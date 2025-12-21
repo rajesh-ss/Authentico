@@ -7,6 +7,8 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
 import IssuanceFlow from "./pages/IssuanceFlow";
+import RequestReEvaluation from "./pages/RequestReEvaluation";
+import MyReEvaluations from "./pages/MyReEvaluations";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -22,6 +24,8 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/issue/*" element={<IssuanceFlow />} />
+            <Route path="/request-reevaluation" element={<RequestReEvaluation />} />
+            <Route path="/my-reevaluations" element={<MyReEvaluations />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
