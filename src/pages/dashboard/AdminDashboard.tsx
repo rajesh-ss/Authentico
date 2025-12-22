@@ -1,6 +1,6 @@
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { StatsCard } from '@/components/dashboard/StatsCard';
-import { ActivityTimeline } from '@/components/dashboard/ActivityTimeline';
+
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -20,42 +20,6 @@ import {
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
-const mockActivity = [
-  {
-    id: '1',
-    type: 'user' as const,
-    title: 'New User Created',
-    description: 'Mr. James Wilson added as Re-Evaluation Updater',
-    timestamp: new Date(Date.now() - 600000),
-    actor: 'Prof. Robert Chen',
-  },
-  {
-    id: '2',
-    type: 'approval' as const,
-    title: 'Re-evaluation Completed',
-    description: 'Request #REV-2024-089 fully verified',
-    timestamp: new Date(Date.now() - 3600000),
-    actor: 'Multi-sig (3/3)',
-    transactionHash: '0x8f4a2c1e9b7d3f6a5c8e1b4d7f2a9c6e3b8d1f4a7c0e3b6d9f2a5c8e1b4d7f2a',
-  },
-  {
-    id: '3',
-    type: 'issue' as const,
-    title: 'Batch Issue Complete',
-    description: '156 marks cards registered on blockchain',
-    timestamp: new Date(Date.now() - 7200000),
-    actor: 'Dr. Sarah Johnson',
-    transactionHash: '0x1a2b3c4d5e6f7890abcdef1234567890abcdef1234567890abcdef12345678',
-  },
-  {
-    id: '4',
-    type: 'verification' as const,
-    title: 'Audit Log Exported',
-    description: 'Monthly audit report generated',
-    timestamp: new Date(Date.now() - 14400000),
-    actor: 'System',
-  },
-];
 
 const userStats = [
   { role: 'Marks Card Issuers', count: 5, active: 4 },
@@ -160,9 +124,9 @@ export default function AdminDashboard() {
       </div>
 
       {/* Main Content */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 gap-6">
         {/* User Management Overview */}
-        <div className="lg:col-span-2 space-y-6">
+        <div className="space-y-6">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-lg font-semibold">User Management</CardTitle>
@@ -243,17 +207,6 @@ export default function AdminDashboard() {
           </Card>
         </div>
 
-        {/* Activity Timeline */}
-        <div>
-          <Card className="h-fit">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-lg font-semibold">Recent Activity</CardTitle>
-            </CardHeader>
-            <CardContent className="pt-0">
-              <ActivityTimeline events={mockActivity} />
-            </CardContent>
-          </Card>
-        </div>
       </div>
     </DashboardLayout>
   );
