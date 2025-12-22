@@ -1,6 +1,4 @@
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
-import { StatsCard } from '@/components/dashboard/StatsCard';
-
 import { RecentMarksCards } from '@/components/dashboard/RecentMarksCards';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -9,12 +7,9 @@ import {
   FileText, 
   Upload, 
   RefreshCcw, 
-  Shield, 
-  Plus,
-  ArrowRight,
-  TrendingUp
+  ArrowRight
 } from 'lucide-react';
-import { MarksCard, BlockchainTransaction } from '@/types/blockchain';
+import { MarksCard } from '@/types/blockchain';
 import { Link } from 'react-router-dom';
 
 // Mock data
@@ -101,37 +96,6 @@ export default function IssuerDashboard() {
       title="Dashboard" 
       subtitle="Welcome back, Dr. Sarah Johnson"
     >
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        <StatsCard
-          title="Total Marks Cards"
-          value="1,248"
-          change={{ value: 12, trend: 'up' }}
-          icon={FileText}
-          variant="default"
-        />
-        <StatsCard
-          title="Pending Verifications"
-          value="23"
-          change={{ value: 5, trend: 'down' }}
-          icon={Shield}
-          variant="warning"
-        />
-        <StatsCard
-          title="Re-Evaluation Requests"
-          value="8"
-          icon={RefreshCcw}
-          variant="blockchain"
-        />
-        <StatsCard
-          title="Blockchain Txns Today"
-          value="156"
-          change={{ value: 23, trend: 'up' }}
-          icon={TrendingUp}
-          variant="success"
-        />
-      </div>
-
       {/* Quick Actions */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
         <Link to="/issue/template">
