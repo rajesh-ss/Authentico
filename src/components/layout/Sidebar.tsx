@@ -41,7 +41,6 @@ const roleNavItems: Record<UserRole, NavItem[]> = {
     ]},
     { label: 'Issued Cards', icon: FileText, href: '/cards', badge: '156' },
     { label: 'Re-Evaluations', icon: RefreshCcw, href: '/reevaluations', badge: '3' },
-    { label: 'Blockchain Logs', icon: Shield, href: '/blockchain' },
   ],
   college_admin: [
     { label: 'Dashboard', icon: LayoutDashboard, href: '/dashboard' },
