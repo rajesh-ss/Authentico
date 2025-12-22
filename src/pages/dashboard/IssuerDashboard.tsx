@@ -1,6 +1,6 @@
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { StatsCard } from '@/components/dashboard/StatsCard';
-import { ActivityTimeline } from '@/components/dashboard/ActivityTimeline';
+
 import { RecentMarksCards } from '@/components/dashboard/RecentMarksCards';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -94,42 +94,6 @@ const mockCards: MarksCard[] = [
   },
 ];
 
-const mockActivity = [
-  {
-    id: '1',
-    type: 'issue' as const,
-    title: 'Marks Cards Issued',
-    description: '45 marks cards generated for Semester 6 batch',
-    timestamp: new Date(Date.now() - 300000),
-    actor: 'Dr. Sarah Johnson',
-    transactionHash: '0x8f4a2c1e9b7d3f6a5c8e1b4d7f2a9c6e3b8d1f4a7c0e3b6d9f2a5c8e1b4d7f2a',
-  },
-  {
-    id: '2',
-    type: 'reevaluation' as const,
-    title: 'Re-evaluation Request',
-    description: 'New request received from Rahul Verma',
-    timestamp: new Date(Date.now() - 3600000),
-    actor: 'System',
-  },
-  {
-    id: '3',
-    type: 'verification' as const,
-    title: 'Blockchain Verified',
-    description: 'Batch verification completed successfully',
-    timestamp: new Date(Date.now() - 7200000),
-    actor: 'Blockchain Network',
-    transactionHash: '0x1a2b3c4d5e6f7890abcdef1234567890abcdef1234567890abcdef12345678',
-  },
-  {
-    id: '4',
-    type: 'upload' as const,
-    title: 'Data Uploaded',
-    description: 'Excel file with 156 student records processed',
-    timestamp: new Date(Date.now() - 14400000),
-    actor: 'Dr. Sarah Johnson',
-  },
-];
 
 export default function IssuerDashboard() {
   return (
@@ -217,37 +181,20 @@ export default function IssuerDashboard() {
       </div>
 
       {/* Main Content */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Recent Cards */}
-        <div className="lg:col-span-2">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-lg font-semibold">Recent Marks Cards</CardTitle>
-              <Button variant="ghost" size="sm" asChild>
-                <Link to="/cards">
-                  View All
-                  <ArrowRight className="h-4 w-4 ml-1" />
-                </Link>
-              </Button>
-            </CardHeader>
-            <CardContent className="pt-0">
-              <RecentMarksCards cards={mockCards} />
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Activity Timeline */}
-        <div>
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-lg font-semibold">Recent Activity</CardTitle>
-            </CardHeader>
-            <CardContent className="pt-0">
-              <ActivityTimeline events={mockActivity} />
-            </CardContent>
-          </Card>
-        </div>
-      </div>
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between pb-2">
+          <CardTitle className="text-lg font-semibold">Recent Marks Cards</CardTitle>
+          <Button variant="ghost" size="sm" asChild>
+            <Link to="/cards">
+              View All
+              <ArrowRight className="h-4 w-4 ml-1" />
+            </Link>
+          </Button>
+        </CardHeader>
+        <CardContent className="pt-0">
+          <RecentMarksCards cards={mockCards} />
+        </CardContent>
+      </Card>
     </DashboardLayout>
   );
 }
