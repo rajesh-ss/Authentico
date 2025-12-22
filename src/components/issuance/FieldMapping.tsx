@@ -105,16 +105,16 @@ export function FieldMapping({
                     </div>
 
                     <Select
-                      value={mapping.excelColumn || ''}
+                      value={mapping.excelColumn || '__not_mapped__'}
                       onValueChange={(value) =>
-                        onUpdateMapping(mapping.templateField, value)
+                        onUpdateMapping(mapping.templateField, value === '__not_mapped__' ? '' : value)
                       }
                     >
                       <SelectTrigger className="w-48">
                         <SelectValue placeholder="Select column" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">-- Not Mapped --</SelectItem>
+                        <SelectItem value="__not_mapped__">-- Not Mapped --</SelectItem>
                         {headers.map((header) => (
                           <SelectItem key={header} value={header}>
                             {header}
