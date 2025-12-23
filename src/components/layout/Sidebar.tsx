@@ -63,12 +63,10 @@ const roleNavItems: Record<UserRole, NavItem[]> = {
     { label: 'Dashboard', icon: LayoutDashboard, href: '/dashboard' },
     { label: 'Pending Signatures', icon: Shield, href: '/signatures', badge: '6' },
     { label: 'Signed Records', icon: FileText, href: '/signed' },
-    { label: 'Blockchain History', icon: Shield, href: '/blockchain' },
   ],
   student: [
     { label: 'Dashboard', icon: LayoutDashboard, href: '/dashboard' },
     { label: 'My Marks Cards', icon: GraduationCap, href: '/my-cards' },
-    { label: 'Re-Evaluation', icon: RefreshCcw, href: '/request-reevaluation' },
     { label: 'Verify Certificate', icon: QrCode, href: '/verify' },
   ],
 };
