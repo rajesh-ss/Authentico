@@ -107,51 +107,6 @@ export function Sidebar() {
         </div>
       </div>
 
-      {/* User Info */}
-      <div className="p-4 border-b border-sidebar-border">
-        <div className="flex items-center gap-3">
-          <div className="h-10 w-10 rounded-full bg-sidebar-accent flex items-center justify-center">
-            <span className="text-sm font-medium text-sidebar-accent-foreground">
-              {user.name.split(' ').map(n => n[0]).join('')}
-            </span>
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-sidebar-foreground truncate">{user.name}</p>
-            <Badge variant="role" className="mt-1 text-[10px]">
-              {roleLabels[user.role]}
-            </Badge>
-          </div>
-        </div>
-
-        {/* Wallet Connection */}
-        {(user.role !== 'student') && (
-          <div className="mt-3">
-            {user.walletConnected ? (
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                className="w-full justify-start text-sidebar-foreground/80 hover:text-sidebar-foreground hover:bg-sidebar-accent text-xs"
-                onClick={disconnectWallet}
-              >
-                <Wallet className="h-3.5 w-3.5 mr-2 text-success" />
-                <span className="truncate font-mono text-[10px]">
-                  {user.walletAddress?.slice(0, 6)}...{user.walletAddress?.slice(-4)}
-                </span>
-              </Button>
-            ) : (
-              <Button 
-                variant="wallet" 
-                size="sm" 
-                className="w-full text-xs"
-                onClick={connectWallet}
-              >
-                <Wallet className="h-3.5 w-3.5 mr-2" />
-                Connect Wallet
-              </Button>
-            )}
-          </div>
-        )}
-      </div>
 
       {/* Navigation */}
       <nav className="flex-1 overflow-y-auto p-4">
