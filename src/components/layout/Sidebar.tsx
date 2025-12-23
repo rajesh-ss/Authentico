@@ -18,7 +18,8 @@ import {
   GraduationCap,
   Bell,
   ChevronDown,
-  Building2
+  Building2,
+  X
 } from 'lucide-react';
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
@@ -29,6 +30,11 @@ interface NavItem {
   href: string;
   badge?: string;
   children?: NavItem[];
+}
+
+interface SidebarProps {
+  isOpen: boolean;
+  onClose: () => void;
 }
 
 const roleNavItems: Record<UserRole, NavItem[]> = {
@@ -72,7 +78,7 @@ const roleNavItems: Record<UserRole, NavItem[]> = {
   ],
 };
 
-export function Sidebar() {
+export function Sidebar({ isOpen, onClose }: SidebarProps) {
   const { user, logout, connectWallet, disconnectWallet } = useAuth();
   const location = useLocation();
   const [expandedItems, setExpandedItems] = useState<string[]>([]);
@@ -93,18 +99,40 @@ export function Sidebar() {
   const isParentActive = (item: NavItem) => 
     item.children?.some(child => location.pathname.startsWith(child.href));
 
+  const handleNavClick = () => {
+    // Close sidebar on mobile when navigating
+    if (window.innerWidth < 1024) {
+      onClose();
+    }
+  };
+
   return (
-    <aside className="fixed left-0 top-0 h-screen w-64 bg-sidebar gradient-sidebar border-r border-sidebar-border flex flex-col">
+    <aside className={cn(
+      "fixed left-0 top-0 h-screen w-64 bg-sidebar gradient-sidebar border-r border-sidebar-border flex flex-col z-50 transition-transform duration-300 ease-in-out",
+      "lg:translate-x-0",
+      isOpen ? "translate-x-0" : "-translate-x-full"
+    )}>
       {/* Logo & Branding */}
-      <div className="p-6 border-b border-sidebar-border">
-        <div className="flex items-center gap-3">
-          <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-sidebar-primary to-accent flex items-center justify-center">
-            <Shield className="h-6 w-6 text-sidebar-primary-foreground" />
+      <div className="p-4 md:p-6 border-b border-sidebar-border">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-sidebar-primary to-accent flex items-center justify-center">
+              <Shield className="h-6 w-6 text-sidebar-primary-foreground" />
+            </div>
+            <div>
+              <h1 className="font-semibold text-sidebar-foreground text-sm">BlockCert</h1>
+              <p className="text-[10px] text-sidebar-foreground/60">Academic Verification</p>
+            </div>
           </div>
-          <div>
-            <h1 className="font-semibold text-sidebar-foreground text-sm">BlockCert</h1>
-            <p className="text-[10px] text-sidebar-foreground/60">Academic Verification</p>
-          </div>
+          {/* Mobile close button */}
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="lg:hidden text-sidebar-foreground hover:bg-sidebar-accent"
+            onClick={onClose}
+          >
+            <X className="h-5 w-5" />
+          </Button>
         </div>
       </div>
 
@@ -142,6 +170,7 @@ export function Sidebar() {
                         <li key={child.label}>
                           <Link
                             to={child.href}
+                            onClick={handleNavClick}
                             className={cn(
                               "flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors",
                               isActive(child.href)
@@ -160,6 +189,7 @@ export function Sidebar() {
               ) : (
                 <Link
                   to={item.href}
+                  onClick={handleNavClick}
                   className={cn(
                     "flex items-center justify-between px-3 py-2.5 rounded-lg text-sm transition-colors",
                     isActive(item.href)
@@ -187,6 +217,7 @@ export function Sidebar() {
       <div className="p-4 border-t border-sidebar-border space-y-1">
         <Link
           to="/notifications"
+          onClick={handleNavClick}
           className="flex items-center justify-between px-3 py-2.5 rounded-lg text-sm text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50 transition-colors"
         >
           <div className="flex items-center gap-3">
@@ -199,6 +230,7 @@ export function Sidebar() {
         </Link>
         <Link
           to="/settings"
+          onClick={handleNavClick}
           className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50 transition-colors"
         >
           <Settings className="h-4 w-4" />

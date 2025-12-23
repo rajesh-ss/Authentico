@@ -194,59 +194,59 @@ export default function MyMarksCards() {
 
           {/* Card Header Info */}
           <Card className="mb-6">
-            <CardContent className="p-6">
-              <div className="flex items-start justify-between mb-6">
+            <CardContent className="p-4 md:p-6">
+              <div className="flex flex-col md:flex-row md:items-start justify-between gap-4 mb-6">
                 <div className="flex items-center gap-4">
-                  <div className="h-16 w-16 rounded-xl bg-primary/10 flex items-center justify-center">
-                    <FileText className="h-8 w-8 text-primary" />
+                  <div className="h-12 w-12 md:h-16 md:w-16 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                    <FileText className="h-6 w-6 md:h-8 md:w-8 text-primary" />
                   </div>
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <h2 className="text-2xl font-bold">{selectedCard.semester}</h2>
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <h2 className="text-xl md:text-2xl font-bold">{selectedCard.semester}</h2>
                       <Badge variant={statusBadgeVariant[selectedCard.status]}>
                         {selectedCard.status === 'reevaluated' ? `v${selectedCard.version}` : 'Original'}
                       </Badge>
                     </div>
-                    <p className="text-muted-foreground">
+                    <p className="text-sm text-muted-foreground">
                       {selectedCard.academicYear} • Issued {selectedCard.issuedAt.toLocaleDateString()}
                     </p>
                   </div>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2">
                   <Button variant="outline" size="sm" onClick={() => handleDownload(selectedCard)}>
                     <Download className="h-4 w-4 mr-2" />
-                    Download
+                    <span className="hidden sm:inline">Download</span>
                   </Button>
                   <Button variant="outline" size="sm" onClick={() => handleShowQr(selectedCard)}>
                     <QrCode className="h-4 w-4 mr-2" />
-                    QR Code
+                    <span className="hidden sm:inline">QR Code</span>
                   </Button>
                   <Button variant="outline" size="sm" asChild>
                     <Link to="/request-reevaluation">
                       <RefreshCcw className="h-4 w-4 mr-2" />
-                      Request Re-evaluation
+                      <span className="hidden sm:inline">Re-evaluation</span>
                     </Link>
                   </Button>
                 </div>
               </div>
 
               {/* Stats Grid */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="p-4 bg-muted/30 rounded-lg text-center">
-                  <p className="text-sm text-muted-foreground">Total Marks</p>
-                  <p className="text-2xl font-bold">{selectedCard.totalMarks}/{selectedCard.maxMarks}</p>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
+                <div className="p-3 md:p-4 bg-muted/30 rounded-lg text-center">
+                  <p className="text-xs md:text-sm text-muted-foreground">Total Marks</p>
+                  <p className="text-lg md:text-2xl font-bold">{selectedCard.totalMarks}/{selectedCard.maxMarks}</p>
                 </div>
-                <div className="p-4 bg-muted/30 rounded-lg text-center">
-                  <p className="text-sm text-muted-foreground">Percentage</p>
-                  <p className="text-2xl font-bold">{selectedCard.percentage}%</p>
+                <div className="p-3 md:p-4 bg-muted/30 rounded-lg text-center">
+                  <p className="text-xs md:text-sm text-muted-foreground">Percentage</p>
+                  <p className="text-lg md:text-2xl font-bold">{selectedCard.percentage}%</p>
                 </div>
-                <div className="p-4 bg-muted/30 rounded-lg text-center">
-                  <p className="text-sm text-muted-foreground">Grade</p>
-                  <p className="text-2xl font-bold">{selectedCard.grade}</p>
+                <div className="p-3 md:p-4 bg-muted/30 rounded-lg text-center">
+                  <p className="text-xs md:text-sm text-muted-foreground">Grade</p>
+                  <p className="text-lg md:text-2xl font-bold">{selectedCard.grade}</p>
                 </div>
-                <div className="p-4 bg-muted/30 rounded-lg text-center">
-                  <p className="text-sm text-muted-foreground">CGPA</p>
-                  <p className="text-2xl font-bold">{selectedCard.cgpa}</p>
+                <div className="p-3 md:p-4 bg-muted/30 rounded-lg text-center">
+                  <p className="text-xs md:text-sm text-muted-foreground">CGPA</p>
+                  <p className="text-lg md:text-2xl font-bold">{selectedCard.cgpa}</p>
                 </div>
               </div>
             </CardContent>
@@ -257,32 +257,32 @@ export default function MyMarksCards() {
             <CardHeader>
               <CardTitle className="text-lg">Subject-wise Marks</CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-0 md:p-6 md:pt-0">
               <div className="overflow-x-auto">
-                <table className="w-full">
+                <table className="w-full min-w-[600px]">
                   <thead>
                     <tr className="border-b border-border">
-                      <th className="text-left py-3 px-4 font-medium text-muted-foreground">Code</th>
-                      <th className="text-left py-3 px-4 font-medium text-muted-foreground">Subject</th>
-                      <th className="text-center py-3 px-4 font-medium text-muted-foreground">Internal</th>
-                      <th className="text-center py-3 px-4 font-medium text-muted-foreground">External</th>
-                      <th className="text-center py-3 px-4 font-medium text-muted-foreground">Total</th>
-                      <th className="text-center py-3 px-4 font-medium text-muted-foreground">Grade</th>
-                      <th className="text-center py-3 px-4 font-medium text-muted-foreground">Credits</th>
+                      <th className="text-left py-3 px-4 font-medium text-muted-foreground text-sm">Code</th>
+                      <th className="text-left py-3 px-4 font-medium text-muted-foreground text-sm">Subject</th>
+                      <th className="text-center py-3 px-4 font-medium text-muted-foreground text-sm">Int</th>
+                      <th className="text-center py-3 px-4 font-medium text-muted-foreground text-sm">Ext</th>
+                      <th className="text-center py-3 px-4 font-medium text-muted-foreground text-sm">Total</th>
+                      <th className="text-center py-3 px-4 font-medium text-muted-foreground text-sm">Grade</th>
+                      <th className="text-center py-3 px-4 font-medium text-muted-foreground text-sm">Cr</th>
                     </tr>
                   </thead>
                   <tbody>
                     {selectedCard.subjects.map((subject) => (
                       <tr key={subject.code} className="border-b border-border/50 hover:bg-muted/30">
-                        <td className="py-3 px-4 font-mono text-sm">{subject.code}</td>
-                        <td className="py-3 px-4">{subject.name}</td>
-                        <td className="py-3 px-4 text-center">{subject.internalMarks}</td>
-                        <td className="py-3 px-4 text-center">{subject.externalMarks}</td>
-                        <td className="py-3 px-4 text-center font-medium">{subject.totalMarks}/{subject.maxMarks}</td>
+                        <td className="py-3 px-4 font-mono text-xs md:text-sm">{subject.code}</td>
+                        <td className="py-3 px-4 text-sm">{subject.name}</td>
+                        <td className="py-3 px-4 text-center text-sm">{subject.internalMarks}</td>
+                        <td className="py-3 px-4 text-center text-sm">{subject.externalMarks}</td>
+                        <td className="py-3 px-4 text-center font-medium text-sm">{subject.totalMarks}/{subject.maxMarks}</td>
                         <td className="py-3 px-4 text-center">
-                          <Badge variant="outline">{subject.grade}</Badge>
+                          <Badge variant="outline" className="text-xs">{subject.grade}</Badge>
                         </td>
-                        <td className="py-3 px-4 text-center">{subject.credits}</td>
+                        <td className="py-3 px-4 text-center text-sm">{subject.credits}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -301,24 +301,24 @@ export default function MyMarksCards() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                   <span className="text-muted-foreground">Status</span>
                   <TransactionBadge status={selectedCard.blockchain.status} />
                 </div>
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                   <span className="text-muted-foreground">Transaction Hash</span>
                   <TransactionHash hash={selectedCard.blockchain.hash} />
                 </div>
                 {selectedCard.blockchain.blockNumber && (
-                  <div className="flex items-center justify-between">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                     <span className="text-muted-foreground">Block Number</span>
                     <span className="font-mono">#{selectedCard.blockchain.blockNumber}</span>
                   </div>
                 )}
                 {selectedCard.blockchain.timestamp && (
-                  <div className="flex items-center justify-between">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                     <span className="text-muted-foreground">Timestamp</span>
-                    <span>{selectedCard.blockchain.timestamp.toLocaleString()}</span>
+                    <span className="text-sm">{selectedCard.blockchain.timestamp.toLocaleString()}</span>
                   </div>
                 )}
               </div>
@@ -336,7 +336,7 @@ export default function MyMarksCards() {
     >
       <div className="max-w-4xl mx-auto">
         {/* Search and Actions */}
-        <div className="flex items-center justify-between gap-4 mb-6">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 mb-6">
           <div className="relative flex-1 max-w-sm">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
@@ -347,15 +347,15 @@ export default function MyMarksCards() {
             />
           </div>
           <div className="flex gap-2">
-            <Button variant="outline" asChild>
+            <Button variant="outline" asChild className="flex-1 sm:flex-none">
               <Link to="/request-reevaluation">
                 <RefreshCcw className="h-4 w-4 mr-2" />
-                Request Re-evaluation
+                <span className="hidden sm:inline">Request</span> Re-eval
               </Link>
             </Button>
-            <Button variant="outline">
+            <Button variant="outline" className="flex-1 sm:flex-none">
               <Download className="h-4 w-4 mr-2" />
-              Download All
+              <span className="hidden sm:inline">Download</span> All
             </Button>
           </div>
         </div>
@@ -364,20 +364,20 @@ export default function MyMarksCards() {
         <div className="grid gap-4">
           {filteredCards.map((card) => (
             <Card key={card.id} className="hover:border-primary/50 transition-colors">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-4">
-                    <div className="h-14 w-14 rounded-lg bg-primary/10 flex items-center justify-center">
-                      <FileText className="h-7 w-7 text-primary" />
+              <CardContent className="p-4 md:p-6">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                  <div className="flex items-center gap-3 md:gap-4">
+                    <div className="h-12 w-12 md:h-14 md:w-14 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                      <FileText className="h-6 w-6 md:h-7 md:w-7 text-primary" />
                     </div>
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <h3 className="font-semibold text-lg">{card.semester}</h3>
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <h3 className="font-semibold text-base md:text-lg">{card.semester}</h3>
                         <Badge variant={statusBadgeVariant[card.status]} className="text-xs">
                           {card.status === 'reevaluated' ? `v${card.version}` : 'Original'}
                         </Badge>
                       </div>
-                      <div className="flex items-center gap-4 mt-1 text-sm text-muted-foreground">
+                      <div className="flex items-center gap-3 md:gap-4 mt-1 text-xs md:text-sm text-muted-foreground flex-wrap">
                         <span className="flex items-center gap-1">
                           <Calendar className="h-3 w-3" />
                           {card.academicYear}
@@ -390,12 +390,14 @@ export default function MyMarksCards() {
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-3">
-                    <div className="text-right mr-4">
-                      <p className="text-2xl font-bold">{card.cgpa}</p>
+                  <div className="flex items-center justify-between md:justify-end gap-3">
+                    <div className="text-left md:text-right mr-2 md:mr-4">
+                      <p className="text-xl md:text-2xl font-bold">{card.cgpa}</p>
                       <p className="text-xs text-muted-foreground">CGPA</p>
                     </div>
-                    <TransactionBadge status={card.blockchain.status} size="sm" />
+                    <div className="hidden sm:block">
+                      <TransactionBadge status={card.blockchain.status} size="sm" />
+                    </div>
                     <div className="flex gap-1">
                       <Button variant="ghost" size="icon" onClick={() => handleViewDetails(card)}>
                         <Eye className="h-4 w-4" />
@@ -414,43 +416,28 @@ export default function MyMarksCards() {
           ))}
         </div>
 
-        {filteredCards.length === 0 && (
-          <Card className="p-12 text-center">
-            <FileText className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-            <h3 className="text-lg font-semibold mb-2">No marks cards found</h3>
-            <p className="text-muted-foreground">
-              {searchQuery ? 'Try adjusting your search query' : 'No marks cards have been issued yet'}
-            </p>
-          </Card>
-        )}
+        {/* QR Code Dialog */}
+        <Dialog open={showQrDialog} onOpenChange={setShowQrDialog}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>Certificate QR Code</DialogTitle>
+            </DialogHeader>
+            {qrCard && (
+              <div className="flex flex-col items-center py-6">
+                <div className="h-48 w-48 bg-muted rounded-lg flex items-center justify-center mb-4">
+                  <QrCode className="h-32 w-32 text-muted-foreground" />
+                </div>
+                <p className="text-sm text-muted-foreground text-center">
+                  Scan this QR code to verify {qrCard.semester} marks card
+                </p>
+                <p className="text-xs text-muted-foreground mt-2 font-mono break-all text-center px-4">
+                  {qrCard.blockchain.hash.slice(0, 20)}...
+                </p>
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
       </div>
-
-      {/* QR Code Dialog */}
-      <Dialog open={showQrDialog} onOpenChange={setShowQrDialog}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Certificate QR Code</DialogTitle>
-          </DialogHeader>
-          {qrCard && (
-            <div className="flex flex-col items-center py-6">
-              <div className="h-48 w-48 bg-muted rounded-lg flex items-center justify-center mb-4">
-                <QrCode className="h-32 w-32 text-muted-foreground" />
-              </div>
-              <p className="text-center text-sm text-muted-foreground mb-4">
-                Scan this QR code to verify the authenticity of this marks card
-              </p>
-              <div className="text-center">
-                <p className="font-semibold">{qrCard.semester}</p>
-                <p className="text-sm text-muted-foreground">{qrCard.academicYear}</p>
-              </div>
-              <Button variant="outline" className="mt-4" onClick={() => setShowQrDialog(false)}>
-                <X className="h-4 w-4 mr-2" />
-                Close
-              </Button>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
     </DashboardLayout>
   );
 }
