@@ -3,23 +3,16 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { TransactionBadge } from '@/components/blockchain/TransactionBadge';
-import { TransactionHash } from '@/components/blockchain/TransactionHash';
-import { ReEvaluationTimeline } from '@/components/reevaluation/ReEvaluationTimeline';
 import { 
   GraduationCap, 
   Download, 
   Eye, 
-  RefreshCcw, 
-  Shield,
   QrCode,
   FileText,
-  Clock,
   CheckCircle2,
-  ArrowRight,
-  Calendar
+  ArrowRight
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { format } from 'date-fns';
 
 // Mock data for student's marks cards
 const studentMarksCards = [
@@ -70,45 +63,6 @@ const studentMarksCards = [
   },
 ];
 
-// Mock re-evaluation request
-const activeReEvaluation = {
-  id: 'REV-2024-102',
-  subjects: ['Data Structures', 'Algorithms'],
-  currentStatus: 'marks_updated' as const,
-  timeline: [
-    {
-      id: '1',
-      status: 'submitted' as const,
-      timestamp: new Date('2024-06-01'),
-      actor: 'Alex Thompson',
-      actorRole: 'Student',
-    },
-    {
-      id: '2',
-      status: 'under_review' as const,
-      timestamp: new Date('2024-06-02'),
-      actor: 'Dr. Emily Davis',
-      actorRole: 'Re-Evaluation Approver',
-    },
-    {
-      id: '3',
-      status: 'approved' as const,
-      timestamp: new Date('2024-06-05'),
-      actor: 'Dr. Emily Davis',
-      actorRole: 'Re-Evaluation Approver',
-      comment: 'Approved for re-evaluation',
-    },
-    {
-      id: '4',
-      status: 'marks_updated' as const,
-      timestamp: new Date('2024-06-08'),
-      actor: 'Mr. James Wilson',
-      actorRole: 'Re-Evaluation Updater',
-      transactionHash: '0x9a8b7c6d5e4f3210fedcba9876543210fedcba9876543210fedcba98765432',
-    },
-  ],
-};
-
 const statusBadgeVariant = {
   issued: 'issued' as const,
   reevaluated: 'reevaluated' as const,
@@ -123,7 +77,7 @@ export default function StudentDashboard() {
       subtitle="Welcome back, Alex Thompson"
     >
       {/* Overview Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
         <Card variant="blockchain" className="p-5">
           <div className="flex items-center justify-between">
             <div>
@@ -148,19 +102,6 @@ export default function StudentDashboard() {
             </div>
           </div>
           <p className="text-xs text-muted-foreground mt-3">Semester 6</p>
-        </Card>
-
-        <Card variant="warning" className="p-5">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-muted-foreground">Active Re-Evaluation</p>
-              <p className="text-3xl font-bold text-foreground mt-1">1</p>
-            </div>
-            <div className="h-12 w-12 rounded-lg bg-warning/10 flex items-center justify-center">
-              <RefreshCcw className="h-6 w-6 text-warning" />
-            </div>
-          </div>
-          <p className="text-xs text-muted-foreground mt-3">In progress</p>
         </Card>
       </div>
 
@@ -234,12 +175,6 @@ export default function StudentDashboard() {
             </CardHeader>
             <CardContent className="pt-0 space-y-2">
               <Button variant="outline" className="w-full justify-start" asChild>
-                <Link to="/request-reevaluation">
-                  <RefreshCcw className="h-4 w-4 mr-2" />
-                  Request Re-Evaluation
-                </Link>
-              </Button>
-              <Button variant="outline" className="w-full justify-start" asChild>
                 <Link to="/verify">
                   <QrCode className="h-4 w-4 mr-2" />
                   Verify Certificate
@@ -251,36 +186,6 @@ export default function StudentDashboard() {
               </Button>
             </CardContent>
           </Card>
-
-          {/* Active Re-Evaluation */}
-          {activeReEvaluation && (
-            <Card>
-              <CardHeader className="pb-2">
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-lg font-semibold">Re-Evaluation Status</CardTitle>
-                  <Badge variant="pending">{activeReEvaluation.id}</Badge>
-                </div>
-              </CardHeader>
-              <CardContent className="pt-0">
-                <p className="text-sm text-muted-foreground mb-4">
-                  Subjects: {activeReEvaluation.subjects.join(', ')}
-                </p>
-                <ReEvaluationTimeline 
-                  events={activeReEvaluation.timeline}
-                  currentStatus={activeReEvaluation.currentStatus}
-                />
-                <div className="mt-4 p-3 bg-warning/10 rounded-lg">
-                  <div className="flex items-center gap-2 text-warning">
-                    <Clock className="h-4 w-4" />
-                    <span className="text-sm font-medium">Pending Verification</span>
-                  </div>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Awaiting multi-signature approval (1 of 3 completed)
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-          )}
         </div>
       </div>
     </DashboardLayout>
