@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useCallback } from 'react';
+import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
 import { User, UserRole, AuthState } from '@/types/auth';
 
 interface AuthContextType extends AuthState {
@@ -9,6 +9,8 @@ interface AuthContextType extends AuthState {
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+const AUTH_STORAGE_KEY = 'blockcert_auth';
 
 // Mock users for demonstration
 const mockUsers: Record<string, User> = {
@@ -62,12 +64,30 @@ const mockUsers: Record<string, User> = {
   },
 };
 
-export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [authState, setAuthState] = useState<AuthState>({
+// Get initial auth state from localStorage
+const getInitialAuthState = (): AuthState => {
+  try {
+    const stored = localStorage.getItem(AUTH_STORAGE_KEY);
+    if (stored) {
+      const parsed = JSON.parse(stored);
+      return {
+        user: parsed.user,
+        isAuthenticated: true,
+        isLoading: false,
+      };
+    }
+  } catch {
+    localStorage.removeItem(AUTH_STORAGE_KEY);
+  }
+  return {
     user: null,
     isAuthenticated: false,
     isLoading: false,
-  });
+  };
+};
+
+export function AuthProvider({ children }: { children: React.ReactNode }) {
+  const [authState, setAuthState] = useState<AuthState>(getInitialAuthState);
 
   const login = useCallback(async (email: string, password: string) => {
     setAuthState(prev => ({ ...prev, isLoading: true }));
@@ -90,12 +110,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const logout = useCallback(() => {
+    localStorage.removeItem(AUTH_STORAGE_KEY);
     setAuthState({
       user: null,
       isAuthenticated: false,
       isLoading: false,
     });
   }, []);
+
+  // Persist auth state changes to localStorage
+  useEffect(() => {
+    if (authState.isAuthenticated && authState.user) {
+      localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify({ user: authState.user }));
+    }
+  }, [authState.isAuthenticated, authState.user]);
 
   const connectWallet = useCallback(async () => {
     // Simulate wallet connection

@@ -140,7 +140,7 @@
   }
 
   .gradient-sidebar {
-    background: linear-gradient(to bottom, hsl(var(--sidebar-background)), hsl(var(--sidebar-background)), hsl(var(--primary) / 0.1));
+    background: hsl(var(--sidebar-background));
   }
 
   /* Glass effect */
