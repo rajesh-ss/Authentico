@@ -9,6 +9,8 @@ import Dashboard from "./pages/Dashboard";
 import IssuanceFlow from "./pages/IssuanceFlow";
 import RequestReEvaluation from "./pages/RequestReEvaluation";
 import MyReEvaluations from "./pages/MyReEvaluations";
+import MyMarksCards from "./pages/MyMarksCards";
+import VerifyCertificate from "./pages/VerifyCertificate";
 import UserManagement from "./pages/UserManagement";
 import ReEvaluationsAdmin from "./pages/ReEvaluationsAdmin";
 import NotFound from "./pages/NotFound";
@@ -28,6 +30,8 @@ const App = () => (
             <Route path="/issue/*" element={<IssuanceFlow />} />
             <Route path="/request-reevaluation" element={<RequestReEvaluation />} />
             <Route path="/my-reevaluations" element={<MyReEvaluations />} />
+            <Route path="/my-cards" element={<MyMarksCards />} />
+            <Route path="/verify" element={<VerifyCertificate />} />
             <Route path="/users" element={<UserManagement />} />
             <Route path="/reevaluations" element={<ReEvaluationsAdmin />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
