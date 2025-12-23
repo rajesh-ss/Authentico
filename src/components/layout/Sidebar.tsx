@@ -40,13 +40,8 @@ interface SidebarProps {
 const roleNavItems: Record<UserRole, NavItem[]> = {
   issuer: [
     { label: 'Dashboard', icon: LayoutDashboard, href: '/dashboard' },
-    { label: 'Issue Marks Cards', icon: Upload, href: '/issue', children: [
-      { label: 'Upload Template', icon: FileText, href: '/issue/template' },
-      { label: 'Upload Data', icon: Upload, href: '/issue/upload' },
-      { label: 'Generate Cards', icon: FileText, href: '/issue/generate' },
-    ]},
+    { label: 'Issue Marks Cards', icon: Upload, href: '/issue/template' },
     { label: 'Issued Cards', icon: FileText, href: '/cards', badge: '156' },
-    { label: 'Re-Evaluations', icon: RefreshCcw, href: '/reevaluations', badge: '3' },
   ],
   college_admin: [
     { label: 'Dashboard', icon: LayoutDashboard, href: '/dashboard' },
