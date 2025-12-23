@@ -1,13 +1,17 @@
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
-import { RecentMarksCards } from '@/components/dashboard/RecentMarksCards';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { FileText, Upload, RefreshCcw, ArrowRight } from 'lucide-react';
-import { MarksCard } from '@/types/blockchain';
+import { DataTable, StatusBadge, type Column } from '@/components/shared';
+import { TransactionBadge } from '@/components/blockchain/TransactionBadge';
+import { FileText, Upload, RefreshCcw, ArrowRight, Eye, Download, MoreHorizontal } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { format } from 'date-fns';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { MarksCard } from '@/types/blockchain';
 
-const mockCards: MarksCard[] = [
+// Mock data for issuer dashboard using the blockchain.ts MarksCard type
+const recentCards: MarksCard[] = [
   {
     id: '1', studentId: 'STU001', studentName: 'Priya Sharma', registrationNumber: '2021CS1045',
     semester: 'Sem 6', academicYear: '2023-24', subjects: [], totalMarks: 542, percentage: 78.5,
@@ -35,6 +39,70 @@ const quickActions = [
   { to: '/issue/template', icon: Upload, title: 'Issue New Cards', desc: 'Upload template & data', color: 'primary' },
   { to: '/cards', icon: FileText, title: 'View All Cards', desc: '1,248 issued cards', color: 'success' },
   { to: '/reevaluations', icon: RefreshCcw, title: 'Re-Evaluations', desc: '8 pending requests', color: 'warning', badge: '8' },
+];
+
+const columns: Column<MarksCard>[] = [
+  {
+    key: 'student',
+    header: 'Student',
+    render: (card) => (
+      <div>
+        <p className="font-medium">{card.studentName}</p>
+        <p className="text-xs text-muted-foreground font-mono">{card.registrationNumber}</p>
+      </div>
+    ),
+  },
+  {
+    key: 'semester',
+    header: 'Semester',
+    render: (card) => <span>{card.semester}</span>,
+  },
+  {
+    key: 'version',
+    header: 'Version',
+    render: (card) => (
+      <Badge variant="outline" className="text-xs">
+        v{card.version}
+      </Badge>
+    ),
+  },
+  {
+    key: 'status',
+    header: 'Status',
+    render: (card) => <StatusBadge status={card.status} />,
+  },
+  {
+    key: 'blockchain',
+    header: 'Blockchain',
+    render: (card) => <TransactionBadge status={card.blockchain.status} size="sm" />,
+  },
+  {
+    key: 'issued',
+    header: 'Issued',
+    render: (card) => (
+      <span className="text-muted-foreground text-sm">
+        {format(card.issuedAt, 'dd MMM yyyy')}
+      </span>
+    ),
+  },
+  {
+    key: 'actions',
+    header: '',
+    className: 'text-right',
+    render: () => (
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" size="icon">
+            <MoreHorizontal className="h-4 w-4" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          <DropdownMenuItem><Eye className="h-4 w-4 mr-2" />View</DropdownMenuItem>
+          <DropdownMenuItem><Download className="h-4 w-4 mr-2" />Download</DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    ),
+  },
 ];
 
 export default function IssuerDashboard() {
@@ -73,7 +141,12 @@ export default function IssuerDashboard() {
           </Button>
         </CardHeader>
         <CardContent className="pt-0">
-          <RecentMarksCards cards={mockCards} />
+          <DataTable 
+            data={recentCards} 
+            columns={columns} 
+            keyExtractor={(card) => card.id} 
+            emptyMessage="No recent marks cards"
+          />
         </CardContent>
       </Card>
     </DashboardLayout>

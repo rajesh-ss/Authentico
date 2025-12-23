@@ -99,7 +99,7 @@ export default function VerifierDashboard() {
                   </div>
                 </div>
 
-                <SignatureProgress approval={sig.approval} canSign={true} onSign={() => console.log('Sign', sig.id)} />
+                <SignatureProgress approval={sig.approval} canSign={true} onSign={() => {/* TODO: Implement sign functionality */}} />
               </div>
             </CardContent>
           </Card>

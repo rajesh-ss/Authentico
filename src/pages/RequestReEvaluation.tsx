@@ -1,27 +1,55 @@
 import { useState } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { ReEvaluationForm } from '@/components/reevaluation/ReEvaluationForm';
-import { useReEvaluation } from '@/hooks/useReEvaluation';
-import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent } from '@/components/ui/card';
 import { CheckCircle, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
+import { MarksCardOption } from '@/types/reevaluation';
+
+// Mock marks cards data for the form
+const marksCards: MarksCardOption[] = [
+  {
+    id: '1',
+    semester: 'Semester 6',
+    academicYear: '2023-24',
+    subjects: [
+      { code: 'CS601', name: 'Machine Learning', currentMarks: 72, maxMarks: 100, grade: 'A' },
+      { code: 'CS602', name: 'Data Structures', currentMarks: 65, maxMarks: 100, grade: 'B+' },
+      { code: 'CS603', name: 'Algorithms', currentMarks: 58, maxMarks: 100, grade: 'B' },
+      { code: 'CS604', name: 'Database Systems', currentMarks: 78, maxMarks: 100, grade: 'A' },
+      { code: 'CS605', name: 'Computer Networks', currentMarks: 70, maxMarks: 100, grade: 'A' },
+    ],
+  },
+  {
+    id: '2',
+    semester: 'Semester 5',
+    academicYear: '2023-24',
+    subjects: [
+      { code: 'CS501', name: 'Operating Systems', currentMarks: 68, maxMarks: 100, grade: 'B+' },
+      { code: 'CS502', name: 'Software Engineering', currentMarks: 75, maxMarks: 100, grade: 'A' },
+      { code: 'CS503', name: 'Web Technologies', currentMarks: 82, maxMarks: 100, grade: 'A+' },
+      { code: 'CS504', name: 'Compiler Design', currentMarks: 55, maxMarks: 100, grade: 'B' },
+    ],
+  },
+];
 
 export default function RequestReEvaluation() {
-  const navigate = useNavigate();
   const { toast } = useToast();
-  const { marksCards, submitRequest, isLoading } = useReEvaluation();
+  const [isLoading, setIsLoading] = useState(false);
   const [submittedId, setSubmittedId] = useState<string | null>(null);
 
-  const handleSubmit = async (data: Parameters<typeof submitRequest>[0]) => {
+  const handleSubmit = async (data: { marksCardId: string; subjects: string[]; reason: string; supportingDocuments: File[] }) => {
+    setIsLoading(true);
     try {
-      const request = await submitRequest(data);
-      setSubmittedId(request.id);
+      // Simulate API call
+      await new Promise((resolve) => setTimeout(resolve, 1500));
+      const requestId = `REV-2024-${Math.floor(Math.random() * 1000)}`;
+      setSubmittedId(requestId);
       toast({
         title: "Request Submitted Successfully",
-        description: `Your re-evaluation request ${request.id} has been submitted.`,
+        description: `Your re-evaluation request ${requestId} has been submitted.`,
       });
     } catch (error) {
       toast({
@@ -29,6 +57,8 @@ export default function RequestReEvaluation() {
         description: "There was an error submitting your request. Please try again.",
         variant: "destructive",
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 
