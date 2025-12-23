@@ -14,6 +14,13 @@ import MyMarksCards from "./pages/MyMarksCards";
 import VerifyCertificate from "./pages/VerifyCertificate";
 import UserManagement from "./pages/UserManagement";
 import ReEvaluationsAdmin from "./pages/ReEvaluationsAdmin";
+import PendingApprovals from "./pages/approver/PendingApprovals";
+import ApprovedRequests from "./pages/approver/ApprovedRequests";
+import RejectedRequests from "./pages/approver/RejectedRequests";
+import UpdateMarks from "./pages/updater/UpdateMarks";
+import CompletedUpdates from "./pages/updater/CompletedUpdates";
+import PendingSignatures from "./pages/verifier/PendingSignatures";
+import SignedRecords from "./pages/verifier/SignedRecords";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -81,41 +88,41 @@ const App = () => (
             {/* Approver Routes */}
             <Route path="/approvals" element={
               <ProtectedRoute allowedRoles={['reevaluation_approver']}>
-                <ReEvaluationsAdmin />
+                <PendingApprovals />
               </ProtectedRoute>
             } />
             <Route path="/approved" element={
               <ProtectedRoute allowedRoles={['reevaluation_approver']}>
-                <ReEvaluationsAdmin />
+                <ApprovedRequests />
               </ProtectedRoute>
             } />
             <Route path="/rejected" element={
               <ProtectedRoute allowedRoles={['reevaluation_approver']}>
-                <ReEvaluationsAdmin />
+                <RejectedRequests />
               </ProtectedRoute>
             } />
             
             {/* Updater Routes */}
             <Route path="/update-marks" element={
               <ProtectedRoute allowedRoles={['reevaluation_updater']}>
-                <ReEvaluationsAdmin />
+                <UpdateMarks />
               </ProtectedRoute>
             } />
             <Route path="/completed" element={
               <ProtectedRoute allowedRoles={['reevaluation_updater']}>
-                <ReEvaluationsAdmin />
+                <CompletedUpdates />
               </ProtectedRoute>
             } />
             
             {/* Verifier Routes */}
             <Route path="/signatures" element={
               <ProtectedRoute allowedRoles={['verifying_admin']}>
-                <ReEvaluationsAdmin />
+                <PendingSignatures />
               </ProtectedRoute>
             } />
             <Route path="/signed" element={
               <ProtectedRoute allowedRoles={['verifying_admin']}>
-                <ReEvaluationsAdmin />
+                <SignedRecords />
               </ProtectedRoute>
             } />
             
