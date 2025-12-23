@@ -2,7 +2,7 @@ import React, { createContext, useContext, useState, useCallback, useEffect } fr
 import { User, UserRole, AuthState } from '@/types/auth';
 
 interface AuthContextType extends AuthState {
-  login: (email: string, password: string) => Promise<void>;
+  login: (email: string, password: string) => Promise<User>;
   logout: () => void;
   connectWallet: () => Promise<void>;
   disconnectWallet: () => void;
@@ -89,7 +89,7 @@ const getInitialAuthState = (): AuthState => {
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [authState, setAuthState] = useState<AuthState>(getInitialAuthState);
 
-  const login = useCallback(async (email: string, password: string) => {
+  const login = useCallback(async (email: string, password: string): Promise<User> => {
     setAuthState(prev => ({ ...prev, isLoading: true }));
     
     // Simulate API call
@@ -103,6 +103,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         isAuthenticated: true,
         isLoading: false,
       });
+      return user;
     } else {
       setAuthState(prev => ({ ...prev, isLoading: false }));
       throw new Error('Invalid credentials');

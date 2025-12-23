@@ -9,12 +9,13 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Shield, Lock, Mail, AlertCircle, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { demoAccounts } from '@/data';
+import { getRoleDefaultRoute } from '@/lib/roleRoutes';
 
 export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-  const { login, isLoading } = useAuth();
+  const { login, isLoading, user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -22,9 +23,10 @@ export default function Login() {
     e.preventDefault();
     setError('');
     try {
-      await login(email, password);
+      const loggedInUser = await login(email, password);
       toast({ title: 'Login Successful', description: 'Welcome to BlockCert Academic Verification System' });
-      navigate('/dashboard');
+      const defaultRoute = getRoleDefaultRoute(loggedInUser.role);
+      navigate(defaultRoute);
     } catch (err) {
       setError('Invalid email or password. Please try again.');
     }
