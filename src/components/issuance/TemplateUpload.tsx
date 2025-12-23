@@ -1,10 +1,9 @@
 import { useState, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Upload, FileText, FileCode, Eye, Trash2, ArrowRight, CheckCircle } from 'lucide-react';
+import { Upload, FileText, FileCode, Trash2, ArrowRight, CheckCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { MarksCardTemplate, TemplateField } from '@/types/issuance';
+import { MarksCardTemplate } from '@/types/issuance';
 
 interface TemplateUploadProps {
   template: MarksCardTemplate | null;
@@ -15,7 +14,6 @@ interface TemplateUploadProps {
 
 export function TemplateUpload({ template, onUpload, onNext, isLoading }: TemplateUploadProps) {
   const [isDragOver, setIsDragOver] = useState(false);
-  const [previewOpen, setPreviewOpen] = useState(false);
 
   const handleDrop = useCallback(
     async (e: React.DragEvent) => {
@@ -84,14 +82,6 @@ export function TemplateUpload({ template, onUpload, onNext, isLoading }: Templa
                   </div>
                   <div className="flex items-center justify-center gap-2">
                     <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setPreviewOpen(true)}
-                    >
-                      <Eye className="h-4 w-4 mr-1" />
-                      Preview
-                    </Button>
-                    <Button
                       variant="ghost"
                       size="sm"
                       className="text-destructive hover:text-destructive"
@@ -148,78 +138,29 @@ export function TemplateUpload({ template, onUpload, onNext, isLoading }: Templa
           </CardContent>
         </Card>
 
-        {/* Template Fields */}
+        {/* Template Preview */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg">Dynamic Fields</CardTitle>
+            <CardTitle className="text-lg">Template Preview</CardTitle>
             <CardDescription>
-              These fields will be populated from your Excel data
+              Preview of your uploaded template
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-3">
-              {template?.fields.map((field) => (
-                <div
-                  key={field.id}
-                  className="flex items-center justify-between p-3 rounded-lg bg-muted/50"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="h-8 w-8 rounded bg-primary/10 flex items-center justify-center">
-                      <span className="text-xs font-mono text-primary">
-                        {`{{${field.id}}}`}
-                      </span>
-                    </div>
-                    <div>
-                      <p className="font-medium text-sm">{field.name}</p>
-                      <p className="text-xs text-muted-foreground capitalize">
-                        {field.type}
-                      </p>
-                    </div>
-                  </div>
-                  {field.required && (
-                    <Badge variant="secondary" className="text-xs">
-                      Required
-                    </Badge>
-                  )}
-                </div>
-              )) || (
-                <div className="text-center py-8 text-muted-foreground">
-                  <p>Upload a template to see dynamic fields</p>
-                </div>
-              )}
-            </div>
+            {template ? (
+              <iframe
+                src={template.fileUrl}
+                className="w-full h-[400px] border rounded"
+                title="Template Preview"
+              />
+            ) : (
+              <div className="flex items-center justify-center h-[400px] bg-muted/30 rounded-lg border-2 border-dashed border-border">
+                <p className="text-muted-foreground">Upload a template to see preview</p>
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
-
-      {/* Preview Modal */}
-      {previewOpen && template && (
-        <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm flex items-center justify-center p-4">
-          <Card className="w-full max-w-4xl max-h-[80vh] overflow-hidden">
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle>Template Preview</CardTitle>
-              <Button variant="ghost" size="sm" onClick={() => setPreviewOpen(false)}>
-                Close
-              </Button>
-            </CardHeader>
-            <CardContent className="overflow-auto max-h-[60vh]">
-              {template.fileType === 'pdf' ? (
-                <iframe
-                  src={template.fileUrl}
-                  className="w-full h-[500px] border rounded"
-                  title="Template Preview"
-                />
-              ) : (
-                <iframe
-                  src={template.fileUrl}
-                  className="w-full h-[500px] border rounded"
-                  title="Template Preview"
-                />
-              )}
-            </CardContent>
-          </Card>
-        </div>
-      )}
 
       {/* Actions */}
       <div className="flex justify-end">
