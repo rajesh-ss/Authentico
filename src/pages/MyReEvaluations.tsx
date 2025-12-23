@@ -1,14 +1,36 @@
 import { useState } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { RequestsList, RequestDetails } from '@/components/reevaluation/RequestsList';
-import { useReEvaluation } from '@/hooks/useReEvaluation';
+import { mockReEvaluations } from '@/data';
 import { ReEvaluationRequest } from '@/types/blockchain';
 import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
+// Convert mock data to match expected format
+const requests: ReEvaluationRequest[] = mockReEvaluations.map(item => ({
+  id: item.id,
+  marksCardId: item.marksCardId,
+  studentId: item.studentId,
+  studentName: item.studentName,
+  subjects: item.subjects,
+  reason: item.reason,
+  supportingDocuments: [],
+  status: item.status,
+  timeline: [
+    {
+      id: '1',
+      status: item.status,
+      timestamp: item.submittedAt,
+      actor: item.studentName,
+      actorRole: 'Student',
+    },
+  ],
+  createdAt: item.submittedAt,
+  updatedAt: item.updatedAt,
+}));
+
 export default function MyReEvaluations() {
-  const { requests } = useReEvaluation();
   const [selectedRequest, setSelectedRequest] = useState<ReEvaluationRequest | null>(null);
 
   return (

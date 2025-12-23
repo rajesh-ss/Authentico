@@ -26,7 +26,7 @@ export default function MyMarksCards() {
   );
 
   const handleDownload = (card: MarksCard) => {
-    console.log('Downloading:', card.id);
+    // TODO: Implement actual download functionality
   };
 
   // Detail View
