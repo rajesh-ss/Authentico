@@ -46,9 +46,7 @@ const roleNavItems: Record<UserRole, NavItem[]> = {
     { label: 'Dashboard', icon: LayoutDashboard, href: '/dashboard' },
     { label: 'User Management', icon: Users, href: '/users' },
     { label: 'All Marks Cards', icon: FileText, href: '/cards' },
-    { label: 'Verification', icon: QrCode, href: '/verify' },
     { label: 'Re-Evaluations', icon: RefreshCcw, href: '/reevaluations', badge: '5' },
-    { label: 'Audit Logs', icon: Shield, href: '/audit' },
   ],
   reevaluation_approver: [
     { label: 'Dashboard', icon: LayoutDashboard, href: '/dashboard' },
