@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Shield, Lock, Mail, AlertCircle, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { demoAccounts } from '@/data';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -20,25 +21,20 @@ export default function Login() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-
     try {
       await login(email, password);
-      toast({
-        title: 'Login Successful',
-        description: 'Welcome to BlockCert Academic Verification System',
-      });
+      toast({ title: 'Login Successful', description: 'Welcome to BlockCert Academic Verification System' });
       navigate('/dashboard');
     } catch (err) {
       setError('Invalid email or password. Please try again.');
     }
   };
 
-  const demoAccounts = [
-    { email: 'issuer@university.edu', role: 'Marks Card Issuer' },
-    { email: 'admin@university.edu', role: 'College Admin' },
-    { email: 'approver@university.edu', role: 'Re-Evaluation Approver' },
-    { email: 'verifier@university.edu', role: 'Verifying Admin' },
-    { email: 'student@university.edu', role: 'Student' },
+  const features = [
+    'Tamper-proof digital marks cards',
+    'Multi-signature verification workflow',
+    'Real-time re-evaluation tracking',
+    'Instant QR code verification',
   ];
 
   return (
@@ -46,8 +42,6 @@ export default function Login() {
       {/* Left Panel - Branding */}
       <div className="hidden lg:flex lg:w-1/2 bg-primary relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-primary via-primary to-accent/30" />
-        
-        {/* Decorative elements */}
         <div className="absolute top-20 left-20 w-72 h-72 bg-accent/10 rounded-full blur-3xl" />
         <div className="absolute bottom-20 right-20 w-96 h-96 bg-primary-foreground/5 rounded-full blur-3xl" />
         
@@ -63,22 +57,15 @@ export default function Login() {
           </div>
 
           <h2 className="text-4xl lg:text-5xl font-bold text-primary-foreground leading-tight mb-6">
-            Blockchain-Verified<br />
-            Academic Records
+            Blockchain-Verified<br />Academic Records
           </h2>
 
           <p className="text-lg text-primary-foreground/80 max-w-md mb-8">
-            Secure, immutable, and instantly verifiable academic credentials 
-            powered by blockchain technology.
+            Secure, immutable, and instantly verifiable academic credentials powered by blockchain technology.
           </p>
 
           <div className="space-y-4">
-            {[
-              'Tamper-proof digital marks cards',
-              'Multi-signature verification workflow',
-              'Real-time re-evaluation tracking',
-              'Instant QR code verification',
-            ].map((feature, index) => (
+            {features.map((feature, index) => (
               <div key={index} className="flex items-center gap-3">
                 <div className="h-2 w-2 rounded-full bg-accent" />
                 <span className="text-primary-foreground/90">{feature}</span>
@@ -105,9 +92,7 @@ export default function Login() {
           <Card className="border-0 shadow-lg">
             <CardHeader className="space-y-1 pb-4">
               <CardTitle className="text-2xl font-bold">Welcome back</CardTitle>
-              <CardDescription>
-                Sign in to access your academic verification dashboard
-              </CardDescription>
+              <CardDescription>Sign in to access your academic verification dashboard</CardDescription>
             </CardHeader>
             <CardContent>
               <form onSubmit={handleSubmit} className="space-y-4">
@@ -122,53 +107,23 @@ export default function Login() {
                   <Label htmlFor="email">Email</Label>
                   <div className="relative">
                     <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      id="email"
-                      type="email"
-                      placeholder="you@university.edu"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      className="pl-10"
-                      required
-                    />
+                    <Input id="email" type="email" placeholder="you@university.edu" value={email} onChange={(e) => setEmail(e.target.value)} className="pl-10" required />
                   </div>
                 </div>
 
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
                     <Label htmlFor="password">Password</Label>
-                    <a href="#" className="text-xs text-accent hover:underline">
-                      Forgot password?
-                    </a>
+                    <a href="#" className="text-xs text-accent hover:underline">Forgot password?</a>
                   </div>
                   <div className="relative">
                     <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      id="password"
-                      type="password"
-                      placeholder="••••••••"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      className="pl-10"
-                      required
-                    />
+                    <Input id="password" type="password" placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} className="pl-10" required />
                   </div>
                 </div>
 
-                <Button 
-                  type="submit" 
-                  className="w-full" 
-                  size="lg"
-                  disabled={isLoading}
-                >
-                  {isLoading ? (
-                    <>
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      Signing in...
-                    </>
-                  ) : (
-                    'Sign In'
-                  )}
+                <Button type="submit" className="w-full" size="lg" disabled={isLoading}>
+                  {isLoading ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Signing in...</> : 'Sign In'}
                 </Button>
               </form>
 
@@ -181,10 +136,7 @@ export default function Login() {
                   {demoAccounts.map((account) => (
                     <button
                       key={account.email}
-                      onClick={() => {
-                        setEmail(account.email);
-                        setPassword('password');
-                      }}
+                      onClick={() => { setEmail(account.email); setPassword('password'); }}
                       className="w-full flex items-center justify-between px-3 py-2 text-sm rounded-lg bg-muted/50 hover:bg-muted transition-colors text-left"
                     >
                       <span className="font-mono text-xs truncate">{account.email}</span>
@@ -201,9 +153,7 @@ export default function Login() {
             <Shield className="h-5 w-5 text-accent shrink-0 mt-0.5" />
             <div>
               <p className="text-sm font-medium text-foreground">Secure Access</p>
-              <p className="text-xs text-muted-foreground mt-1">
-                All sessions are encrypted and blockchain transactions require wallet signature verification.
-              </p>
+              <p className="text-xs text-muted-foreground mt-1">All sessions are encrypted and blockchain transactions require wallet signature verification.</p>
             </div>
           </div>
         </div>
