@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useCallback, ReactNode } from 'react';
+import { createContext, useContext, useState, useCallback, ReactNode, useRef } from 'react';
 
 export interface GenerationJob {
   id: string;
@@ -18,6 +18,7 @@ interface GenerationContextType {
   updateProgress: (jobId: string, generatedCards: number) => void;
   completeJob: (jobId: string) => void;
   failJob: (jobId: string, errorMessage: string) => void;
+  retryJob: (jobId: string) => void;
   moveToBackground: () => void;
   isGenerating: boolean;
   showGeneratingOverlay: boolean;
@@ -28,6 +29,7 @@ const GenerationContext = createContext<GenerationContextType | undefined>(undef
 export function GenerationProvider({ children }: { children: ReactNode }) {
   const [jobs, setJobs] = useState<GenerationJob[]>([]);
   const [showGeneratingOverlay, setShowGeneratingOverlay] = useState(false);
+  const generationIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   const activeJob = jobs.find(job => job.status === 'in_progress') || null;
   const isGenerating = activeJob !== null;
@@ -77,6 +79,62 @@ export function GenerationProvider({ children }: { children: ReactNode }) {
     setShowGeneratingOverlay(false);
   }, []);
 
+  const retryJob = useCallback((jobId: string) => {
+    const jobToRetry = jobs.find(j => j.id === jobId);
+    if (!jobToRetry || jobToRetry.status !== 'failed') return;
+
+    // Reset the job state
+    setJobs(prev =>
+      prev.map(job =>
+        job.id === jobId
+          ? { 
+              ...job, 
+              status: 'in_progress', 
+              generatedCards: 0, 
+              startedAt: new Date(),
+              completedAt: undefined,
+              errorMessage: undefined
+            }
+          : job
+      )
+    );
+    setShowGeneratingOverlay(true);
+
+    // Simulate generation progress
+    let generated = 0;
+    const interval = setInterval(() => {
+      generated += Math.ceil(Math.random() * 3) + 1;
+      if (generated >= jobToRetry.totalCards) {
+        generated = jobToRetry.totalCards;
+        setJobs(prev =>
+          prev.map(job =>
+            job.id === jobId ? { ...job, generatedCards: generated } : job
+          )
+        );
+        clearInterval(interval);
+        generationIntervalRef.current = null;
+        
+        // Complete successfully on retry (no random failure)
+        setJobs(prev =>
+          prev.map(job =>
+            job.id === jobId
+              ? { ...job, status: 'completed', completedAt: new Date(), generatedCards: jobToRetry.totalCards }
+              : job
+          )
+        );
+        setShowGeneratingOverlay(false);
+      } else {
+        setJobs(prev =>
+          prev.map(job =>
+            job.id === jobId ? { ...job, generatedCards: generated } : job
+          )
+        );
+      }
+    }, 200);
+    
+    generationIntervalRef.current = interval;
+  }, [jobs]);
+
   const moveToBackground = useCallback(() => {
     setShowGeneratingOverlay(false);
   }, []);
@@ -90,6 +148,7 @@ export function GenerationProvider({ children }: { children: ReactNode }) {
         updateProgress,
         completeJob,
         failJob,
+        retryJob,
         moveToBackground,
         isGenerating,
         showGeneratingOverlay,
