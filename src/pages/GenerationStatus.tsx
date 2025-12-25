@@ -22,7 +22,8 @@ import {
   Archive,
   Search,
   Filter,
-  X
+  X,
+  Eye
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { format, formatDistanceToNow, isAfter, subDays, subMonths } from 'date-fns';
@@ -35,10 +36,11 @@ interface JobCardProps {
   job: GenerationJob;
   onRetry?: (jobId: string) => void;
   onDownload?: (job: GenerationJob) => void;
+  onViewDetails?: (jobId: string) => void;
   isDownloading?: boolean;
 }
 
-function JobCard({ job, onRetry, onDownload, isDownloading }: JobCardProps) {
+function JobCard({ job, onRetry, onDownload, onViewDetails, isDownloading }: JobCardProps) {
   const progressPercent = Math.round((job.generatedCards / job.totalCards) * 100);
   const isActive = job.status === 'in_progress';
   const isCompleted = job.status === 'completed';
@@ -143,6 +145,19 @@ function JobCard({ job, onRetry, onDownload, isDownloading }: JobCardProps) {
                 >
                   <RotateCcw className="h-4 w-4" />
                   Retry Generation
+                </Button>
+              )}
+
+              {/* View Details Button for Completed Jobs */}
+              {isCompleted && onViewDetails && (
+                <Button
+                  variant="default"
+                  size="sm"
+                  onClick={() => onViewDetails(job.id)}
+                  className="gap-2"
+                >
+                  <Eye className="h-4 w-4" />
+                  View Details
                 </Button>
               )}
 
@@ -284,6 +299,10 @@ export default function GenerationStatus() {
   };
 
   const hasActiveFilters = searchQuery !== '' || statusFilter !== 'all' || dateFilter !== 'all';
+
+  const handleViewDetails = (jobId: string) => {
+    navigate(`/batch/${jobId}`);
+  };
 
   const handleDownloadAll = async () => {
     if (completedJobs.length === 0) {
@@ -631,7 +650,7 @@ export default function GenerationStatus() {
               <ScrollArea className="h-[500px] pr-4">
                 <div className="space-y-4">
                   {filteredJobs.filter(j => j.id !== activeJob?.id).map((job) => (
-                    <JobCard key={job.id} job={job} onRetry={retryJob} onDownload={handleDownloadJob} isDownloading={isDownloading} />
+                    <JobCard key={job.id} job={job} onRetry={retryJob} onDownload={handleDownloadJob} onViewDetails={handleViewDetails} isDownloading={isDownloading} />
                   ))}
                 </div>
               </ScrollArea>
