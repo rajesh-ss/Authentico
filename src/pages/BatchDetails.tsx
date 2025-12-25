@@ -21,11 +21,15 @@ import {
   Award,
   CheckCircle2,
   FileText,
-  QrCode
+  QrCode,
+  Loader2,
+  FileDown
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { useGeneration } from '@/contexts/GenerationContext';
+import { downloadSinglePDF, downloadBulkPDF } from '@/lib/pdfGenerator';
+import { toast } from 'sonner';
 
 // Generate mock student data for a batch
 function generateMockStudents(batchId: string, count: number) {
@@ -116,16 +120,29 @@ interface Student {
 }
 
 function MarksCardModal({ student, open, onClose }: { student: Student | null; open: boolean; onClose: () => void }) {
+  const handleDownloadPDF = () => {
+    if (student) {
+      downloadSinglePDF(student);
+      toast.success(`Downloaded marks card for ${student.studentName}`);
+    }
+  };
+
   if (!student) return null;
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Award className="h-5 w-5 text-primary" />
-            Marks Card Details
-          </DialogTitle>
+          <div className="flex items-center justify-between">
+            <DialogTitle className="flex items-center gap-2">
+              <Award className="h-5 w-5 text-primary" />
+              Marks Card Details
+            </DialogTitle>
+            <Button onClick={handleDownloadPDF} size="sm" className="gap-2">
+              <Download className="h-4 w-4" />
+              Download PDF
+            </Button>
+          </div>
         </DialogHeader>
         
         <div className="space-y-6">
@@ -266,6 +283,8 @@ export default function BatchDetails() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
+  const [downloadingStudentId, setDownloadingStudentId] = useState<string | null>(null);
 
   // Find the batch (from context or historical)
   const contextJob = jobs.find(j => j.id === batchId);
@@ -319,6 +338,32 @@ export default function BatchDetails() {
     setIsModalOpen(true);
   };
 
+  const handleDownloadSinglePDF = (student: Student) => {
+    setDownloadingStudentId(student.id);
+    try {
+      downloadSinglePDF(student);
+      toast.success(`Downloaded marks card for ${student.studentName}`);
+    } catch (error) {
+      toast.error('Failed to generate PDF');
+    } finally {
+      setDownloadingStudentId(null);
+    }
+  };
+
+  const handleDownloadAllPDFs = async () => {
+    if (students.length === 0) return;
+    
+    setIsDownloading(true);
+    try {
+      const batchName = batchInfo.fileName.replace(/\.[^/.]+$/, '');
+      await downloadBulkPDF(students, batchName);
+      toast.success(`Downloaded ${students.length} marks cards as ZIP`);
+    } catch (error) {
+      toast.error('Failed to generate PDFs');
+    } finally {
+      setIsDownloading(false);
+    }
+  };
   return (
     <DashboardLayout
       title={batchInfo.fileName.replace(/\.[^/.]+$/, '')}
@@ -418,6 +463,18 @@ export default function BatchDetails() {
                   }
                 </CardDescription>
               </div>
+              <Button 
+                onClick={handleDownloadAllPDFs}
+                disabled={isDownloading}
+                className="gap-2"
+              >
+                {isDownloading ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <FileDown className="h-4 w-4" />
+                )}
+                Download All PDFs
+              </Button>
             </div>
             <div className="relative max-w-md">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -472,15 +529,31 @@ export default function BatchDetails() {
                         </Badge>
                       </TableCell>
                       <TableCell className="text-right">
-                        <Button 
-                          variant="ghost" 
-                          size="sm"
-                          onClick={() => handleViewStudent(student)}
-                          className="gap-1"
-                        >
-                          <Eye className="h-4 w-4" />
-                          View
-                        </Button>
+                        <div className="flex items-center justify-end gap-1">
+                          <Button 
+                            variant="ghost" 
+                            size="sm"
+                            onClick={() => handleViewStudent(student)}
+                            className="gap-1"
+                          >
+                            <Eye className="h-4 w-4" />
+                            View
+                          </Button>
+                          <Button 
+                            variant="ghost" 
+                            size="sm"
+                            onClick={() => handleDownloadSinglePDF(student)}
+                            disabled={downloadingStudentId === student.id}
+                            className="gap-1"
+                          >
+                            {downloadingStudentId === student.id ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                              <Download className="h-4 w-4" />
+                            )}
+                            PDF
+                          </Button>
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))}
