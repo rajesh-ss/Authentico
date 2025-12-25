@@ -23,7 +23,8 @@ import {
   FileText,
   QrCode,
   Loader2,
-  FileDown
+  FileDown,
+  Printer
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
@@ -127,21 +128,263 @@ function MarksCardModal({ student, open, onClose }: { student: Student | null; o
     }
   };
 
+  const handlePrint = () => {
+    if (!student) return;
+    
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) {
+      toast.error('Please allow popups to print');
+      return;
+    }
+
+    const printContent = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>Marks Card - ${student.studentName}</title>
+          <style>
+            * { margin: 0; padding: 0; box-sizing: border-box; }
+            body { 
+              font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+              padding: 20px;
+              color: #1a1a1a;
+            }
+            .header { 
+              text-align: center; 
+              padding: 20px; 
+              background: linear-gradient(135deg, #2563eb, #1d4ed8);
+              color: white;
+              border-radius: 8px 8px 0 0;
+            }
+            .header h1 { font-size: 22px; margin-bottom: 5px; }
+            .header p { font-size: 14px; opacity: 0.9; }
+            .verified-badge {
+              display: inline-block;
+              background: #22c55e;
+              color: white;
+              padding: 4px 12px;
+              border-radius: 20px;
+              font-size: 11px;
+              margin-top: 10px;
+            }
+            .content { 
+              padding: 25px; 
+              border: 1px solid #e5e7eb;
+              border-top: none;
+            }
+            .info-grid { 
+              display: grid; 
+              grid-template-columns: 1fr 1fr; 
+              gap: 15px; 
+              margin-bottom: 25px;
+              padding-bottom: 20px;
+              border-bottom: 1px dashed #e5e7eb;
+            }
+            .info-item label { 
+              font-size: 11px; 
+              color: #6b7280; 
+              display: block; 
+              margin-bottom: 3px;
+            }
+            .info-item span { font-weight: 600; font-size: 13px; }
+            table { 
+              width: 100%; 
+              border-collapse: collapse; 
+              margin: 20px 0;
+              font-size: 12px;
+            }
+            th { 
+              background: #f3f4f6; 
+              padding: 10px 8px; 
+              text-align: left;
+              font-weight: 600;
+              border: 1px solid #e5e7eb;
+            }
+            td { 
+              padding: 10px 8px; 
+              border: 1px solid #e5e7eb;
+            }
+            .text-center { text-align: center; }
+            .grade-badge {
+              display: inline-block;
+              background: #f3f4f6;
+              padding: 2px 8px;
+              border-radius: 4px;
+              font-weight: 600;
+            }
+            .summary-box { 
+              background: #f8fafc; 
+              padding: 20px; 
+              border-radius: 8px;
+              margin: 20px 0;
+            }
+            .summary-row { 
+              display: flex; 
+              justify-content: space-between; 
+              margin-bottom: 10px;
+            }
+            .summary-row:last-child { margin-bottom: 0; }
+            .summary-label { color: #6b7280; font-size: 13px; }
+            .summary-value { font-weight: 700; font-size: 14px; }
+            .result-badge {
+              display: inline-block;
+              background: #22c55e;
+              color: white;
+              padding: 4px 16px;
+              border-radius: 20px;
+              font-size: 12px;
+            }
+            .blockchain-box {
+              background: #fafafa;
+              padding: 15px;
+              border-radius: 8px;
+              margin-top: 20px;
+              font-size: 11px;
+            }
+            .blockchain-box h4 { font-size: 12px; margin-bottom: 8px; color: #374151; }
+            .hash { 
+              font-family: monospace; 
+              font-size: 9px; 
+              word-break: break-all;
+              color: #6b7280;
+            }
+            .footer { 
+              margin-top: 30px; 
+              padding-top: 15px;
+              border-top: 1px solid #e5e7eb;
+              text-align: center; 
+              font-size: 10px; 
+              color: #9ca3af;
+            }
+            @media print {
+              body { padding: 0; }
+              .header { border-radius: 0; }
+            }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <h1>University of Technology</h1>
+            <p>Statement of Marks</p>
+            <span class="verified-badge">✓ Blockchain Verified</span>
+          </div>
+          <div class="content">
+            <div class="info-grid">
+              <div class="info-item">
+                <label>Student Name</label>
+                <span>${student.studentName}</span>
+              </div>
+              <div class="info-item">
+                <label>Registration No</label>
+                <span>${student.registrationNo}</span>
+              </div>
+              <div class="info-item">
+                <label>Roll No</label>
+                <span>${student.rollNo}</span>
+              </div>
+              <div class="info-item">
+                <label>Semester</label>
+                <span>${student.semester}</span>
+              </div>
+              <div class="info-item">
+                <label>Academic Year</label>
+                <span>${student.academicYear}</span>
+              </div>
+              <div class="info-item">
+                <label>Department</label>
+                <span>${student.department}</span>
+              </div>
+            </div>
+
+            <h3 style="font-size: 14px; margin-bottom: 10px; color: #374151;">Subject-wise Marks</h3>
+            <table>
+              <thead>
+                <tr>
+                  <th>Code</th>
+                  <th>Subject Name</th>
+                  <th class="text-center">Credits</th>
+                  <th class="text-center">Internal</th>
+                  <th class="text-center">External</th>
+                  <th class="text-center">Total</th>
+                  <th class="text-center">Grade</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${student.subjects.map(sub => `
+                  <tr>
+                    <td>${sub.code}</td>
+                    <td>${sub.name}</td>
+                    <td class="text-center">${sub.credits}</td>
+                    <td class="text-center">${sub.internal}</td>
+                    <td class="text-center">${sub.external}</td>
+                    <td class="text-center" style="font-weight: 600;">${sub.total}</td>
+                    <td class="text-center"><span class="grade-badge">${sub.grade}</span></td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+
+            <div class="summary-box">
+              <div class="summary-row">
+                <span class="summary-label">Total Marks</span>
+                <span class="summary-value">${student.totalMarks} / ${student.maxMarks}</span>
+              </div>
+              <div class="summary-row">
+                <span class="summary-label">Percentage</span>
+                <span class="summary-value">${student.percentage}%</span>
+              </div>
+              <div class="summary-row">
+                <span class="summary-label">Result</span>
+                <span class="result-badge">${student.grade}</span>
+              </div>
+            </div>
+
+            <div class="blockchain-box">
+              <h4>Blockchain Verification</h4>
+              <p>Transaction Hash:</p>
+              <p class="hash">${student.blockchainHash}</p>
+              <p style="margin-top: 8px; color: #6b7280;">Issued: ${format(student.issuedAt, 'PPpp')}</p>
+            </div>
+
+            <div class="footer">
+              <p>This is a computer-generated document and does not require a signature.</p>
+              <p>Document ID: ${student.id}</p>
+            </div>
+          </div>
+        </body>
+      </html>
+    `;
+
+    printWindow.document.write(printContent);
+    printWindow.document.close();
+    
+    // Wait for content to load then print
+    printWindow.onload = () => {
+      printWindow.print();
+    };
+  };
+
   if (!student) return null;
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between gap-2">
             <DialogTitle className="flex items-center gap-2">
               <Award className="h-5 w-5 text-primary" />
               Marks Card Details
             </DialogTitle>
-            <Button onClick={handleDownloadPDF} size="sm" className="gap-2">
-              <Download className="h-4 w-4" />
-              Download PDF
-            </Button>
+            <div className="flex gap-2">
+              <Button onClick={handlePrint} variant="outline" size="sm" className="gap-2">
+                <Printer className="h-4 w-4" />
+                Print
+              </Button>
+              <Button onClick={handleDownloadPDF} size="sm" className="gap-2">
+                <Download className="h-4 w-4" />
+                PDF
+              </Button>
+            </div>
           </div>
         </DialogHeader>
         
