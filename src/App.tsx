@@ -4,10 +4,13 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { GenerationProvider } from "@/contexts/GenerationContext";
+import { GeneratingOverlay } from "@/components/generation/GeneratingOverlay";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
 import IssuanceFlow from "./pages/IssuanceFlow";
+import GenerationStatus from "./pages/GenerationStatus";
 import RequestReEvaluation from "./pages/RequestReEvaluation";
 import MyReEvaluations from "./pages/MyReEvaluations";
 import MyMarksCards from "./pages/MyMarksCards";
@@ -28,33 +31,40 @@ const queryClient = new QueryClient();
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <Routes>
-            {/* Public Routes */}
-            <Route path="/" element={<Index />} />
-            <Route path="/verify" element={<VerifyCertificate />} />
-            
-            {/* Protected Dashboard - All authenticated users */}
-            <Route path="/dashboard" element={
-              <ProtectedRoute>
-                <Dashboard />
-              </ProtectedRoute>
-            } />
-            
-            {/* Issuer Routes */}
-            <Route path="/issue/*" element={
-              <ProtectedRoute allowedRoles={['issuer']}>
-                <IssuanceFlow />
-              </ProtectedRoute>
-            } />
-            <Route path="/cards" element={
-              <ProtectedRoute allowedRoles={['issuer', 'college_admin']}>
-                <MyMarksCards />
-              </ProtectedRoute>
-            } />
+      <GenerationProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <GeneratingOverlay />
+          <BrowserRouter>
+            <Routes>
+              {/* Public Routes */}
+              <Route path="/" element={<Index />} />
+              <Route path="/verify" element={<VerifyCertificate />} />
+              
+              {/* Protected Dashboard - All authenticated users */}
+              <Route path="/dashboard" element={
+                <ProtectedRoute>
+                  <Dashboard />
+                </ProtectedRoute>
+              } />
+              
+              {/* Issuer Routes */}
+              <Route path="/issue/*" element={
+                <ProtectedRoute allowedRoles={['issuer']}>
+                  <IssuanceFlow />
+                </ProtectedRoute>
+              } />
+              <Route path="/generation-status" element={
+                <ProtectedRoute allowedRoles={['issuer']}>
+                  <GenerationStatus />
+                </ProtectedRoute>
+              } />
+              <Route path="/cards" element={
+                <ProtectedRoute allowedRoles={['issuer', 'college_admin']}>
+                  <MyMarksCards />
+                </ProtectedRoute>
+              } />
             
             {/* Student Routes */}
             <Route path="/my-cards" element={
@@ -114,23 +124,24 @@ const App = () => (
               </ProtectedRoute>
             } />
             
-            {/* Verifier Routes */}
-            <Route path="/signatures" element={
-              <ProtectedRoute allowedRoles={['verifying_admin']}>
-                <PendingSignatures />
-              </ProtectedRoute>
-            } />
-            <Route path="/signed" element={
-              <ProtectedRoute allowedRoles={['verifying_admin']}>
-                <SignedRecords />
-              </ProtectedRoute>
-            } />
-            
+              {/* Verifier Routes */}
+              <Route path="/signatures" element={
+                <ProtectedRoute allowedRoles={['verifying_admin']}>
+                  <PendingSignatures />
+                </ProtectedRoute>
+              } />
+              <Route path="/signed" element={
+                <ProtectedRoute allowedRoles={['verifying_admin']}>
+                  <SignedRecords />
+                </ProtectedRoute>
+              } />
+              
             {/* Catch-all */}
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
-      </TooltipProvider>
+        </TooltipProvider>
+      </GenerationProvider>
     </AuthProvider>
   </QueryClientProvider>
 );

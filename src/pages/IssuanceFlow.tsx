@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -10,6 +10,7 @@ import { Upload, FileSpreadsheet, CheckCircle, AlertCircle, Send, GraduationCap,
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import * as XLSX from 'xlsx';
+import { useGeneration } from '@/contexts/GenerationContext';
 
 // Sample template data for preview
 const sampleTemplate = {
@@ -79,23 +80,59 @@ export default function IssuanceFlow() {
     [handleUpload]
   );
 
+  const { startGeneration, updateProgress, completeJob, failJob } = useGeneration();
+  const generationIntervalRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Cleanup interval on unmount
+  useEffect(() => {
+    return () => {
+      if (generationIntervalRef.current) {
+        clearInterval(generationIntervalRef.current);
+      }
+    };
+  }, []);
+
   const handleSubmit = useCallback(async () => {
     if (!excelFile || rawData.length === 0) return;
     
     setIsSubmitting(true);
-    try {
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      toast.success(`Successfully submitted ${rawData.length} marks cards for processing`);
-      
-      setExcelFile(null);
-      setRawData([]);
-      setHeaders([]);
-    } catch {
-      toast.error('Failed to submit marks cards');
-    } finally {
-      setIsSubmitting(false);
-    }
-  }, [excelFile, rawData]);
+    const totalCards = rawData.length;
+    const fileName = excelFile.name;
+    
+    // Start generation job
+    const jobId = startGeneration(fileName, totalCards);
+    
+    // Clear file data immediately
+    setExcelFile(null);
+    setRawData([]);
+    setHeaders([]);
+    setIsSubmitting(false);
+    
+    // Simulate generation progress
+    let generated = 0;
+    const interval = setInterval(() => {
+      generated += Math.ceil(Math.random() * 3) + 1;
+      if (generated >= totalCards) {
+        generated = totalCards;
+        updateProgress(jobId, generated);
+        clearInterval(interval);
+        generationIntervalRef.current = null;
+        
+        // Random chance of failure for demo
+        if (Math.random() > 0.9) {
+          failJob(jobId, 'Network error during blockchain verification');
+          toast.error('Generation failed. Please try again.');
+        } else {
+          completeJob(jobId);
+          toast.success(`Successfully generated ${totalCards} marks cards`);
+        }
+      } else {
+        updateProgress(jobId, generated);
+      }
+    }, 200);
+    
+    generationIntervalRef.current = interval;
+  }, [excelFile, rawData, startGeneration, updateProgress, completeJob, failJob]);
 
   const handleReset = useCallback(() => {
     setExcelFile(null);
