@@ -38,6 +38,8 @@ interface SidebarProps {
   onClose: () => void;
   isCollapsed: boolean;
   onToggleCollapse: () => void;
+  isHovering: boolean;
+  onHoverChange: (hovering: boolean) => void;
 }
 
 const roleNavItems: Record<UserRole, NavItem[]> = {
@@ -76,10 +78,13 @@ const roleNavItems: Record<UserRole, NavItem[]> = {
   ],
 };
 
-export function Sidebar({ isOpen, onClose, isCollapsed, onToggleCollapse }: SidebarProps) {
+export function Sidebar({ isOpen, onClose, isCollapsed, onToggleCollapse, isHovering, onHoverChange }: SidebarProps) {
   const { user, logout } = useAuth();
   const location = useLocation();
   const [expandedItems, setExpandedItems] = useState<string[]>([]);
+
+  // Determine if sidebar should show expanded content (collapsed but hovering = expanded view)
+  const showExpanded = !isCollapsed || isHovering;
 
   if (!user) return null;
 
@@ -106,7 +111,8 @@ export function Sidebar({ isOpen, onClose, isCollapsed, onToggleCollapse }: Side
   const NavItemContent = ({ item, isChild = false }: { item: NavItem; isChild?: boolean }) => {
     const active = isActive(item.href);
     
-    if (isCollapsed && !isChild) {
+    // Show collapsed (icon only) view when not showing expanded content and not a child item
+    if (!showExpanded && !isChild) {
       return (
         <Tooltip delayDuration={0}>
           <TooltipTrigger asChild>
@@ -163,32 +169,36 @@ export function Sidebar({ isOpen, onClose, isCollapsed, onToggleCollapse }: Side
   };
 
   return (
-    <aside className={cn(
-      "fixed left-0 top-0 h-screen bg-sidebar gradient-sidebar border-r border-sidebar-border flex flex-col z-50 transition-all duration-300 ease-in-out",
-      "lg:translate-x-0",
-      isOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0",
-      isCollapsed ? "w-16" : "w-64"
-    )}>
+    <aside 
+      className={cn(
+        "fixed left-0 top-0 h-screen bg-sidebar gradient-sidebar border-r border-sidebar-border flex flex-col z-50 transition-all duration-300 ease-in-out",
+        "lg:translate-x-0",
+        isOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0",
+        showExpanded ? "w-64" : "w-16"
+      )}
+      onMouseEnter={() => onHoverChange(true)}
+      onMouseLeave={() => onHoverChange(false)}
+    >
       {/* Logo & Branding */}
       <div className={cn(
         "border-b border-sidebar-border transition-all duration-300",
-        isCollapsed ? "p-3" : "p-4 md:p-6"
+        showExpanded ? "p-4 md:p-6" : "p-3"
       )}>
         <div className="flex items-center justify-between">
           <div className={cn(
             "flex items-center gap-3 overflow-hidden",
-            isCollapsed && "justify-center w-full"
+            !showExpanded && "justify-center w-full"
           )}>
             <div className={cn(
               "rounded-lg bg-gradient-to-br from-sidebar-primary to-accent flex items-center justify-center flex-shrink-0",
-              isCollapsed ? "h-9 w-9" : "h-10 w-10"
+              showExpanded ? "h-10 w-10" : "h-9 w-9"
             )}>
               <Shield className={cn(
                 "text-sidebar-primary-foreground",
-                isCollapsed ? "h-5 w-5" : "h-6 w-6"
+                showExpanded ? "h-6 w-6" : "h-5 w-5"
               )} />
             </div>
-            {!isCollapsed && (
+            {showExpanded && (
               <div className="min-w-0">
                 <h1 className="font-semibold text-sidebar-foreground text-sm truncate">BlockCert</h1>
                 <p className="text-[10px] text-sidebar-foreground/60 truncate">Academic Verification</p>
@@ -196,7 +206,7 @@ export function Sidebar({ isOpen, onClose, isCollapsed, onToggleCollapse }: Side
             )}
           </div>
           {/* Mobile close button */}
-          {!isCollapsed && (
+          {showExpanded && (
             <Button 
               variant="ghost" 
               size="icon" 
@@ -212,12 +222,12 @@ export function Sidebar({ isOpen, onClose, isCollapsed, onToggleCollapse }: Side
       {/* Navigation */}
       <nav className={cn(
         "flex-1 overflow-y-auto transition-all duration-300",
-        isCollapsed ? "p-2" : "p-4"
+        showExpanded ? "p-4" : "p-2"
       )}>
         <ul className="space-y-1">
           {navItems.map((item) => (
             <li key={item.label} className="relative">
-              {item.children && !isCollapsed ? (
+              {item.children && showExpanded ? (
                 <div>
                   <button
                     onClick={() => toggleExpand(item.label)}
@@ -260,15 +270,15 @@ export function Sidebar({ isOpen, onClose, isCollapsed, onToggleCollapse }: Side
       {/* Collapse Toggle (Desktop only) */}
       <div className={cn(
         "hidden lg:flex border-t border-sidebar-border",
-        isCollapsed ? "p-2 justify-center" : "p-3 px-4"
+        showExpanded ? "p-3 px-4" : "p-2 justify-center"
       )}>
         <Button
           variant="ghost"
-          size={isCollapsed ? "icon" : "sm"}
+          size={showExpanded ? "sm" : "icon"}
           onClick={onToggleCollapse}
           className={cn(
             "text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50",
-            isCollapsed ? "w-10 h-10" : "w-full justify-start gap-2"
+            showExpanded ? "w-full justify-start gap-2" : "w-10 h-10"
           )}
         >
           {isCollapsed ? (
@@ -285,9 +295,9 @@ export function Sidebar({ isOpen, onClose, isCollapsed, onToggleCollapse }: Side
       {/* Footer Actions */}
       <div className={cn(
         "border-t border-sidebar-border space-y-1 transition-all duration-300",
-        isCollapsed ? "p-2" : "p-4"
+        showExpanded ? "p-4" : "p-2"
       )}>
-        {isCollapsed ? (
+        {!showExpanded ? (
           <>
             <Tooltip delayDuration={0}>
               <TooltipTrigger asChild>

@@ -1,4 +1,4 @@
-import { ReactNode, useState, useEffect } from 'react';
+import { ReactNode, useState, useEffect, useCallback } from 'react';
 import { Sidebar } from './Sidebar';
 import { Header } from './Header';
 import { TooltipProvider } from '@/components/ui/tooltip';
@@ -18,14 +18,26 @@ export function DashboardLayout({ children, title, subtitle }: DashboardLayoutPr
     const stored = localStorage.getItem(SIDEBAR_COLLAPSED_KEY);
     return stored === 'true';
   });
+  const [isHovering, setIsHovering] = useState(false);
 
   useEffect(() => {
     localStorage.setItem(SIDEBAR_COLLAPSED_KEY, String(isCollapsed));
   }, [isCollapsed]);
 
-  const handleToggleCollapse = () => {
+  const handleToggleCollapse = useCallback(() => {
     setIsCollapsed(prev => !prev);
-  };
+    setIsHovering(false);
+  }, []);
+
+  const handleHoverChange = useCallback((hovering: boolean) => {
+    // Only allow hover expansion on desktop and when collapsed
+    if (window.innerWidth >= 1024 && isCollapsed) {
+      setIsHovering(hovering);
+    }
+  }, [isCollapsed]);
+
+  // Calculate the actual width state for main content margin
+  const sidebarExpanded = !isCollapsed || isHovering;
 
   return (
     <TooltipProvider>
@@ -44,9 +56,11 @@ export function DashboardLayout({ children, title, subtitle }: DashboardLayoutPr
           onClose={() => setSidebarOpen(false)}
           isCollapsed={isCollapsed}
           onToggleCollapse={handleToggleCollapse}
+          isHovering={isHovering}
+          onHoverChange={handleHoverChange}
         />
         
-        {/* Main content */}
+        {/* Main content - only responds to collapse state, not hover */}
         <div className={cn(
           "transition-all duration-300",
           isCollapsed ? "lg:ml-16" : "lg:ml-64"
