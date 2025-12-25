@@ -1,8 +1,9 @@
 import { useAuth } from '@/contexts/AuthContext';
-import { UserRole, roleLabels } from '@/types/auth';
+import { UserRole } from '@/types/auth';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { 
   LayoutDashboard, 
   FileText, 
@@ -14,12 +15,12 @@ import {
   QrCode,
   Settings,
   LogOut,
-  Wallet,
   GraduationCap,
   Bell,
   ChevronDown,
-  Building2,
-  X
+  X,
+  PanelLeftClose,
+  PanelLeft
 } from 'lucide-react';
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
@@ -35,6 +36,8 @@ interface NavItem {
 interface SidebarProps {
   isOpen: boolean;
   onClose: () => void;
+  isCollapsed: boolean;
+  onToggleCollapse: () => void;
 }
 
 const roleNavItems: Record<UserRole, NavItem[]> = {
@@ -73,8 +76,8 @@ const roleNavItems: Record<UserRole, NavItem[]> = {
   ],
 };
 
-export function Sidebar({ isOpen, onClose }: SidebarProps) {
-  const { user, logout, connectWallet, disconnectWallet } = useAuth();
+export function Sidebar({ isOpen, onClose, isCollapsed, onToggleCollapse }: SidebarProps) {
+  const { user, logout } = useAuth();
   const location = useLocation();
   const [expandedItems, setExpandedItems] = useState<string[]>([]);
 
@@ -95,49 +98,126 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
     item.children?.some(child => location.pathname.startsWith(child.href));
 
   const handleNavClick = () => {
-    // Close sidebar on mobile when navigating
     if (window.innerWidth < 1024) {
       onClose();
     }
   };
 
+  const NavItemContent = ({ item, isChild = false }: { item: NavItem; isChild?: boolean }) => {
+    const active = isActive(item.href);
+    
+    if (isCollapsed && !isChild) {
+      return (
+        <Tooltip delayDuration={0}>
+          <TooltipTrigger asChild>
+            <Link
+              to={item.href}
+              onClick={handleNavClick}
+              className={cn(
+                "flex items-center justify-center w-10 h-10 rounded-lg transition-colors mx-auto",
+                active
+                  ? "bg-sidebar-primary text-sidebar-primary-foreground"
+                  : "text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
+              )}
+            >
+              <item.icon className="h-5 w-5" />
+              {item.badge && (
+                <span className="absolute top-0 right-0 h-2 w-2 rounded-full bg-destructive" />
+              )}
+            </Link>
+          </TooltipTrigger>
+          <TooltipContent side="right" className="flex items-center gap-2">
+            {item.label}
+            {item.badge && (
+              <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
+                {item.badge}
+              </Badge>
+            )}
+          </TooltipContent>
+        </Tooltip>
+      );
+    }
+
+    return (
+      <Link
+        to={item.href}
+        onClick={handleNavClick}
+        className={cn(
+          "flex items-center justify-between px-3 py-2.5 rounded-lg text-sm transition-colors",
+          active
+            ? "bg-sidebar-primary text-sidebar-primary-foreground"
+            : "text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
+        )}
+      >
+        <div className="flex items-center gap-3">
+          <item.icon className="h-4 w-4 flex-shrink-0" />
+          <span className="truncate">{item.label}</span>
+        </div>
+        {item.badge && (
+          <Badge variant="secondary" className="text-[10px] px-1.5 py-0 bg-sidebar-primary/20 text-sidebar-primary-foreground">
+            {item.badge}
+          </Badge>
+        )}
+      </Link>
+    );
+  };
+
   return (
     <aside className={cn(
-      "fixed left-0 top-0 h-screen w-64 bg-sidebar gradient-sidebar border-r border-sidebar-border flex flex-col z-50 transition-transform duration-300 ease-in-out",
+      "fixed left-0 top-0 h-screen bg-sidebar gradient-sidebar border-r border-sidebar-border flex flex-col z-50 transition-all duration-300 ease-in-out",
       "lg:translate-x-0",
-      isOpen ? "translate-x-0" : "-translate-x-full"
+      isOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0",
+      isCollapsed ? "w-16" : "w-64"
     )}>
       {/* Logo & Branding */}
-      <div className="p-4 md:p-6 border-b border-sidebar-border">
+      <div className={cn(
+        "border-b border-sidebar-border transition-all duration-300",
+        isCollapsed ? "p-3" : "p-4 md:p-6"
+      )}>
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-sidebar-primary to-accent flex items-center justify-center">
-              <Shield className="h-6 w-6 text-sidebar-primary-foreground" />
+          <div className={cn(
+            "flex items-center gap-3 overflow-hidden",
+            isCollapsed && "justify-center w-full"
+          )}>
+            <div className={cn(
+              "rounded-lg bg-gradient-to-br from-sidebar-primary to-accent flex items-center justify-center flex-shrink-0",
+              isCollapsed ? "h-9 w-9" : "h-10 w-10"
+            )}>
+              <Shield className={cn(
+                "text-sidebar-primary-foreground",
+                isCollapsed ? "h-5 w-5" : "h-6 w-6"
+              )} />
             </div>
-            <div>
-              <h1 className="font-semibold text-sidebar-foreground text-sm">BlockCert</h1>
-              <p className="text-[10px] text-sidebar-foreground/60">Academic Verification</p>
-            </div>
+            {!isCollapsed && (
+              <div className="min-w-0">
+                <h1 className="font-semibold text-sidebar-foreground text-sm truncate">BlockCert</h1>
+                <p className="text-[10px] text-sidebar-foreground/60 truncate">Academic Verification</p>
+              </div>
+            )}
           </div>
           {/* Mobile close button */}
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            className="lg:hidden text-sidebar-foreground hover:bg-sidebar-accent"
-            onClick={onClose}
-          >
-            <X className="h-5 w-5" />
-          </Button>
+          {!isCollapsed && (
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="lg:hidden text-sidebar-foreground hover:bg-sidebar-accent flex-shrink-0"
+              onClick={onClose}
+            >
+              <X className="h-5 w-5" />
+            </Button>
+          )}
         </div>
       </div>
 
-
       {/* Navigation */}
-      <nav className="flex-1 overflow-y-auto p-4">
+      <nav className={cn(
+        "flex-1 overflow-y-auto transition-all duration-300",
+        isCollapsed ? "p-2" : "p-4"
+      )}>
         <ul className="space-y-1">
           {navItems.map((item) => (
-            <li key={item.label}>
-              {item.children ? (
+            <li key={item.label} className="relative">
+              {item.children && !isCollapsed ? (
                 <div>
                   <button
                     onClick={() => toggleExpand(item.label)}
@@ -163,81 +243,121 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
                     <ul className="mt-1 ml-4 pl-4 border-l border-sidebar-border space-y-1">
                       {item.children.map((child) => (
                         <li key={child.label}>
-                          <Link
-                            to={child.href}
-                            onClick={handleNavClick}
-                            className={cn(
-                              "flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors",
-                              isActive(child.href)
-                                ? "bg-sidebar-primary text-sidebar-primary-foreground"
-                                : "text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
-                            )}
-                          >
-                            <child.icon className="h-4 w-4" />
-                            {child.label}
-                          </Link>
+                          <NavItemContent item={child} isChild />
                         </li>
                       ))}
                     </ul>
                   )}
                 </div>
               ) : (
-                <Link
-                  to={item.href}
-                  onClick={handleNavClick}
-                  className={cn(
-                    "flex items-center justify-between px-3 py-2.5 rounded-lg text-sm transition-colors",
-                    isActive(item.href)
-                      ? "bg-sidebar-primary text-sidebar-primary-foreground"
-                      : "text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
-                  )}
-                >
-                  <div className="flex items-center gap-3">
-                    <item.icon className="h-4 w-4" />
-                    {item.label}
-                  </div>
-                  {item.badge && (
-                    <Badge variant="secondary" className="text-[10px] px-1.5 py-0 bg-sidebar-primary/20 text-sidebar-primary-foreground">
-                      {item.badge}
-                    </Badge>
-                  )}
-                </Link>
+                <NavItemContent item={item} />
               )}
             </li>
           ))}
         </ul>
       </nav>
 
+      {/* Collapse Toggle (Desktop only) */}
+      <div className={cn(
+        "hidden lg:flex border-t border-sidebar-border",
+        isCollapsed ? "p-2 justify-center" : "p-3 px-4"
+      )}>
+        <Button
+          variant="ghost"
+          size={isCollapsed ? "icon" : "sm"}
+          onClick={onToggleCollapse}
+          className={cn(
+            "text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50",
+            isCollapsed ? "w-10 h-10" : "w-full justify-start gap-2"
+          )}
+        >
+          {isCollapsed ? (
+            <PanelLeft className="h-4 w-4" />
+          ) : (
+            <>
+              <PanelLeftClose className="h-4 w-4" />
+              <span className="text-sm">Collapse</span>
+            </>
+          )}
+        </Button>
+      </div>
+
       {/* Footer Actions */}
-      <div className="p-4 border-t border-sidebar-border space-y-1">
-        <Link
-          to="/notifications"
-          onClick={handleNavClick}
-          className="flex items-center justify-between px-3 py-2.5 rounded-lg text-sm text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50 transition-colors"
-        >
-          <div className="flex items-center gap-3">
-            <Bell className="h-4 w-4" />
-            Notifications
-          </div>
-          <Badge variant="destructive" className="text-[10px] px-1.5 py-0">
-            4
-          </Badge>
-        </Link>
-        <Link
-          to="/settings"
-          onClick={handleNavClick}
-          className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50 transition-colors"
-        >
-          <Settings className="h-4 w-4" />
-          Settings
-        </Link>
-        <button
-          onClick={logout}
-          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-destructive/80 hover:text-destructive hover:bg-destructive/10 transition-colors"
-        >
-          <LogOut className="h-4 w-4" />
-          Logout
-        </button>
+      <div className={cn(
+        "border-t border-sidebar-border space-y-1 transition-all duration-300",
+        isCollapsed ? "p-2" : "p-4"
+      )}>
+        {isCollapsed ? (
+          <>
+            <Tooltip delayDuration={0}>
+              <TooltipTrigger asChild>
+                <Link
+                  to="/notifications"
+                  onClick={handleNavClick}
+                  className="flex items-center justify-center w-10 h-10 rounded-lg text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50 transition-colors mx-auto relative"
+                >
+                  <Bell className="h-5 w-5" />
+                  <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-destructive" />
+                </Link>
+              </TooltipTrigger>
+              <TooltipContent side="right">Notifications</TooltipContent>
+            </Tooltip>
+            <Tooltip delayDuration={0}>
+              <TooltipTrigger asChild>
+                <Link
+                  to="/settings"
+                  onClick={handleNavClick}
+                  className="flex items-center justify-center w-10 h-10 rounded-lg text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50 transition-colors mx-auto"
+                >
+                  <Settings className="h-5 w-5" />
+                </Link>
+              </TooltipTrigger>
+              <TooltipContent side="right">Settings</TooltipContent>
+            </Tooltip>
+            <Tooltip delayDuration={0}>
+              <TooltipTrigger asChild>
+                <button
+                  onClick={logout}
+                  className="flex items-center justify-center w-10 h-10 rounded-lg text-destructive/80 hover:text-destructive hover:bg-destructive/10 transition-colors mx-auto"
+                >
+                  <LogOut className="h-5 w-5" />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent side="right">Logout</TooltipContent>
+            </Tooltip>
+          </>
+        ) : (
+          <>
+            <Link
+              to="/notifications"
+              onClick={handleNavClick}
+              className="flex items-center justify-between px-3 py-2.5 rounded-lg text-sm text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50 transition-colors"
+            >
+              <div className="flex items-center gap-3">
+                <Bell className="h-4 w-4" />
+                Notifications
+              </div>
+              <Badge variant="destructive" className="text-[10px] px-1.5 py-0">
+                4
+              </Badge>
+            </Link>
+            <Link
+              to="/settings"
+              onClick={handleNavClick}
+              className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50 transition-colors"
+            >
+              <Settings className="h-4 w-4" />
+              Settings
+            </Link>
+            <button
+              onClick={logout}
+              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-destructive/80 hover:text-destructive hover:bg-destructive/10 transition-colors"
+            >
+              <LogOut className="h-4 w-4" />
+              Logout
+            </button>
+          </>
+        )}
       </div>
     </aside>
   );
