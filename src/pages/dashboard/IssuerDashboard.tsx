@@ -117,7 +117,7 @@ export default function IssuerDashboard() {
           </Button>
         </CardHeader>
         <CardContent className="pt-0">
-          <div className="space-y-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {recentBatches.map((batch) => (
               <div 
                 key={batch.id} 
