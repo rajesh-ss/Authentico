@@ -35,8 +35,8 @@ const App = () => (
         <TooltipProvider>
           <Toaster />
           <Sonner />
-          <GeneratingOverlay />
           <BrowserRouter>
+            <GeneratingOverlay />
             <Routes>
               {/* Public Routes */}
               <Route path="/" element={<Index />} />
