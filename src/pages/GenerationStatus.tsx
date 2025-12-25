@@ -14,13 +14,19 @@ import {
   FileSpreadsheet, 
   Layers,
   ArrowRight,
-  RefreshCw
+  RefreshCw,
+  RotateCcw
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { format, formatDistanceToNow } from 'date-fns';
 import { cn } from '@/lib/utils';
 
-function JobCard({ job }: { job: GenerationJob }) {
+interface JobCardProps {
+  job: GenerationJob;
+  onRetry?: (jobId: string) => void;
+}
+
+function JobCard({ job, onRetry }: JobCardProps) {
   const progressPercent = Math.round((job.generatedCards / job.totalCards) * 100);
   const isActive = job.status === 'in_progress';
   const isCompleted = job.status === 'completed';
@@ -113,6 +119,19 @@ function JobCard({ job }: { job: GenerationJob }) {
               </p>
             )}
 
+            {/* Retry Button for Failed Jobs */}
+            {isFailed && onRetry && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => onRetry(job.id)}
+                className="gap-2"
+              >
+                <RotateCcw className="h-4 w-4" />
+                Retry Generation
+              </Button>
+            )}
+
             {/* Completion Time */}
             {job.completedAt && (
               <p className="text-xs text-muted-foreground">
@@ -127,7 +146,7 @@ function JobCard({ job }: { job: GenerationJob }) {
 }
 
 export default function GenerationStatus() {
-  const { jobs, isGenerating, activeJob } = useGeneration();
+  const { jobs, isGenerating, activeJob, retryJob } = useGeneration();
   const navigate = useNavigate();
 
   const completedJobs = jobs.filter(j => j.status === 'completed');
@@ -258,7 +277,7 @@ export default function GenerationStatus() {
               <ScrollArea className="h-[400px] pr-4">
                 <div className="space-y-4">
                   {jobs.filter(j => j.id !== activeJob?.id).map((job) => (
-                    <JobCard key={job.id} job={job} />
+                    <JobCard key={job.id} job={job} onRetry={retryJob} />
                   ))}
                 </div>
               </ScrollArea>
