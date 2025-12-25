@@ -539,33 +539,15 @@ export default function GenerationStatus() {
                   }
                 </CardDescription>
               </div>
-              <div className="flex gap-2">
-                {completedJobs.length > 0 && (
-                  <Button 
-                    variant="default" 
-                    size="sm"
-                    onClick={handleDownloadAll}
-                    disabled={isDownloading}
-                    className="gap-2"
-                  >
-                    {isDownloading ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                      <Archive className="h-4 w-4" />
-                    )}
-                    Download All ({totalGenerated} cards)
-                  </Button>
-                )}
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={() => navigate('/issue/template')}
-                  className="gap-2"
-                >
-                  New Generation
-                  <ArrowRight className="h-4 w-4" />
-                </Button>
-              </div>
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => navigate('/issue/template')}
+                className="gap-2"
+              >
+                New Generation
+                <ArrowRight className="h-4 w-4" />
+              </Button>
             </div>
 
             {/* Search and Filters */}
