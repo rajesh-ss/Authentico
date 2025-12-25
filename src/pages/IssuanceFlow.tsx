@@ -146,9 +146,9 @@ export default function IssuanceFlow() {
       title="Issue Marks Cards"
       subtitle="Upload student data to generate and issue marks cards"
     >
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Left: Marks Card Template Preview */}
-        <Card className="lg:sticky lg:top-6 h-fit">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:h-[calc(100vh-12rem)]">
+        {/* Left: Marks Card Template Preview - Fixed height, no scroll */}
+        <Card className="lg:overflow-hidden lg:h-full flex flex-col">
           <CardHeader className="pb-4">
             <div className="flex items-center justify-between">
               <div>
@@ -161,8 +161,8 @@ export default function IssuanceFlow() {
               <Badge variant="outline">Sample</Badge>
             </div>
           </CardHeader>
-          <CardContent>
-            <div className="border rounded-lg p-6 bg-gradient-to-br from-background to-muted/30 space-y-6">
+          <CardContent className="flex-1 overflow-hidden">
+            <div className="border rounded-lg p-6 bg-gradient-to-br from-background to-muted/30 space-y-6 h-full overflow-auto">
               {/* Header */}
               <div className="text-center space-y-2 pb-4 border-b border-dashed">
                 <div className="flex justify-center">
@@ -276,8 +276,8 @@ export default function IssuanceFlow() {
           </CardContent>
         </Card>
 
-        {/* Right: Upload Section */}
-        <div className="space-y-6">
+        {/* Right: Upload Section - Scrollable */}
+        <div className="space-y-6 lg:overflow-y-auto lg:h-full lg:pr-2">
           {/* Upload Area */}
           <Card>
             <CardHeader>
