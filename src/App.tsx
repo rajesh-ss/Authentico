@@ -11,6 +11,7 @@ import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
 import IssuanceFlow from "./pages/IssuanceFlow";
 import GenerationStatus from "./pages/GenerationStatus";
+import BatchDetails from "./pages/BatchDetails";
 import RequestReEvaluation from "./pages/RequestReEvaluation";
 import MyReEvaluations from "./pages/MyReEvaluations";
 import MyMarksCards from "./pages/MyMarksCards";
@@ -58,6 +59,11 @@ const App = () => (
               <Route path="/generation-status" element={
                 <ProtectedRoute allowedRoles={['issuer']}>
                   <GenerationStatus />
+                </ProtectedRoute>
+              } />
+              <Route path="/batch/:batchId" element={
+                <ProtectedRoute allowedRoles={['issuer']}>
+                  <BatchDetails />
                 </ProtectedRoute>
               } />
               <Route path="/cards" element={
