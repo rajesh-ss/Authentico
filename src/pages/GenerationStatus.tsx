@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useGeneration, GenerationJob } from '@/contexts/GenerationContext';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -6,6 +6,8 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { 
   Loader2, 
   CheckCircle2, 
@@ -17,10 +19,13 @@ import {
   RefreshCw,
   RotateCcw,
   Download,
-  Archive
+  Archive,
+  Search,
+  Filter,
+  X
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { format, formatDistanceToNow } from 'date-fns';
+import { format, formatDistanceToNow, isAfter, subDays, subMonths } from 'date-fns';
 import { cn } from '@/lib/utils';
 import JSZip from 'jszip';
 import { saveAs } from 'file-saver';
@@ -226,13 +231,59 @@ export default function GenerationStatus() {
   const { jobs, isGenerating, activeJob, retryJob } = useGeneration();
   const navigate = useNavigate();
   const [isDownloading, setIsDownloading] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [dateFilter, setDateFilter] = useState<string>('all');
 
   // Combine current session jobs with historical batches
   const allJobs = [...jobs, ...historicalBatches.filter(h => !jobs.some(j => j.id === h.id))];
+
+  // Filter jobs based on search and filters
+  const filteredJobs = useMemo(() => {
+    return allJobs.filter(job => {
+      // Search filter
+      const matchesSearch = searchQuery === '' || 
+        job.fileName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        job.id.toLowerCase().includes(searchQuery.toLowerCase());
+
+      // Status filter
+      const matchesStatus = statusFilter === 'all' || job.status === statusFilter;
+
+      // Date filter
+      let matchesDate = true;
+      const jobDate = job.completedAt || job.startedAt;
+      const now = new Date();
+      
+      switch (dateFilter) {
+        case 'today':
+          matchesDate = isAfter(jobDate, subDays(now, 1));
+          break;
+        case 'week':
+          matchesDate = isAfter(jobDate, subDays(now, 7));
+          break;
+        case 'month':
+          matchesDate = isAfter(jobDate, subMonths(now, 1));
+          break;
+        case 'all':
+        default:
+          matchesDate = true;
+      }
+
+      return matchesSearch && matchesStatus && matchesDate;
+    });
+  }, [allJobs, searchQuery, statusFilter, dateFilter]);
   
-  const completedJobs = allJobs.filter(j => j.status === 'completed');
-  const failedJobs = allJobs.filter(j => j.status === 'failed');
+  const completedJobs = filteredJobs.filter(j => j.status === 'completed');
+  const failedJobs = filteredJobs.filter(j => j.status === 'failed');
   const totalGenerated = completedJobs.reduce((sum, j) => sum + j.generatedCards, 0);
+
+  const clearFilters = () => {
+    setSearchQuery('');
+    setStatusFilter('all');
+    setDateFilter('all');
+  };
+
+  const hasActiveFilters = searchQuery !== '' || statusFilter !== 'all' || dateFilter !== 'all';
 
   const handleDownloadAll = async () => {
     if (completedJobs.length === 0) {
@@ -458,12 +509,15 @@ export default function GenerationStatus() {
 
         {/* Job History */}
         <Card>
-          <CardHeader>
+          <CardHeader className="space-y-4">
             <div className="flex items-center justify-between flex-wrap gap-4">
               <div>
                 <CardTitle className="text-lg">Generation History</CardTitle>
                 <CardDescription>
-                  All marks card generation jobs
+                  {hasActiveFilters 
+                    ? `Showing ${filteredJobs.length} of ${allJobs.length} batches`
+                    : 'All marks card generation jobs'
+                  }
                 </CardDescription>
               </div>
               <div className="flex gap-2">
@@ -494,26 +548,89 @@ export default function GenerationStatus() {
                 </Button>
               </div>
             </div>
+
+            {/* Search and Filters */}
+            <div className="flex flex-col sm:flex-row gap-3">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search by file name..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-9"
+                />
+              </div>
+              <div className="flex gap-2">
+                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                  <SelectTrigger className="w-[140px]">
+                    <Filter className="h-4 w-4 mr-2" />
+                    <SelectValue placeholder="Status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Status</SelectItem>
+                    <SelectItem value="completed">Completed</SelectItem>
+                    <SelectItem value="in_progress">In Progress</SelectItem>
+                    <SelectItem value="failed">Failed</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Select value={dateFilter} onValueChange={setDateFilter}>
+                  <SelectTrigger className="w-[140px]">
+                    <SelectValue placeholder="Date" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Time</SelectItem>
+                    <SelectItem value="today">Today</SelectItem>
+                    <SelectItem value="week">Last 7 Days</SelectItem>
+                    <SelectItem value="month">Last Month</SelectItem>
+                  </SelectContent>
+                </Select>
+                {hasActiveFilters && (
+                  <Button 
+                    variant="ghost" 
+                    size="icon"
+                    onClick={clearFilters}
+                    className="shrink-0"
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                )}
+              </div>
+            </div>
           </CardHeader>
           <CardContent>
-            {allJobs.length === 0 ? (
+            {filteredJobs.length === 0 ? (
               <div className="text-center py-12">
                 <div className="h-16 w-16 mx-auto rounded-full bg-muted flex items-center justify-center mb-4">
                   <FileSpreadsheet className="h-8 w-8 text-muted-foreground" />
                 </div>
-                <h3 className="font-medium text-lg mb-1">No generation jobs yet</h3>
-                <p className="text-muted-foreground text-sm mb-4">
-                  Upload student data to start generating marks cards
-                </p>
-                <Button onClick={() => navigate('/issue/template')} className="gap-2">
-                  Issue Marks Cards
-                  <ArrowRight className="h-4 w-4" />
-                </Button>
+                {hasActiveFilters ? (
+                  <>
+                    <h3 className="font-medium text-lg mb-1">No matching batches</h3>
+                    <p className="text-muted-foreground text-sm mb-4">
+                      Try adjusting your search or filters
+                    </p>
+                    <Button variant="outline" onClick={clearFilters} className="gap-2">
+                      <X className="h-4 w-4" />
+                      Clear Filters
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <h3 className="font-medium text-lg mb-1">No generation jobs yet</h3>
+                    <p className="text-muted-foreground text-sm mb-4">
+                      Upload student data to start generating marks cards
+                    </p>
+                    <Button onClick={() => navigate('/issue/template')} className="gap-2">
+                      Issue Marks Cards
+                      <ArrowRight className="h-4 w-4" />
+                    </Button>
+                  </>
+                )}
               </div>
             ) : (
               <ScrollArea className="h-[500px] pr-4">
                 <div className="space-y-4">
-                  {allJobs.filter(j => j.id !== activeJob?.id).map((job) => (
+                  {filteredJobs.filter(j => j.id !== activeJob?.id).map((job) => (
                     <JobCard key={job.id} job={job} onRetry={retryJob} onDownload={handleDownloadJob} isDownloading={isDownloading} />
                   ))}
                 </div>
