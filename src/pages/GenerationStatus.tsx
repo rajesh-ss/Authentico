@@ -173,13 +173,65 @@ function JobCard({ job, onRetry, onDownload, isDownloading }: JobCardProps) {
   );
 }
 
+// Mock historical batches (simulating previously generated marks cards)
+const historicalBatches: GenerationJob[] = [
+  {
+    id: 'hist_batch_001',
+    fileName: 'CS_Semester6_2024_Batch1.xlsx',
+    totalCards: 120,
+    generatedCards: 120,
+    status: 'completed',
+    startedAt: new Date('2024-12-20T10:30:00'),
+    completedAt: new Date('2024-12-20T10:35:00'),
+  },
+  {
+    id: 'hist_batch_002',
+    fileName: 'ECE_Semester4_2024.xlsx',
+    totalCards: 85,
+    generatedCards: 85,
+    status: 'completed',
+    startedAt: new Date('2024-12-18T14:00:00'),
+    completedAt: new Date('2024-12-18T14:04:00'),
+  },
+  {
+    id: 'hist_batch_003',
+    fileName: 'ME_Semester2_2024.xlsx',
+    totalCards: 95,
+    generatedCards: 95,
+    status: 'completed',
+    startedAt: new Date('2024-12-15T09:15:00'),
+    completedAt: new Date('2024-12-15T09:20:00'),
+  },
+  {
+    id: 'hist_batch_004',
+    fileName: 'Civil_Semester8_2024.xlsx',
+    totalCards: 60,
+    generatedCards: 60,
+    status: 'completed',
+    startedAt: new Date('2024-12-10T11:00:00'),
+    completedAt: new Date('2024-12-10T11:03:00'),
+  },
+  {
+    id: 'hist_batch_005',
+    fileName: 'IT_Semester6_2024.xlsx',
+    totalCards: 110,
+    generatedCards: 110,
+    status: 'completed',
+    startedAt: new Date('2024-12-05T16:30:00'),
+    completedAt: new Date('2024-12-05T16:36:00'),
+  },
+];
+
 export default function GenerationStatus() {
   const { jobs, isGenerating, activeJob, retryJob } = useGeneration();
   const navigate = useNavigate();
   const [isDownloading, setIsDownloading] = useState(false);
 
-  const completedJobs = jobs.filter(j => j.status === 'completed');
-  const failedJobs = jobs.filter(j => j.status === 'failed');
+  // Combine current session jobs with historical batches
+  const allJobs = [...jobs, ...historicalBatches.filter(h => !jobs.some(j => j.id === h.id))];
+  
+  const completedJobs = allJobs.filter(j => j.status === 'completed');
+  const failedJobs = allJobs.filter(j => j.status === 'failed');
   const totalGenerated = completedJobs.reduce((sum, j) => sum + j.generatedCards, 0);
 
   const handleDownloadAll = async () => {
@@ -444,7 +496,7 @@ export default function GenerationStatus() {
             </div>
           </CardHeader>
           <CardContent>
-            {jobs.length === 0 ? (
+            {allJobs.length === 0 ? (
               <div className="text-center py-12">
                 <div className="h-16 w-16 mx-auto rounded-full bg-muted flex items-center justify-center mb-4">
                   <FileSpreadsheet className="h-8 w-8 text-muted-foreground" />
@@ -459,9 +511,9 @@ export default function GenerationStatus() {
                 </Button>
               </div>
             ) : (
-              <ScrollArea className="h-[400px] pr-4">
+              <ScrollArea className="h-[500px] pr-4">
                 <div className="space-y-4">
-                  {jobs.filter(j => j.id !== activeJob?.id).map((job) => (
+                  {allJobs.filter(j => j.id !== activeJob?.id).map((job) => (
                     <JobCard key={job.id} job={job} onRetry={retryJob} onDownload={handleDownloadJob} isDownloading={isDownloading} />
                   ))}
                 </div>
