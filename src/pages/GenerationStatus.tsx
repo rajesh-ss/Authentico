@@ -630,7 +630,7 @@ export default function GenerationStatus() {
               </div>
             ) : (
               <ScrollArea className="h-[500px] pr-4">
-                <div className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {filteredJobs.filter(j => j.id !== activeJob?.id).map((job) => (
                     <JobCard key={job.id} job={job} onRetry={retryJob} onDownload={handleDownloadJob} onViewDetails={handleViewDetails} isDownloading={isDownloading} />
                   ))}
