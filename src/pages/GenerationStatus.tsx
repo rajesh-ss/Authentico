@@ -250,6 +250,7 @@ export default function GenerationStatus() {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [dateFilter, setDateFilter] = useState<string>('all');
+  const [downloadProgress, setDownloadProgress] = useState({ current: 0, total: 0, fileName: '' });
 
   // Combine current session jobs with historical batches
   const allJobs = [...jobs, ...historicalBatches.filter(h => !jobs.some(j => j.id === h.id))];
@@ -389,6 +390,8 @@ export default function GenerationStatus() {
     if (job.status !== 'completed') return;
 
     setIsDownloading(true);
+    setDownloadProgress({ current: 0, total: job.generatedCards, fileName: job.fileName });
+    
     try {
       const zip = new JSZip();
       const folderName = job.fileName.replace(/\.[^/.]+$/, '');
@@ -426,8 +429,18 @@ export default function GenerationStatus() {
           `${studentData.registrationNo}-${studentData.studentName.replace(/\s+/g, '_')}.pdf`,
           pdfBlob
         );
+
+        // Update progress
+        setDownloadProgress(prev => ({ ...prev, current: i }));
+        
+        // Small delay to allow UI to update and prevent blocking
+        if (i % 10 === 0) {
+          await new Promise(resolve => setTimeout(resolve, 0));
+        }
       }
 
+      // Finalize ZIP
+      setDownloadProgress(prev => ({ ...prev, current: prev.total }));
       const content = await zip.generateAsync({ type: 'blob' });
       saveAs(content, `${folderName}-marks-cards.zip`);
       
@@ -437,6 +450,7 @@ export default function GenerationStatus() {
       toast.error('Failed to generate PDF files');
     } finally {
       setIsDownloading(false);
+      setDownloadProgress({ current: 0, total: 0, fileName: '' });
     }
   };
 
@@ -637,6 +651,53 @@ export default function GenerationStatus() {
             )}
           </CardContent>
         </Card>
+
+        {/* Download Progress Dialog */}
+        {isDownloading && downloadProgress.total > 0 && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm">
+            <Card className="w-full max-w-md mx-4 shadow-lg border-primary/20">
+              <CardHeader className="pb-3">
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
+                    <Loader2 className="h-5 w-5 text-primary animate-spin" />
+                  </div>
+                  <div>
+                    <CardTitle className="text-lg">Generating PDFs</CardTitle>
+                    <CardDescription className="text-sm truncate max-w-[250px]">
+                      {downloadProgress.fileName}
+                    </CardDescription>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Progress</span>
+                    <span className="font-medium">
+                      {downloadProgress.current} of {downloadProgress.total}
+                    </span>
+                  </div>
+                  <Progress 
+                    value={(downloadProgress.current / downloadProgress.total) * 100} 
+                    className="h-3"
+                  />
+                  <p className="text-xs text-muted-foreground text-center">
+                    {Math.round((downloadProgress.current / downloadProgress.total) * 100)}% complete
+                  </p>
+                </div>
+                
+                <div className="flex items-center justify-center gap-2 p-3 bg-muted/30 rounded-lg">
+                  <Archive className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-sm text-muted-foreground">
+                    {downloadProgress.current === downloadProgress.total 
+                      ? 'Preparing ZIP file...' 
+                      : `Generating PDF ${downloadProgress.current}...`}
+                  </span>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
       </div>
     </DashboardLayout>
   );
