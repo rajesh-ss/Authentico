@@ -25,6 +25,9 @@ import UpdateMarks from "./pages/updater/UpdateMarks";
 import CompletedUpdates from "./pages/updater/CompletedUpdates";
 import PendingSignatures from "./pages/verifier/PendingSignatures";
 import SignedRecords from "./pages/verifier/SignedRecords";
+import TeacherApprovals from "./pages/teacher/TeacherApprovals";
+import TeacherApproved from "./pages/teacher/TeacherApproved";
+import TeacherRejected from "./pages/teacher/TeacherRejected";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -139,6 +142,23 @@ const App = () => (
               <Route path="/signed" element={
                 <ProtectedRoute allowedRoles={['verifying_admin']}>
                   <SignedRecords />
+                </ProtectedRoute>
+              } />
+              
+              {/* Teacher Routes */}
+              <Route path="/teacher/approvals" element={
+                <ProtectedRoute allowedRoles={['teacher']}>
+                  <TeacherApprovals />
+                </ProtectedRoute>
+              } />
+              <Route path="/teacher/approved" element={
+                <ProtectedRoute allowedRoles={['teacher']}>
+                  <TeacherApproved />
+                </ProtectedRoute>
+              } />
+              <Route path="/teacher/rejected" element={
+                <ProtectedRoute allowedRoles={['teacher']}>
+                  <TeacherRejected />
                 </ProtectedRoute>
               } />
               
