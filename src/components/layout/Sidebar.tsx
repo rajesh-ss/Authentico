@@ -76,6 +76,12 @@ const roleNavItems: Record<UserRole, NavItem[]> = {
     { label: 'Re-Evaluations', icon: RefreshCcw, href: '/my-reevaluations' },
     { label: 'Verify Certificate', icon: QrCode, href: '/verify' },
   ],
+  teacher: [
+    { label: 'Dashboard', icon: LayoutDashboard, href: '/dashboard' },
+    { label: 'Pending Approvals', icon: ClipboardCheck, href: '/teacher/approvals', badge: '3' },
+    { label: 'Approved Requests', icon: FileText, href: '/teacher/approved' },
+    { label: 'Rejected Requests', icon: FileText, href: '/teacher/rejected' },
+  ],
 };
 
 export function Sidebar({ isOpen, onClose, isCollapsed, onToggleCollapse, isHovering, onHoverChange }: SidebarProps) {

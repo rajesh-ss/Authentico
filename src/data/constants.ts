@@ -7,6 +7,7 @@ export const demoAccounts = [
   { email: 'approver@university.edu', role: 'Re-Evaluation Approver' },
   { email: 'verifier@university.edu', role: 'Verifying Admin' },
   { email: 'student@university.edu', role: 'Student' },
+  { email: 'teacher@university.edu', role: 'Teacher' },
 ];
 
 // Role filter options
@@ -23,6 +24,7 @@ export const roleLabels: Record<UserRole, string> = {
   reevaluation_updater: 'Re-Evaluation Updater',
   verifying_admin: 'Verifying Admin',
   student: 'Student',
+  teacher: 'Teacher',
 };
 
 // Status badge variants mapping
