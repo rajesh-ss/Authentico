@@ -4,7 +4,8 @@ export type UserRole =
   | 'reevaluation_approver' 
   | 'reevaluation_updater' 
   | 'verifying_admin' 
-  | 'student';
+  | 'student'
+  | 'teacher';
 
 export interface User {
   id: string;
@@ -31,6 +32,7 @@ export const roleLabels: Record<UserRole, string> = {
   reevaluation_updater: 'Re-Evaluation Updater',
   verifying_admin: 'Verifying Admin',
   student: 'Student',
+  teacher: 'Teacher',
 };
 
 export const roleDescriptions: Record<UserRole, string> = {
@@ -40,4 +42,5 @@ export const roleDescriptions: Record<UserRole, string> = {
   reevaluation_updater: 'Update marks after re-evaluation approval',
   verifying_admin: 'Provide digital signatures for multi-party verification',
   student: 'View marks cards and submit re-evaluation requests',
+  teacher: 'Validate and approve re-evaluation requests from students',
 };

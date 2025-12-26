@@ -17,6 +17,7 @@ export const mockUsers: ManagedUser[] = [
   { id: '4', name: 'Dr. Michael Brown', email: 'verifier@university.edu', role: 'verifying_admin', department: 'Quality Assurance', status: 'active', createdAt: new Date('2024-01-05') },
   { id: '5', name: 'Prof. Lisa Anderson', email: 'lisa@university.edu', role: 'issuer', department: 'Mathematics', status: 'inactive', createdAt: new Date('2023-11-20') },
   { id: '6', name: 'Dr. Robert Taylor', email: 'robert@university.edu', role: 'verifying_admin', department: 'Administration', status: 'active', createdAt: new Date('2024-04-01') },
+  { id: '7', name: 'Prof. Anita Desai', email: 'teacher@university.edu', role: 'teacher', department: 'Computer Science', status: 'active', createdAt: new Date('2024-05-15') },
 ];
 
-export const availableRoles: UserRole[] = ['issuer', 'reevaluation_approver', 'reevaluation_updater', 'verifying_admin'];
+export const availableRoles: UserRole[] = ['issuer', 'reevaluation_approver', 'reevaluation_updater', 'verifying_admin', 'teacher'];

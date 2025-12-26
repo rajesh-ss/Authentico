@@ -62,6 +62,14 @@ const mockUsers: Record<string, User> = {
     department: 'Computer Science',
     institution: 'State University',
   },
+  'teacher@university.edu': {
+    id: '7',
+    email: 'teacher@university.edu',
+    name: 'Prof. Anita Desai',
+    role: 'teacher',
+    department: 'Computer Science',
+    institution: 'State University',
+  },
 };
 
 // Get initial auth state from localStorage

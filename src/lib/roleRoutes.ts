@@ -8,6 +8,7 @@ export const getRoleDefaultRoute = (role: UserRole): string => {
     reevaluation_updater: '/update-marks',
     verifying_admin: '/signatures',
     student: '/my-cards',
+    teacher: '/teacher/approvals',
   };
   return routes[role] || '/dashboard';
 };
