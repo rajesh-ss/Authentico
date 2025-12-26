@@ -6,7 +6,6 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { DropdownMenuItem, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 import { FilterBar, DataTable, ConfirmDialog, MobileCard, StatusBadge, StatsGrid, type Column } from '@/components/shared';
 import { mockReEvaluations, type ReEvaluationItem } from '@/data';
@@ -17,7 +16,6 @@ import { useDialog } from '@/hooks/useDialog';
 import { useSearch } from '@/hooks/useSearch';
 import { Clock, CheckCircle, XCircle, Eye, AlertCircle, FileText, Calculator, ClipboardList } from 'lucide-react';
 import { toast } from 'sonner';
-import { ReEvaluationStatus } from '@/types/blockchain';
 
 export default function TeacherApprovals() {
   const [requests, setRequests] = useState<ReEvaluationItem[]>(
@@ -53,7 +51,6 @@ export default function TeacherApprovals() {
 
   const handleAction = () => {
     if (!actionDialog.data || !actionType) return;
-    const newStatus: ReEvaluationStatus = actionType === 'approve' ? 'approved' : 'rejected';
     setRequests(requests.filter(r => r.id !== actionDialog.data!.id));
     actionDialog.close();
     toast.success(`Request ${actionDialog.data.id} ${actionType === 'approve' ? 'approved' : 'rejected'}`);
