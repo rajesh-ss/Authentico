@@ -12,7 +12,7 @@ import { Progress } from '@/components/ui/progress';
 import { 
   Upload, FileSpreadsheet, CheckCircle, AlertCircle, Send, GraduationCap, Award, 
   Calendar, Hash, BookOpen, ChevronDown, ChevronUp, FileCheck, Eye, 
-  Users, Columns, Loader2, X, RotateCcw, Sparkles, PartyPopper, ArrowRight,
+  Users, Columns, Loader2, X, RotateCcw, Sparkles, PartyPopper,
   FileText, ExternalLink, Plus
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
