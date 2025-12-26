@@ -127,7 +127,7 @@ export default function TeacherApprovals() {
 
       {/* Enhanced View Dialog with Tabs */}
       <Dialog open={viewDialog.isOpen} onOpenChange={(open) => !open && viewDialog.close()}>
-        <DialogContent className="max-w-4xl max-h-[90vh] p-0 gap-0 overflow-hidden">
+        <DialogContent className="max-w-4xl h-[90vh] p-0 gap-0 flex flex-col overflow-hidden">
           <DialogHeader className="px-6 pt-6 pb-4 border-b flex-shrink-0">
             <DialogTitle className="flex items-center gap-2">
               <ClipboardList className="h-5 w-5 text-primary flex-shrink-0" />
@@ -139,7 +139,7 @@ export default function TeacherApprovals() {
           </DialogHeader>
           
           {viewDialog.data && (
-            <Tabs defaultValue="overview" className="flex-1 flex flex-col min-h-0">
+            <Tabs defaultValue="overview" className="flex-1 flex flex-col min-h-0 overflow-hidden">
               <div className="px-6 pt-4 border-b flex-shrink-0">
                 <TabsList className="w-full sm:w-auto grid grid-cols-3 sm:inline-flex">
                   <TabsTrigger value="overview" className="gap-2">
@@ -157,7 +157,7 @@ export default function TeacherApprovals() {
                 </TabsList>
               </div>
 
-              <ScrollArea className="flex-1 min-h-0">
+              <div className="flex-1 overflow-y-auto">
                 <div className="p-6">
                   <TabsContent value="overview" className="m-0 space-y-4">
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -229,7 +229,7 @@ export default function TeacherApprovals() {
                     )}
                   </TabsContent>
                 </div>
-              </ScrollArea>
+              </div>
             </Tabs>
           )}
         </DialogContent>
