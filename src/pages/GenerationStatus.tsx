@@ -31,6 +31,7 @@ import { cn } from '@/lib/utils';
 import JSZip from 'jszip';
 import { saveAs } from 'file-saver';
 import { toast } from 'sonner';
+import { generateMarksCardPDF } from '@/lib/pdfGenerator';
 
 interface JobCardProps {
   job: GenerationJob;
@@ -393,14 +394,16 @@ export default function GenerationStatus() {
       const folderName = job.fileName.replace(/\.[^/.]+$/, '');
       const folder = zip.folder(folderName);
 
-      // Generate mock marks card data
+      // Generate PDF marks cards for each student
       for (let i = 1; i <= job.generatedCards; i++) {
-        const cardData = {
+        const studentData = {
           id: `MC-${job.id.slice(-6)}-${String(i).padStart(4, '0')}`,
           studentName: `Student ${i}`,
           registrationNo: `REG${new Date().getFullYear()}${String(i).padStart(4, '0')}`,
+          rollNo: `R${String(i).padStart(3, '0')}`,
           semester: 'Semester 6',
           academicYear: '2023-2024',
+          department: 'Computer Science & Engineering',
           subjects: [
             { code: 'CS601', name: 'Machine Learning', credits: 4, internal: 28, external: 56, total: 84, grade: 'A' },
             { code: 'CS602', name: 'Cloud Computing', credits: 4, internal: 26, external: 52, total: 78, grade: 'B+' },
@@ -408,35 +411,30 @@ export default function GenerationStatus() {
             { code: 'CS604', name: 'Cyber Security', credits: 3, internal: 27, external: 54, total: 81, grade: 'A' },
           ],
           totalMarks: 315,
+          maxMarks: 400,
           percentage: 78.75,
           grade: 'First Class with Distinction',
-          generatedAt: job.completedAt?.toISOString(),
           blockchainHash: `0x${Array.from({ length: 64 }, () => Math.floor(Math.random() * 16).toString(16)).join('')}`,
+          issuedAt: job.completedAt || new Date(),
         };
 
+        // Generate PDF using the pdfGenerator utility
+        const pdfDoc = generateMarksCardPDF(studentData);
+        const pdfBlob = pdfDoc.output('blob');
+        
         folder?.file(
-          `marks-card-${String(i).padStart(4, '0')}.json`,
-          JSON.stringify(cardData, null, 2)
+          `${studentData.registrationNo}-${studentData.studentName.replace(/\s+/g, '_')}.pdf`,
+          pdfBlob
         );
       }
 
-      // Add summary
-      const summaryData = {
-        jobId: job.id,
-        fileName: job.fileName,
-        totalCards: job.generatedCards,
-        generatedAt: job.completedAt?.toISOString(),
-        status: job.status,
-      };
-      folder?.file('_summary.json', JSON.stringify(summaryData, null, 2));
-
       const content = await zip.generateAsync({ type: 'blob' });
-      saveAs(content, `${folderName}-${format(new Date(), 'yyyy-MM-dd-HHmmss')}.zip`);
+      saveAs(content, `${folderName}-marks-cards.zip`);
       
-      toast.success(`Downloaded ${job.generatedCards} marks cards`);
+      toast.success(`Downloaded ${job.generatedCards} marks cards as PDF`);
     } catch (error) {
       console.error('Download failed:', error);
-      toast.error('Failed to generate ZIP file');
+      toast.error('Failed to generate PDF files');
     } finally {
       setIsDownloading(false);
     }
