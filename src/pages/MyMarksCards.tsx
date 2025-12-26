@@ -9,6 +9,7 @@ import { TransactionHash } from '@/components/blockchain/TransactionHash';
 import { StatusBadge, FormDialog } from '@/components/shared';
 import { mockMarksCards, type MarksCard } from '@/data';
 import { useDialog } from '@/hooks/useDialog';
+import { toast } from 'sonner';
 import { 
   FileText, Download, Eye, QrCode, Search, ArrowLeft,
   RefreshCcw, Calendar, Award, CheckCircle2
@@ -25,8 +26,8 @@ export default function MyMarksCards() {
     card.academicYear.includes(searchQuery)
   );
 
-  const handleDownload = (card: MarksCard) => {
-    // TODO: Implement actual download functionality
+  const handleDownload = (_card: MarksCard) => {
+    toast.info('Download functionality coming soon');
   };
 
   // Detail View
