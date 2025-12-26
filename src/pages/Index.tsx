@@ -1,8 +1,9 @@
+import { memo } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Navigate } from 'react-router-dom';
 import Login from './Login';
 
-const Index = () => {
+const Index = memo(function Index() {
   const { isAuthenticated, user } = useAuth();
 
   if (isAuthenticated && user) {
@@ -10,6 +11,6 @@ const Index = () => {
   }
 
   return <Login />;
-};
+});
 
 export default Index;
