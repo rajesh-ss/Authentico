@@ -4,12 +4,18 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { DropdownMenuItem, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
-import { FilterBar, DataTable, ConfirmDialog, FormDialog, MobileCard, StatusBadge, StatsGrid, type Column } from '@/components/shared';
+import { FilterBar, DataTable, ConfirmDialog, MobileCard, StatusBadge, StatsGrid, type Column } from '@/components/shared';
 import { mockReEvaluations, type ReEvaluationItem } from '@/data';
+import { getAnswerSheetByRequestId } from '@/data/mockAnswerSheets';
+import { MarksBreakdown } from '@/components/teacher/MarksBreakdown';
+import { AnswerSheetViewer } from '@/components/teacher/AnswerSheetViewer';
 import { useDialog } from '@/hooks/useDialog';
 import { useSearch } from '@/hooks/useSearch';
-import { Clock, CheckCircle, XCircle, Eye, AlertCircle, FileText } from 'lucide-react';
+import { Clock, CheckCircle, XCircle, Eye, AlertCircle, FileText, Calculator, ClipboardList } from 'lucide-react';
 import { toast } from 'sonner';
 import { ReEvaluationStatus } from '@/types/blockchain';
 
@@ -52,6 +58,8 @@ export default function TeacherApprovals() {
     actionDialog.close();
     toast.success(`Request ${actionDialog.data.id} ${actionType === 'approve' ? 'approved' : 'rejected'}`);
   };
+
+  const answerSheetData = viewDialog.data ? getAnswerSheetByRequestId(viewDialog.data.id) : undefined;
 
   const columns: Column<ReEvaluationItem>[] = [
     { key: 'id', header: 'ID', render: (r) => <span className="font-mono text-sm">{r.id}</span> },
@@ -117,19 +125,115 @@ export default function TeacherApprovals() {
         ))}
       </div>
 
-      {/* View Dialog */}
-      <FormDialog open={viewDialog.isOpen} onOpenChange={(open) => !open && viewDialog.close()} title="Request Details" description={`ID: ${viewDialog.data?.id}`} onSubmit={viewDialog.close} submitLabel="Close" maxWidth="2xl">
-        {viewDialog.data && (
-          <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div><Label className="text-xs text-muted-foreground">Student</Label><p className="font-medium text-sm">{viewDialog.data.studentName}</p></div>
-              <div><Label className="text-xs text-muted-foreground">Semester</Label><p className="font-medium text-sm">{viewDialog.data.semester}</p></div>
-            </div>
-            <div><Label className="text-xs text-muted-foreground">Subjects</Label><div className="flex flex-wrap gap-1 mt-1">{viewDialog.data.subjects.map((s, i) => <Badge key={i} variant="secondary" className="text-xs">{s}</Badge>)}</div></div>
-            <div><Label className="text-xs text-muted-foreground">Reason</Label><p className="text-sm bg-muted/50 p-3 rounded-lg mt-1">{viewDialog.data.reason}</p></div>
-          </div>
-        )}
-      </FormDialog>
+      {/* Enhanced View Dialog with Tabs */}
+      <Dialog open={viewDialog.isOpen} onOpenChange={(open) => !open && viewDialog.close()}>
+        <DialogContent className="max-w-4xl max-h-[90vh] p-0 gap-0">
+          <DialogHeader className="px-6 pt-6 pb-4 border-b">
+            <DialogTitle className="flex items-center gap-2">
+              <ClipboardList className="h-5 w-5 text-primary" />
+              Re-Evaluation Request Details
+            </DialogTitle>
+            <DialogDescription>
+              {viewDialog.data?.id} • {viewDialog.data?.studentName}
+            </DialogDescription>
+          </DialogHeader>
+          
+          {viewDialog.data && (
+            <Tabs defaultValue="overview" className="flex-1">
+              <div className="px-6 pt-4 border-b">
+                <TabsList className="w-full sm:w-auto grid grid-cols-3 sm:inline-flex">
+                  <TabsTrigger value="overview" className="gap-2">
+                    <ClipboardList className="h-4 w-4 hidden sm:inline" />
+                    Overview
+                  </TabsTrigger>
+                  <TabsTrigger value="marks" className="gap-2">
+                    <Calculator className="h-4 w-4 hidden sm:inline" />
+                    Marks
+                  </TabsTrigger>
+                  <TabsTrigger value="answersheet" className="gap-2">
+                    <FileText className="h-4 w-4 hidden sm:inline" />
+                    Answer Sheet
+                  </TabsTrigger>
+                </TabsList>
+              </div>
+
+              <ScrollArea className="h-[calc(90vh-200px)] sm:h-[500px]">
+                <div className="p-6">
+                  <TabsContent value="overview" className="m-0 space-y-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div className="p-4 rounded-lg bg-muted/30 space-y-1">
+                        <Label className="text-xs text-muted-foreground">Student Name</Label>
+                        <p className="font-medium">{viewDialog.data.studentName}</p>
+                      </div>
+                      <div className="p-4 rounded-lg bg-muted/30 space-y-1">
+                        <Label className="text-xs text-muted-foreground">Student ID</Label>
+                        <p className="font-medium font-mono">{viewDialog.data.studentId}</p>
+                      </div>
+                      <div className="p-4 rounded-lg bg-muted/30 space-y-1">
+                        <Label className="text-xs text-muted-foreground">Semester</Label>
+                        <p className="font-medium">{viewDialog.data.semester}</p>
+                      </div>
+                      <div className="p-4 rounded-lg bg-muted/30 space-y-1">
+                        <Label className="text-xs text-muted-foreground">Submitted Date</Label>
+                        <p className="font-medium">{viewDialog.data.submittedAt.toLocaleDateString()}</p>
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label className="text-xs text-muted-foreground">Subjects for Re-Evaluation</Label>
+                      <div className="flex flex-wrap gap-2">
+                        {viewDialog.data.subjects.map((s, i) => (
+                          <Badge key={i} variant="secondary" className="text-sm">{s}</Badge>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label className="text-xs text-muted-foreground">Reason for Re-Evaluation</Label>
+                      <div className="p-4 bg-muted/30 rounded-lg">
+                        <p className="text-sm leading-relaxed">{viewDialog.data.reason}</p>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-col sm:flex-row gap-2 pt-4">
+                      <Button className="flex-1 gap-2" onClick={() => { viewDialog.close(); openActionDialog(viewDialog.data!, 'approve'); }}>
+                        <CheckCircle className="h-4 w-4" />
+                        Approve Request
+                      </Button>
+                      <Button variant="destructive" className="flex-1 gap-2" onClick={() => { viewDialog.close(); openActionDialog(viewDialog.data!, 'reject'); }}>
+                        <XCircle className="h-4 w-4" />
+                        Reject Request
+                      </Button>
+                    </div>
+                  </TabsContent>
+
+                  <TabsContent value="marks" className="m-0">
+                    {answerSheetData ? (
+                      <MarksBreakdown subjects={answerSheetData.subjects} />
+                    ) : (
+                      <div className="text-center py-12 text-muted-foreground">
+                        <Calculator className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                        <p>No marks breakdown available for this request</p>
+                      </div>
+                    )}
+                  </TabsContent>
+
+                  <TabsContent value="answersheet" className="m-0">
+                    {answerSheetData ? (
+                      <AnswerSheetViewer subjects={answerSheetData.subjects} />
+                    ) : (
+                      <div className="text-center py-12 text-muted-foreground">
+                        <FileText className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                        <p>No answer sheets available for this request</p>
+                      </div>
+                    )}
+                  </TabsContent>
+                </div>
+              </ScrollArea>
+            </Tabs>
+          )}
+        </DialogContent>
+      </Dialog>
 
       {/* Action Dialog */}
       <ConfirmDialog 
