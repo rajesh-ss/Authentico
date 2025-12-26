@@ -11,22 +11,22 @@ interface MarksBreakdownProps {
 
 export function MarksBreakdown({ subjects }: MarksBreakdownProps) {
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 overflow-hidden">
       {subjects.map((subject) => {
         const percentage = Math.round((subject.totalObtained / subject.totalMax) * 100);
         
         return (
-          <Card key={subject.subjectCode} className="border-border/50">
+          <Card key={subject.subjectCode} className="border-border/50 overflow-hidden">
             <CardHeader className="pb-3">
               <div className="flex items-start justify-between gap-2">
-                <div className="flex items-center gap-2">
-                  <BookOpen className="h-4 w-4 text-primary" />
-                  <div>
-                    <CardTitle className="text-base">{subject.subjectName}</CardTitle>
+                <div className="flex items-center gap-2 min-w-0 flex-1">
+                  <BookOpen className="h-4 w-4 text-primary flex-shrink-0" />
+                  <div className="min-w-0">
+                    <CardTitle className="text-base truncate">{subject.subjectName}</CardTitle>
                     <p className="text-xs text-muted-foreground font-mono">{subject.subjectCode}</p>
                   </div>
                 </div>
-                <Badge variant={percentage >= 75 ? 'default' : percentage >= 50 ? 'secondary' : 'destructive'}>
+                <Badge variant={percentage >= 75 ? 'default' : percentage >= 50 ? 'secondary' : 'destructive'} className="flex-shrink-0">
                   {subject.grade}
                 </Badge>
               </div>
@@ -60,16 +60,16 @@ export function MarksBreakdown({ subjects }: MarksBreakdownProps) {
               {/* Question-wise Breakdown */}
               <div className="space-y-2">
                 <div className="flex items-center gap-2 text-sm font-medium">
-                  <Calculator className="h-4 w-4" />
+                  <Calculator className="h-4 w-4 flex-shrink-0" />
                   Question-wise Marks
                 </div>
-                <div className="rounded-lg border overflow-hidden">
-                  <Table>
+                <div className="rounded-lg border overflow-x-auto">
+                  <Table className="min-w-[400px]">
                     <TableHeader>
                       <TableRow className="bg-muted/30">
-                        <TableHead className="h-8 text-xs">Q.No</TableHead>
-                        <TableHead className="h-8 text-xs text-center">Max</TableHead>
-                        <TableHead className="h-8 text-xs text-center">Obtained</TableHead>
+                        <TableHead className="h-8 text-xs w-16">Q.No</TableHead>
+                        <TableHead className="h-8 text-xs text-center w-16">Max</TableHead>
+                        <TableHead className="h-8 text-xs text-center w-20">Obtained</TableHead>
                         <TableHead className="h-8 text-xs">Remarks</TableHead>
                       </TableRow>
                     </TableHeader>
@@ -83,8 +83,10 @@ export function MarksBreakdown({ subjects }: MarksBreakdownProps) {
                               {q.obtainedMarks}
                             </span>
                           </TableCell>
-                          <TableCell className="py-2 text-xs text-muted-foreground max-w-[150px] truncate">
-                            {q.remarks || '-'}
+                          <TableCell className="py-2 text-xs text-muted-foreground">
+                            <span className="block max-w-[200px] truncate" title={q.remarks}>
+                              {q.remarks || '-'}
+                            </span>
                           </TableCell>
                         </TableRow>
                       ))}
