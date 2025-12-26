@@ -24,15 +24,15 @@ export function AnswerSheetViewer({ subjects }: AnswerSheetViewerProps) {
   const handleRotate = () => setRotation(prev => (prev + 90) % 360);
 
   return (
-    <Card className="border-border/50">
+    <Card className="border-border/50 overflow-hidden">
       <CardHeader className="pb-3">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div className="flex items-center gap-2">
-            <FileText className="h-4 w-4 text-primary" />
-            <CardTitle className="text-base">Answer Sheet</CardTitle>
+          <div className="flex items-center gap-2 min-w-0">
+            <FileText className="h-4 w-4 text-primary flex-shrink-0" />
+            <CardTitle className="text-base truncate">Answer Sheet</CardTitle>
           </div>
           <Select value={selectedSubject} onValueChange={setSelectedSubject}>
-            <SelectTrigger className="w-full sm:w-[200px]">
+            <SelectTrigger className="w-full sm:w-[200px] flex-shrink-0">
               <SelectValue placeholder="Select subject" />
             </SelectTrigger>
             <SelectContent>
@@ -45,10 +45,10 @@ export function AnswerSheetViewer({ subjects }: AnswerSheetViewerProps) {
           </Select>
         </div>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-4 overflow-hidden">
         {/* Toolbar */}
-        <div className="flex flex-wrap items-center justify-between gap-2 p-2 bg-muted/30 rounded-lg">
-          <div className="flex items-center gap-1">
+        <div className="flex flex-wrap items-center justify-between gap-2 p-2 bg-muted/30 rounded-lg overflow-x-auto">
+          <div className="flex items-center gap-1 flex-shrink-0">
             <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleZoomOut} disabled={zoom <= 50}>
               <ZoomOut className="h-4 w-4" />
             </Button>
@@ -60,18 +60,18 @@ export function AnswerSheetViewer({ subjects }: AnswerSheetViewerProps) {
               <RotateCw className="h-4 w-4" />
             </Button>
           </div>
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-1 flex-shrink-0">
             <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage <= 1}>
               <ChevronLeft className="h-4 w-4" />
             </Button>
-            <span className="text-sm text-muted-foreground px-2">
+            <span className="text-sm text-muted-foreground px-2 whitespace-nowrap">
               Page {currentPage} of {totalPages}
             </span>
             <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage >= totalPages}>
               <ChevronRight className="h-4 w-4" />
             </Button>
           </div>
-          <Button variant="outline" size="sm" className="h-8 gap-1">
+          <Button variant="outline" size="sm" className="h-8 gap-1 flex-shrink-0">
             <Download className="h-3 w-3" />
             <span className="hidden sm:inline">Download</span>
           </Button>
