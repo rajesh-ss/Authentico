@@ -206,7 +206,7 @@ export function Sidebar({ isOpen, onClose, isCollapsed, onToggleCollapse, isHove
             </div>
             {showExpanded && (
               <div className="min-w-0">
-                <h1 className="font-semibold text-sidebar-foreground text-sm truncate">BlockCert</h1>
+                <h1 className="font-semibold text-sidebar-foreground text-sm truncate">Authentico</h1>
                 <p className="text-[10px] text-sidebar-foreground/60 truncate">Academic Verification</p>
               </div>
             )}

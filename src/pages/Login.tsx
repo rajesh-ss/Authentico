@@ -24,7 +24,7 @@ const Login = memo(function Login() {
     setError('');
     try {
       const loggedInUser = await login(email, password);
-      toast({ title: 'Login Successful', description: 'Welcome to BlockCert Academic Verification System' });
+      toast({ title: 'Login Successful', description: 'Welcome to Authentico Academic Verification System' });
       const defaultRoute = getRoleDefaultRoute(loggedInUser.role);
       navigate(defaultRoute);
     } catch (_err) {
@@ -53,7 +53,7 @@ const Login = memo(function Login() {
               <Shield className="h-10 w-10 text-primary-foreground" />
             </div>
             <div>
-              <h1 className="text-3xl font-bold text-primary-foreground">BlockCert</h1>
+              <h1 className="text-3xl font-bold text-primary-foreground">Authentico</h1>
               <p className="text-primary-foreground/70">Academic Verification System</p>
             </div>
           </div>
@@ -86,7 +86,7 @@ const Login = memo(function Login() {
               <Shield className="h-7 w-7 text-primary-foreground" />
             </div>
             <div>
-              <h1 className="text-xl font-bold text-foreground">BlockCert</h1>
+              <h1 className="text-xl font-bold text-foreground">Authentico</h1>
               <p className="text-xs text-muted-foreground">Academic Verification</p>
             </div>
           </div>
