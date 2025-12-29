@@ -32,6 +32,7 @@ const SignedRecords = lazy(() => import("./pages/verifier/SignedRecords"));
 const TeacherApprovals = lazy(() => import("./pages/teacher/TeacherApprovals"));
 const TeacherApproved = lazy(() => import("./pages/teacher/TeacherApproved"));
 const TeacherRejected = lazy(() => import("./pages/teacher/TeacherRejected"));
+const Analytics = lazy(() => import("./pages/admin/Analytics"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient({
@@ -119,6 +120,11 @@ const App = () => (
               <Route path="/reevaluations" element={
                 <ProtectedRoute allowedRoles={['college_admin', 'reevaluation_approver', 'reevaluation_updater']}>
                   <ReEvaluationsAdmin />
+                </ProtectedRoute>
+              } />
+              <Route path="/analytics" element={
+                <ProtectedRoute allowedRoles={['college_admin']}>
+                  <Analytics />
                 </ProtectedRoute>
               } />
               

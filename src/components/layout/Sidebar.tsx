@@ -20,7 +20,8 @@ import {
   ChevronDown,
   X,
   PanelLeftClose,
-  PanelLeft
+  PanelLeft,
+  BarChart3
 } from 'lucide-react';
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
@@ -50,6 +51,7 @@ const roleNavItems: Record<UserRole, NavItem[]> = {
   ],
   college_admin: [
     { label: 'Dashboard', icon: LayoutDashboard, href: '/dashboard' },
+    { label: 'Analytics', icon: BarChart3, href: '/analytics' },
     { label: 'User Management', icon: Users, href: '/users' },
     { label: 'All Marks Cards', icon: FileText, href: '/cards' },
     { label: 'Re-Evaluations', icon: RefreshCcw, href: '/reevaluations', badge: '5' },
