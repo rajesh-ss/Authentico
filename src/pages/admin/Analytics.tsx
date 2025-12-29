@@ -1,10 +1,12 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import {
   Table,
   TableBody,
@@ -42,9 +44,10 @@ import {
   QrCode,
   Link as LinkIcon,
   Code,
-  Activity,
+  CalendarIcon,
 } from 'lucide-react';
-import { format } from 'date-fns';
+import { format, subDays, isWithinInterval, startOfDay, endOfDay } from 'date-fns';
+import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
@@ -62,12 +65,67 @@ import {
   userActivityLogs,
   userActivitySummary,
 } from '@/data/mockAnalytics';
+import type { DateRange } from 'react-day-picker';
 
 const COLORS = ['hsl(var(--primary))', 'hsl(var(--accent))', 'hsl(var(--muted))'];
 
 export default function Analytics() {
   const [issuancePeriod, setIssuancePeriod] = useState<'day' | 'week' | 'month'>('day');
+  const [dateRange, setDateRange] = useState<DateRange | undefined>({
+    from: subDays(new Date(), 30),
+    to: new Date(),
+  });
   const { toast } = useToast();
+
+  // Filter functions based on date range
+  const filterByDateRange = <T extends { date?: string; timestamp?: string }>(
+    data: T[],
+    dateField: 'date' | 'timestamp' = 'date'
+  ): T[] => {
+    if (!dateRange?.from || !dateRange?.to) return data;
+    return data.filter((item) => {
+      const itemDate = new Date(item[dateField] || '');
+      return isWithinInterval(itemDate, {
+        start: startOfDay(dateRange.from!),
+        end: endOfDay(dateRange.to!),
+      });
+    });
+  };
+
+  // Filtered data
+  const filteredIssuanceData = useMemo(() => {
+    const data = issuancePeriod === 'day' ? dailyIssuanceData : issuancePeriod === 'week' ? weeklyIssuanceData : monthlyIssuanceData;
+    if (issuancePeriod !== 'day') return data; // Weekly/monthly data doesn't have ISO dates
+    return filterByDateRange(data, 'date');
+  }, [dateRange, issuancePeriod]);
+
+  const filteredVerificationData = useMemo(() => filterByDateRange(dailyVerificationData, 'date'), [dateRange]);
+  
+  const filteredFraudLogs = useMemo(() => filterByDateRange(fraudLogs, 'timestamp'), [dateRange]);
+  
+  const filteredActivityLogs = useMemo(() => filterByDateRange(userActivityLogs, 'timestamp'), [dateRange]);
+
+  // Calculate filtered stats
+  const filteredStats = useMemo(() => {
+    const issuedInRange = filteredIssuanceData.reduce((sum, d) => sum + d.count, 0);
+    const verificationsInRange = filteredVerificationData.reduce((sum, d) => sum + d.total, 0);
+    const successInRange = filteredVerificationData.reduce((sum, d) => sum + d.success, 0);
+    const failedInRange = filteredVerificationData.reduce((sum, d) => sum + d.failed, 0);
+    const successRate = verificationsInRange > 0 ? ((successInRange / verificationsInRange) * 100).toFixed(1) : '0';
+    const failureRate = verificationsInRange > 0 ? ((failedInRange / verificationsInRange) * 100).toFixed(1) : '0';
+    
+    return {
+      issuedInRange,
+      verificationsInRange,
+      successRate,
+      failureRate,
+      fraudAlertsInRange: filteredFraudLogs.length,
+      highSeverityInRange: filteredFraudLogs.filter(l => l.severity === 'high').length,
+      activityCountInRange: filteredActivityLogs.length,
+      successfulActionsInRange: filteredActivityLogs.filter(l => l.status === 'success').length,
+      failedActionsInRange: filteredActivityLogs.filter(l => l.status === 'failed').length,
+    };
+  }, [filteredIssuanceData, filteredVerificationData, filteredFraudLogs, filteredActivityLogs]);
 
   const getIssuanceData = () => {
     switch (issuancePeriod) {
@@ -131,12 +189,76 @@ export default function Analytics() {
   return (
     <DashboardLayout title="Analytics & Reporting" subtitle="Comprehensive insights into credential issuance, verification, and security">
       <div className="space-y-6">
-        {/* Page Header */}
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">Analytics & Reporting</h1>
-          <p className="text-muted-foreground">
-            Comprehensive insights into credential issuance, verification, and security
-          </p>
+        {/* Page Header with Date Range Picker */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <h1 className="text-2xl font-bold text-foreground">Analytics & Reporting</h1>
+            <p className="text-muted-foreground">
+              Comprehensive insights into credential issuance, verification, and security
+            </p>
+          </div>
+          
+          {/* Date Range Picker */}
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                className={cn(
+                  "justify-start text-left font-normal min-w-[280px]",
+                  !dateRange && "text-muted-foreground"
+                )}
+              >
+                <CalendarIcon className="mr-2 h-4 w-4" />
+                {dateRange?.from ? (
+                  dateRange.to ? (
+                    <>
+                      {format(dateRange.from, "MMM dd, yyyy")} - {format(dateRange.to, "MMM dd, yyyy")}
+                    </>
+                  ) : (
+                    format(dateRange.from, "MMM dd, yyyy")
+                  )
+                ) : (
+                  <span>Select date range</span>
+                )}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="end">
+              <Calendar
+                initialFocus
+                mode="range"
+                defaultMonth={dateRange?.from}
+                selected={dateRange}
+                onSelect={setDateRange}
+                numberOfMonths={2}
+                className="pointer-events-auto"
+              />
+              <div className="flex items-center justify-between p-3 border-t">
+                <div className="flex gap-2">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setDateRange({ from: subDays(new Date(), 7), to: new Date() })}
+                  >
+                    Last 7 days
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setDateRange({ from: subDays(new Date(), 30), to: new Date() })}
+                  >
+                    Last 30 days
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setDateRange({ from: subDays(new Date(), 90), to: new Date() })}
+                  >
+                    Last 90 days
+                  </Button>
+                </div>
+              </div>
+            </PopoverContent>
+          </Popover>
         </div>
 
         {/* Tabs */}
@@ -172,8 +294,8 @@ export default function Analytics() {
               </Card>
               <Card>
                 <CardHeader className="pb-2">
-                  <CardDescription>Today</CardDescription>
-                  <CardTitle className="text-2xl lg:text-3xl text-primary">{overviewStats.todayIssued}</CardTitle>
+                  <CardDescription>In Selected Range</CardDescription>
+                  <CardTitle className="text-2xl lg:text-3xl text-primary">{filteredStats.issuedInRange.toLocaleString()}</CardTitle>
                 </CardHeader>
               </Card>
               <Card>
@@ -208,7 +330,7 @@ export default function Analytics() {
                       <SelectItem value="month">Monthly</SelectItem>
                     </SelectContent>
                   </Select>
-                  <Button variant="outline" size="icon" onClick={() => exportToCSV(getIssuanceData(), 'issuance_trend')}>
+                  <Button variant="outline" size="icon" onClick={() => exportToCSV(filteredIssuanceData, 'issuance_trend')}>
                     <Download className="h-4 w-4" />
                   </Button>
                 </div>
@@ -216,7 +338,7 @@ export default function Analytics() {
               <CardContent>
                 <div className="h-[300px]">
                   <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart data={getIssuanceData()}>
+                    <AreaChart data={filteredIssuanceData}>
                       <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
                       <XAxis dataKey="date" tick={{ fontSize: 12 }} />
                       <YAxis tick={{ fontSize: 12 }} />
@@ -273,26 +395,26 @@ export default function Analytics() {
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
               <Card>
                 <CardHeader className="pb-2">
-                  <CardDescription>Total Verifications</CardDescription>
-                  <CardTitle className="text-2xl lg:text-3xl">{verificationStats.totalVerifications.toLocaleString()}</CardTitle>
+                  <CardDescription>In Selected Range</CardDescription>
+                  <CardTitle className="text-2xl lg:text-3xl">{filteredStats.verificationsInRange.toLocaleString()}</CardTitle>
                 </CardHeader>
               </Card>
               <Card>
                 <CardHeader className="pb-2">
                   <CardDescription>Success Rate</CardDescription>
-                  <CardTitle className="text-2xl lg:text-3xl text-green-600">{verificationStats.successRate}%</CardTitle>
+                  <CardTitle className="text-2xl lg:text-3xl text-green-600">{filteredStats.successRate}%</CardTitle>
                 </CardHeader>
               </Card>
               <Card>
                 <CardHeader className="pb-2">
                   <CardDescription>Failure Rate</CardDescription>
-                  <CardTitle className="text-2xl lg:text-3xl text-destructive">{verificationStats.failureRate}%</CardTitle>
+                  <CardTitle className="text-2xl lg:text-3xl text-destructive">{filteredStats.failureRate}%</CardTitle>
                 </CardHeader>
               </Card>
               <Card>
                 <CardHeader className="pb-2">
-                  <CardDescription>QR Scans</CardDescription>
-                  <CardTitle className="text-2xl lg:text-3xl">{verificationStats.qrVerifications.toLocaleString()}</CardTitle>
+                  <CardDescription>Total (Lifetime)</CardDescription>
+                  <CardTitle className="text-2xl lg:text-3xl">{verificationStats.totalVerifications.toLocaleString()}</CardTitle>
                 </CardHeader>
               </Card>
             </div>
@@ -341,14 +463,14 @@ export default function Analytics() {
                     <CardTitle>Verification Trend</CardTitle>
                     <CardDescription>Success vs Failure over time</CardDescription>
                   </div>
-                  <Button variant="outline" size="icon" onClick={() => exportToCSV(dailyVerificationData, 'verification_trend')}>
+                  <Button variant="outline" size="icon" onClick={() => exportToCSV(filteredVerificationData, 'verification_trend')}>
                     <Download className="h-4 w-4" />
                   </Button>
                 </CardHeader>
                 <CardContent>
                   <div className="h-[300px]">
                     <ResponsiveContainer width="100%" height="100%">
-                      <LineChart data={dailyVerificationData.slice(-14)}>
+                      <LineChart data={filteredVerificationData}>
                         <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
                         <XAxis dataKey="date" tick={{ fontSize: 10 }} />
                         <YAxis tick={{ fontSize: 12 }} />
@@ -378,27 +500,27 @@ export default function Analytics() {
                 <CardHeader className="pb-2">
                   <CardDescription className="flex items-center gap-2">
                     <AlertTriangle className="h-4 w-4 text-destructive" />
-                    Total Alerts
+                    Alerts in Range
                   </CardDescription>
-                  <CardTitle className="text-2xl lg:text-3xl text-destructive">{fraudAlerts.totalAlerts}</CardTitle>
+                  <CardTitle className="text-2xl lg:text-3xl text-destructive">{filteredStats.fraudAlertsInRange}</CardTitle>
                 </CardHeader>
               </Card>
               <Card>
                 <CardHeader className="pb-2">
                   <CardDescription>High Severity</CardDescription>
-                  <CardTitle className="text-2xl lg:text-3xl text-destructive">{fraudAlerts.highSeverity}</CardTitle>
+                  <CardTitle className="text-2xl lg:text-3xl text-destructive">{filteredStats.highSeverityInRange}</CardTitle>
                 </CardHeader>
               </Card>
               <Card>
                 <CardHeader className="pb-2">
                   <CardDescription>Medium Severity</CardDescription>
-                  <CardTitle className="text-2xl lg:text-3xl text-amber-500">{fraudAlerts.mediumSeverity}</CardTitle>
+                  <CardTitle className="text-2xl lg:text-3xl text-amber-500">{filteredFraudLogs.filter(l => l.severity === 'medium').length}</CardTitle>
                 </CardHeader>
               </Card>
               <Card>
                 <CardHeader className="pb-2">
                   <CardDescription>Multiple Failures</CardDescription>
-                  <CardTitle className="text-2xl lg:text-3xl">{fraudAlerts.multipleFailuresDetected}</CardTitle>
+                  <CardTitle className="text-2xl lg:text-3xl">{filteredFraudLogs.filter(l => l.issueType === 'multiple_failures').length}</CardTitle>
                 </CardHeader>
               </Card>
             </div>
@@ -411,7 +533,7 @@ export default function Analytics() {
                   <CardDescription>Failed or suspicious verification attempts</CardDescription>
                 </div>
                 <div className="flex gap-2">
-                  <Button variant="outline" size="sm" onClick={() => exportToCSV(fraudLogs, 'fraud_logs')}>
+                  <Button variant="outline" size="sm" onClick={() => exportToCSV(filteredFraudLogs, 'fraud_logs')}>
                     <Download className="h-4 w-4 mr-2" />
                     CSV
                   </Button>
@@ -419,7 +541,7 @@ export default function Analytics() {
                     variant="outline"
                     size="sm"
                     onClick={() =>
-                      exportToPDF('Fraud Detection Logs', fraudLogs as unknown as object[], [
+                      exportToPDF('Fraud Detection Logs', filteredFraudLogs as unknown as object[], [
                         'Timestamp',
                         'CredentialId',
                         'IpAddress',
@@ -447,7 +569,7 @@ export default function Analytics() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {fraudLogs.map((log) => (
+                      {filteredFraudLogs.map((log) => (
                         <TableRow key={log.id}>
                           <TableCell className="whitespace-nowrap">
                             {format(new Date(log.timestamp), 'MMM dd, HH:mm')}
@@ -479,25 +601,25 @@ export default function Analytics() {
               <Card>
                 <CardHeader className="pb-2">
                   <CardDescription>Active Issuers</CardDescription>
-                  <CardTitle className="text-2xl lg:text-3xl">{userActivitySummary.totalIssuers}</CardTitle>
+                  <CardTitle className="text-2xl lg:text-3xl">{new Set(filteredActivityLogs.map(l => l.userId)).size}</CardTitle>
                 </CardHeader>
               </Card>
               <Card>
                 <CardHeader className="pb-2">
-                  <CardDescription>Total Actions</CardDescription>
-                  <CardTitle className="text-2xl lg:text-3xl">{userActivitySummary.totalActions}</CardTitle>
+                  <CardDescription>Actions in Range</CardDescription>
+                  <CardTitle className="text-2xl lg:text-3xl">{filteredStats.activityCountInRange}</CardTitle>
                 </CardHeader>
               </Card>
               <Card>
                 <CardHeader className="pb-2">
                   <CardDescription>Successful</CardDescription>
-                  <CardTitle className="text-2xl lg:text-3xl text-green-600">{userActivitySummary.successfulActions}</CardTitle>
+                  <CardTitle className="text-2xl lg:text-3xl text-green-600">{filteredStats.successfulActionsInRange}</CardTitle>
                 </CardHeader>
               </Card>
               <Card>
                 <CardHeader className="pb-2">
                   <CardDescription>Failed</CardDescription>
-                  <CardTitle className="text-2xl lg:text-3xl text-destructive">{userActivitySummary.failedActions}</CardTitle>
+                  <CardTitle className="text-2xl lg:text-3xl text-destructive">{filteredStats.failedActionsInRange}</CardTitle>
                 </CardHeader>
               </Card>
             </div>
@@ -510,7 +632,7 @@ export default function Analytics() {
                   <CardDescription>User-level credential issuance history</CardDescription>
                 </div>
                 <div className="flex gap-2">
-                  <Button variant="outline" size="sm" onClick={() => exportToCSV(userActivityLogs, 'user_activity')}>
+                  <Button variant="outline" size="sm" onClick={() => exportToCSV(filteredActivityLogs, 'user_activity')}>
                     <Download className="h-4 w-4 mr-2" />
                     CSV
                   </Button>
@@ -518,7 +640,7 @@ export default function Analytics() {
                     variant="outline"
                     size="sm"
                     onClick={() =>
-                      exportToPDF('User Activity Logs', userActivityLogs as unknown as object[], [
+                      exportToPDF('User Activity Logs', filteredActivityLogs as unknown as object[], [
                         'Timestamp',
                         'UserName',
                         'Action',
@@ -546,7 +668,7 @@ export default function Analytics() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {userActivityLogs.map((log) => (
+                      {filteredActivityLogs.map((log) => (
                         <TableRow key={log.id}>
                           <TableCell className="whitespace-nowrap">
                             {format(new Date(log.timestamp), 'MMM dd, HH:mm')}
