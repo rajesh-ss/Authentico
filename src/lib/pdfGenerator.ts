@@ -37,7 +37,7 @@ export function generateMarksCardPDF(student: StudentData): jsPDF {
   doc.setTextColor(255, 255, 255);
   doc.setFontSize(18);
   doc.setFont('helvetica', 'bold');
-  doc.text('University of Technology', pageWidth / 2, 15, { align: 'center' });
+  doc.text('Authentico Academic Verification', pageWidth / 2, 15, { align: 'center' });
   
   doc.setFontSize(12);
   doc.setFont('helvetica', 'normal');
