@@ -191,7 +191,7 @@ export default function VerifyCertificate() {
   );
 }
 
-function InfoSection({ icon: Icon, title, children }: { icon: any; title: string; children: React.ReactNode }) {
+function InfoSection({ icon: Icon, title, children }: { icon: React.ComponentType<{ className?: string }>; title: string; children: React.ReactNode }) {
   return (
     <div className="space-y-4">
       <h4 className="font-medium flex items-center gap-2 text-muted-foreground"><Icon className="h-4 w-4" />{title}</h4>

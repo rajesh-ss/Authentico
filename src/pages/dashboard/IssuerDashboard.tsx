@@ -2,110 +2,86 @@ import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { DataTable, StatusBadge, type Column } from '@/components/shared';
+import { Progress } from '@/components/ui/progress';
 import { TransactionBadge } from '@/components/blockchain/TransactionBadge';
-import { FileText, Upload, RefreshCcw, ArrowRight, Eye, Download, MoreHorizontal } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { FileText, Upload, RefreshCcw, ArrowRight, Eye, Download, MoreHorizontal, Loader2, CheckCircle, Clock, XCircle } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { MarksCard } from '@/types/blockchain';
-
-// Mock data for issuer dashboard using the blockchain.ts MarksCard type
-const recentCards: MarksCard[] = [
-  {
-    id: '1', studentId: 'STU001', studentName: 'Priya Sharma', registrationNumber: '2021CS1045',
-    semester: 'Sem 6', academicYear: '2023-24', subjects: [], totalMarks: 542, percentage: 78.5,
-    grade: 'A', status: 'issued', version: 1, qrCode: 'qr-1',
-    blockchain: { id: 'tx1', hash: '0x8f4a2c1e...', timestamp: new Date(), status: 'confirmed', type: 'issue' },
-    issuedAt: new Date(), issuedBy: 'Dr. Sarah Johnson',
-  },
-  {
-    id: '2', studentId: 'STU002', studentName: 'Rahul Verma', registrationNumber: '2021CS1089',
-    semester: 'Sem 6', academicYear: '2023-24', subjects: [], totalMarks: 498, percentage: 72.1,
-    grade: 'B+', status: 'reevaluated', version: 2, qrCode: 'qr-2',
-    blockchain: { id: 'tx2', hash: '0x1a2b3c4d...', timestamp: new Date(Date.now() - 3600000), status: 'confirmed', type: 'reevaluation' },
-    issuedAt: new Date(Date.now() - 86400000), issuedBy: 'Dr. Sarah Johnson', previousVersion: '0x...',
-  },
-  {
-    id: '3', studentId: 'STU003', studentName: 'Ananya Patel', registrationNumber: '2021CS1023',
-    semester: 'Sem 6', academicYear: '2023-24', subjects: [], totalMarks: 612, percentage: 88.7,
-    grade: 'A+', status: 'pending_verification', version: 1, qrCode: 'qr-3',
-    blockchain: { id: 'tx3', hash: '0xabcdef12...', timestamp: new Date(Date.now() - 1800000), status: 'pending', type: 'issue' },
-    issuedAt: new Date(Date.now() - 1800000), issuedBy: 'Dr. Sarah Johnson',
-  },
-];
+import { useGeneration, GenerationJob } from '@/contexts/GenerationContext';
 
 const quickActions = [
   { to: '/issue/template', icon: Upload, title: 'Issue New Cards', desc: 'Upload template & data', color: 'primary' },
-  { to: '/cards', icon: FileText, title: 'View All Cards', desc: '1,248 issued cards', color: 'success' },
+  { to: '/generation-status', icon: FileText, title: 'View All Batches', desc: 'View generation history', color: 'success' },
   { to: '/reevaluations', icon: RefreshCcw, title: 'Re-Evaluations', desc: '8 pending requests', color: 'warning', badge: '8' },
 ];
 
-const columns: Column<MarksCard>[] = [
+// Mock recent batches for display
+const mockRecentBatches: GenerationJob[] = [
   {
-    key: 'student',
-    header: 'Student',
-    render: (card) => (
-      <div>
-        <p className="font-medium">{card.studentName}</p>
-        <p className="text-xs text-muted-foreground font-mono">{card.registrationNumber}</p>
-      </div>
-    ),
+    id: 'batch-001',
+    fileName: 'CS_Semester6_2024.xlsx',
+    totalCards: 150,
+    generatedCards: 150,
+    status: 'completed',
+    startedAt: new Date(Date.now() - 86400000),
+    completedAt: new Date(Date.now() - 86000000),
   },
   {
-    key: 'semester',
-    header: 'Semester',
-    render: (card) => <span>{card.semester}</span>,
+    id: 'batch-002',
+    fileName: 'ME_Semester4_2024.xlsx',
+    totalCards: 120,
+    generatedCards: 120,
+    status: 'completed',
+    startedAt: new Date(Date.now() - 172800000),
+    completedAt: new Date(Date.now() - 172000000),
   },
   {
-    key: 'version',
-    header: 'Version',
-    render: (card) => (
-      <Badge variant="outline" className="text-xs">
-        v{card.version}
-      </Badge>
-    ),
-  },
-  {
-    key: 'status',
-    header: 'Status',
-    render: (card) => <StatusBadge status={card.status} />,
-  },
-  {
-    key: 'blockchain',
-    header: 'Blockchain',
-    render: (card) => <TransactionBadge status={card.blockchain.status} size="sm" />,
-  },
-  {
-    key: 'issued',
-    header: 'Issued',
-    render: (card) => (
-      <span className="text-muted-foreground text-sm">
-        {format(card.issuedAt, 'dd MMM yyyy')}
-      </span>
-    ),
-  },
-  {
-    key: 'actions',
-    header: '',
-    className: 'text-right',
-    render: () => (
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="icon">
-            <MoreHorizontal className="h-4 w-4" />
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
-          <DropdownMenuItem><Eye className="h-4 w-4 mr-2" />View</DropdownMenuItem>
-          <DropdownMenuItem><Download className="h-4 w-4 mr-2" />Download</DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
-    ),
+    id: 'batch-003',
+    fileName: 'ECE_Semester8_2024.xlsx',
+    totalCards: 85,
+    generatedCards: 85,
+    status: 'completed',
+    startedAt: new Date(Date.now() - 259200000),
+    completedAt: new Date(Date.now() - 258000000),
   },
 ];
 
+const getStatusIcon = (status: GenerationJob['status']) => {
+  switch (status) {
+    case 'in_progress':
+      return <Loader2 className="h-4 w-4 animate-spin text-primary" />;
+    case 'completed':
+      return <CheckCircle className="h-4 w-4 text-success" />;
+    case 'failed':
+      return <XCircle className="h-4 w-4 text-destructive" />;
+    default:
+      return <Clock className="h-4 w-4 text-muted-foreground" />;
+  }
+};
+
+const getStatusBadge = (status: GenerationJob['status']) => {
+  switch (status) {
+    case 'in_progress':
+      return <Badge variant="default">Generating</Badge>;
+    case 'completed':
+      return <Badge variant="success">Completed</Badge>;
+    case 'failed':
+      return <Badge variant="destructive">Failed</Badge>;
+    default:
+      return <Badge variant="secondary">Pending</Badge>;
+  }
+};
+
 export default function IssuerDashboard() {
+  const { jobs, activeJob } = useGeneration();
+  const navigate = useNavigate();
+  
+  // Combine active job with mock batches, prioritizing real jobs
+  const recentBatches = activeJob 
+    ? [activeJob, ...jobs.filter(j => j.id !== activeJob.id && j.status === 'completed').slice(0, 2), ...mockRecentBatches.slice(0, 3 - jobs.filter(j => j.status === 'completed').length)]
+    : [...jobs.filter(j => j.status === 'completed').slice(0, 3), ...mockRecentBatches].slice(0, 4);
+
   return (
     <DashboardLayout title="Dashboard" subtitle="Welcome back, Dr. Sarah Johnson">
       {/* Quick Actions */}
@@ -132,21 +108,99 @@ export default function IssuerDashboard() {
         ))}
       </div>
 
-      {/* Main Content */}
+      {/* Recent Marks Card Batches */}
       <Card>
         <CardHeader className="flex flex-row items-center justify-between pb-2">
-          <CardTitle className="text-lg font-semibold">Recent Marks Cards</CardTitle>
+          <CardTitle className="text-lg font-semibold">Recent Marks Card Batches</CardTitle>
           <Button variant="ghost" size="sm" asChild>
-            <Link to="/cards">View All<ArrowRight className="h-4 w-4 ml-1" /></Link>
+            <Link to="/generation-status">View All<ArrowRight className="h-4 w-4 ml-1" /></Link>
           </Button>
         </CardHeader>
         <CardContent className="pt-0">
-          <DataTable 
-            data={recentCards} 
-            columns={columns} 
-            keyExtractor={(card) => card.id} 
-            emptyMessage="No recent marks cards"
-          />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {recentBatches.map((batch) => (
+              <div 
+                key={batch.id} 
+                className={`p-4 rounded-lg border transition-colors ${
+                  batch.status === 'in_progress' 
+                    ? 'border-primary/50 bg-primary/5' 
+                    : 'border-border hover:border-muted-foreground/30'
+                }`}
+              >
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-3">
+                    {getStatusIcon(batch.status)}
+                    <div>
+                      <p className="font-medium text-foreground">{batch.fileName}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {batch.status === 'in_progress' 
+                          ? `Started ${format(batch.startedAt, 'dd MMM yyyy, HH:mm')}`
+                          : batch.completedAt 
+                            ? `Completed ${format(batch.completedAt, 'dd MMM yyyy, HH:mm')}`
+                            : format(batch.startedAt, 'dd MMM yyyy, HH:mm')
+                        }
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    {getStatusBadge(batch.status)}
+                    {batch.status === 'completed' && (
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon">
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => navigate(`/batch/${batch.id}`)}>
+                            <Eye className="h-4 w-4 mr-2" />View Details
+                          </DropdownMenuItem>
+                          <DropdownMenuItem>
+                            <Download className="h-4 w-4 mr-2" />Download
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    )}
+                  </div>
+                </div>
+                
+                {/* Progress bar for active generation */}
+                {batch.status === 'in_progress' && (
+                  <div className="mt-3">
+                    <div className="flex justify-between text-xs text-muted-foreground mb-1">
+                      <span>Generating marks cards...</span>
+                      <span>{batch.generatedCards} / {batch.totalCards} cards</span>
+                    </div>
+                    <Progress 
+                      value={(batch.generatedCards / batch.totalCards) * 100} 
+                      className="h-2"
+                    />
+                  </div>
+                )}
+                
+                {/* Summary for completed batches */}
+                {batch.status === 'completed' && (
+                  <div className="mt-2 flex items-center gap-4 text-sm text-muted-foreground">
+                    <span className="flex items-center gap-1">
+                      <FileText className="h-3.5 w-3.5" />
+                      {batch.totalCards} cards
+                    </span>
+                    <TransactionBadge status="confirmed" size="sm" />
+                  </div>
+                )}
+              </div>
+            ))}
+            
+            {recentBatches.length === 0 && (
+              <div className="text-center py-8 text-muted-foreground">
+                <FileText className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                <p>No marks card batches yet</p>
+                <Button variant="link" asChild className="mt-2">
+                  <Link to="/issue/template">Issue your first batch</Link>
+                </Button>
+              </div>
+            )}
+          </div>
         </CardContent>
       </Card>
     </DashboardLayout>

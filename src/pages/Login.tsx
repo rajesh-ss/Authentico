@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback, memo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -11,7 +11,7 @@ import { useToast } from '@/hooks/use-toast';
 import { demoAccounts } from '@/data';
 import { getRoleDefaultRoute } from '@/lib/roleRoutes';
 
-export default function Login() {
+const Login = memo(function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -19,18 +19,18 @@ export default function Login() {
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     try {
       const loggedInUser = await login(email, password);
-      toast({ title: 'Login Successful', description: 'Welcome to BlockCert Academic Verification System' });
+      toast({ title: 'Login Successful', description: 'Welcome to Authentico Academic Verification System' });
       const defaultRoute = getRoleDefaultRoute(loggedInUser.role);
       navigate(defaultRoute);
-    } catch (err) {
+    } catch (_err) {
       setError('Invalid email or password. Please try again.');
     }
-  };
+  }, [email, password, login, toast, navigate]);
 
   const features = [
     'Tamper-proof digital marks cards',
@@ -53,7 +53,7 @@ export default function Login() {
               <Shield className="h-10 w-10 text-primary-foreground" />
             </div>
             <div>
-              <h1 className="text-3xl font-bold text-primary-foreground">BlockCert</h1>
+              <h1 className="text-3xl font-bold text-primary-foreground">Authentico</h1>
               <p className="text-primary-foreground/70">Academic Verification System</p>
             </div>
           </div>
@@ -86,7 +86,7 @@ export default function Login() {
               <Shield className="h-7 w-7 text-primary-foreground" />
             </div>
             <div>
-              <h1 className="text-xl font-bold text-foreground">BlockCert</h1>
+              <h1 className="text-xl font-bold text-foreground">Authentico</h1>
               <p className="text-xs text-muted-foreground">Academic Verification</p>
             </div>
           </div>
@@ -162,4 +162,6 @@ export default function Login() {
       </div>
     </div>
   );
-}
+});
+
+export default Login;

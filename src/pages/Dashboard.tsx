@@ -6,6 +6,7 @@ import AdminDashboard from './dashboard/AdminDashboard';
 import StudentDashboard from './dashboard/StudentDashboard';
 import ApproverDashboard from './dashboard/ApproverDashboard';
 import VerifierDashboard from './dashboard/VerifierDashboard';
+import TeacherDashboard from './dashboard/TeacherDashboard';
 
 export default function Dashboard() {
   const { user, isAuthenticated } = useAuth();
@@ -29,6 +30,8 @@ export default function Dashboard() {
       return <ApproverDashboard />;
     case 'verifying_admin':
       return <VerifierDashboard />;
+    case 'teacher':
+      return <TeacherDashboard />;
     default:
       return <Navigate to={getRoleDefaultRoute(user.role)} replace />;
   }
