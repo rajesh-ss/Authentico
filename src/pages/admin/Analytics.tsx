@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect, useCallback } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -7,6 +7,8 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 import {
   Table,
   TableBody,
@@ -45,6 +47,8 @@ import {
   Link as LinkIcon,
   Code,
   CalendarIcon,
+  RefreshCw,
+  Clock,
 } from 'lucide-react';
 import { format, subDays, isWithinInterval, startOfDay, endOfDay } from 'date-fns';
 import { cn } from '@/lib/utils';
@@ -68,6 +72,7 @@ import {
 import type { DateRange } from 'react-day-picker';
 
 const COLORS = ['hsl(var(--primary))', 'hsl(var(--accent))', 'hsl(var(--muted))'];
+const REFRESH_INTERVAL = 30000; // 30 seconds
 
 export default function Analytics() {
   const [issuancePeriod, setIssuancePeriod] = useState<'day' | 'week' | 'month'>('day');
@@ -75,7 +80,52 @@ export default function Analytics() {
     from: subDays(new Date(), 30),
     to: new Date(),
   });
+  const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [autoRefresh, setAutoRefresh] = useState(true);
+  const [refreshKey, setRefreshKey] = useState(0);
   const { toast } = useToast();
+
+  // Refresh data function
+  const refreshData = useCallback(() => {
+    setIsRefreshing(true);
+    // Simulate API call delay
+    setTimeout(() => {
+      setRefreshKey(prev => prev + 1);
+      setLastUpdated(new Date());
+      setIsRefreshing(false);
+    }, 500);
+  }, []);
+
+  // Auto-refresh effect
+  useEffect(() => {
+    if (!autoRefresh) return;
+    
+    const interval = setInterval(() => {
+      refreshData();
+    }, REFRESH_INTERVAL);
+
+    return () => clearInterval(interval);
+  }, [autoRefresh, refreshData]);
+
+  // Countdown timer for next refresh
+  const [countdown, setCountdown] = useState(30);
+  
+  useEffect(() => {
+    if (!autoRefresh) {
+      setCountdown(30);
+      return;
+    }
+    
+    const timer = setInterval(() => {
+      setCountdown(prev => {
+        if (prev <= 1) return 30;
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [autoRefresh, refreshKey]);
 
   // Filter functions based on date range
   const filterByDateRange = <T extends { date?: string; timestamp?: string }>(
@@ -259,6 +309,45 @@ export default function Analytics() {
               </div>
             </PopoverContent>
           </Popover>
+        </div>
+
+        {/* Auto-refresh Controls */}
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 bg-muted/50 rounded-lg border">
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              <Clock className="h-4 w-4 text-muted-foreground" />
+              <span className="text-sm text-muted-foreground">
+                Last updated: {format(lastUpdated, 'HH:mm:ss')}
+              </span>
+            </div>
+            {autoRefresh && (
+              <Badge variant="secondary" className="text-xs">
+                Next refresh in {countdown}s
+              </Badge>
+            )}
+          </div>
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              <Switch
+                id="auto-refresh"
+                checked={autoRefresh}
+                onCheckedChange={setAutoRefresh}
+              />
+              <Label htmlFor="auto-refresh" className="text-sm cursor-pointer">
+                Auto-refresh
+              </Label>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={refreshData}
+              disabled={isRefreshing}
+              className="gap-2"
+            >
+              <RefreshCw className={cn("h-4 w-4", isRefreshing && "animate-spin")} />
+              {isRefreshing ? 'Refreshing...' : 'Refresh Now'}
+            </Button>
+          </div>
         </div>
 
         {/* Tabs */}
