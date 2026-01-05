@@ -1,0 +1,1 @@
+export { MarksCardModal } from './MarksCardModal';
