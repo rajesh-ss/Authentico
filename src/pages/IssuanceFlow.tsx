@@ -13,8 +13,15 @@ import {
   SuccessScreen,
   GeneratingScreen,
 } from '@/components/issuance';
+import { type FileFormat } from '@/components/issuance/FileUpload';
 
 const ROWS_PER_PAGE = 10;
+
+// Valid file extensions for each format
+const VALID_EXTENSIONS: Record<FileFormat, string[]> = {
+  excel: ['.xlsx', '.xls', '.csv'],
+  mdb: ['.mdb', '.accdb'],
+};
 
 export default function IssuanceFlow() {
   const navigate = useNavigate();
@@ -27,6 +34,7 @@ export default function IssuanceFlow() {
   const [isParsing, setIsParsing] = useState(false);
   const [templateOpen, setTemplateOpen] = useState(true);
   const [lastSubmittedJobId, setLastSubmittedJobId] = useState<string | null>(null);
+  const [selectedFormat, setSelectedFormat] = useState<FileFormat>('excel');
 
   const { jobs, activeJob, startGeneration, updateProgress, completeJob, failJob } = useGeneration();
 
@@ -67,29 +75,72 @@ export default function IssuanceFlow() {
     };
   }, [rawData, headers]);
 
-  const handleUpload = useCallback(async (file: File) => {
+  // Parse Excel/CSV files
+  const parseExcelFile = useCallback(async (file: File) => {
+    const buffer = await file.arrayBuffer();
+    const workbook = XLSX.read(buffer, { type: 'array' });
+    const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+    const jsonData = XLSX.utils.sheet_to_json(firstSheet);
+    
+    if (jsonData.length === 0) {
+      throw new Error('The file appears to be empty');
+    }
+    
+    return {
+      data: jsonData as Record<string, unknown>[],
+      headers: Object.keys(jsonData[0] || {}),
+    };
+  }, []);
+
+  // Parse MDB/Access files (mock implementation - in production would use server-side parsing)
+  const parseMdbFile = useCallback(async (file: File) => {
+    // MDB files require server-side processing in production
+    // For now, we simulate with mock data structure
+    toast.info('MDB parsing requires server-side processing. Using sample data structure.');
+    
+    // Simulate processing delay
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    
+    // Return mock data structure that would come from server
+    const mockData = Array.from({ length: 25 }, (_, i) => ({
+      StudentID: `STU${String(i + 1).padStart(4, '0')}`,
+      Name: `Student ${i + 1}`,
+      RollNo: `${100 + i}`,
+      Department: 'Computer Science',
+      Semester: '6',
+      Subject1: Math.floor(Math.random() * 40) + 60,
+      Subject2: Math.floor(Math.random() * 40) + 60,
+      Subject3: Math.floor(Math.random() * 40) + 60,
+      Subject4: Math.floor(Math.random() * 40) + 60,
+      Subject5: Math.floor(Math.random() * 40) + 60,
+    }));
+    
+    return {
+      data: mockData,
+      headers: Object.keys(mockData[0]),
+    };
+  }, []);
+
+  const handleUpload = useCallback(async (file: File, format: FileFormat) => {
     setIsParsing(true);
     try {
       if (file.size > 10 * 1024 * 1024) {
         throw new Error('File size exceeds 10MB limit');
       }
 
-      const buffer = await file.arrayBuffer();
-      const workbook = XLSX.read(buffer, { type: 'array' });
-      const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-      const jsonData = XLSX.utils.sheet_to_json(firstSheet);
-      
-      if (jsonData.length === 0) {
-        throw new Error('The file appears to be empty');
+      let result: { data: Record<string, unknown>[]; headers: string[] };
+
+      if (format === 'mdb') {
+        result = await parseMdbFile(file);
+      } else {
+        result = await parseExcelFile(file);
       }
 
-      const extractedHeaders = Object.keys(jsonData[0] || {});
-
       setExcelFile(file);
-      setRawData(jsonData as Record<string, unknown>[]);
-      setHeaders(extractedHeaders);
+      setRawData(result.data);
+      setHeaders(result.headers);
       setParseError(null);
-      toast.success(`Loaded ${jsonData.length} records from ${extractedHeaders.length} columns`);
+      toast.success(`Loaded ${result.data.length} records from ${result.headers.length} columns`);
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Failed to parse the file';
       setParseError(message);
@@ -97,7 +148,7 @@ export default function IssuanceFlow() {
     } finally {
       setIsParsing(false);
     }
-  }, []);
+  }, [parseExcelFile, parseMdbFile]);
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -109,18 +160,19 @@ export default function IssuanceFlow() {
   }, []);
 
   const handleDrop = useCallback(
-    async (e: React.DragEvent) => {
+    async (e: React.DragEvent, format: FileFormat) => {
       e.preventDefault();
       setIsDragOver(false);
       setParseError(null);
       const file = e.dataTransfer.files[0];
       if (file) {
-        const validExtensions = ['.xlsx', '.xls', '.csv'];
+        const validExtensions = VALID_EXTENSIONS[format];
         const isValid = validExtensions.some(ext => file.name.toLowerCase().endsWith(ext));
         if (isValid) {
-          await handleUpload(file);
+          await handleUpload(file, format);
         } else {
-          toast.error('Please upload an Excel (.xlsx, .xls) or CSV file');
+          const formatLabel = format === 'mdb' ? 'Access (.mdb, .accdb)' : 'Excel (.xlsx, .xls) or CSV';
+          toast.error(`Please upload a ${formatLabel} file`);
         }
       }
     },
@@ -128,15 +180,19 @@ export default function IssuanceFlow() {
   );
 
   const handleFileSelect = useCallback(
-    async (e: React.ChangeEvent<HTMLInputElement>) => {
+    async (e: React.ChangeEvent<HTMLInputElement>, format: FileFormat) => {
       setParseError(null);
       const file = e.target.files?.[0];
       if (file) {
-        await handleUpload(file);
+        await handleUpload(file, format);
       }
     },
     [handleUpload]
   );
+
+  const handleFormatChange = useCallback((format: FileFormat) => {
+    setSelectedFormat(format);
+  }, []);
 
   const generationIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -261,6 +317,8 @@ export default function IssuanceFlow() {
             onFileSelect={handleFileSelect}
             onReset={handleReset}
             hasData={rawData.length > 0}
+            selectedFormat={selectedFormat}
+            onFormatChange={handleFormatChange}
           />
 
           {rawData.length > 0 && dataStats && (

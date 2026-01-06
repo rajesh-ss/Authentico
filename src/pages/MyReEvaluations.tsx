@@ -13,6 +13,7 @@ const requests: ReEvaluationRequest[] = mockReEvaluations.map(item => ({
   marksCardId: item.marksCardId,
   studentId: item.studentId,
   studentName: item.studentName,
+  type: 'marks_revaluation' as const,
   subjects: item.subjects,
   reason: item.reason,
   supportingDocuments: [],
