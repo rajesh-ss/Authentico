@@ -1,10 +1,13 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { 
-  Upload, FileSpreadsheet, CheckCircle, AlertCircle, Loader2, X, RotateCcw, FileCheck 
+  Upload, FileSpreadsheet, CheckCircle, AlertCircle, Loader2, X, RotateCcw, FileCheck, Database 
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+
+export type FileFormat = 'excel' | 'mdb';
 
 interface FileUploadProps {
   file: File | null;
@@ -13,11 +16,32 @@ interface FileUploadProps {
   isDragOver: boolean;
   onDragOver: (e: React.DragEvent) => void;
   onDragLeave: () => void;
-  onDrop: (e: React.DragEvent) => void;
-  onFileSelect: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onDrop: (e: React.DragEvent, format: FileFormat) => void;
+  onFileSelect: (e: React.ChangeEvent<HTMLInputElement>, format: FileFormat) => void;
   onReset: () => void;
   hasData: boolean;
+  selectedFormat?: FileFormat;
+  onFormatChange?: (format: FileFormat) => void;
 }
+
+const formatConfig = {
+  excel: {
+    accept: '.xlsx,.xls,.csv',
+    label: 'Excel / CSV',
+    description: 'Excel (.xlsx, .xls) or CSV format',
+    icon: FileSpreadsheet,
+    dropText: 'Drop your Excel file here',
+    browseText: 'Browse Files',
+  },
+  mdb: {
+    accept: '.mdb,.accdb',
+    label: 'Access DB',
+    description: 'Microsoft Access (.mdb, .accdb) format',
+    icon: Database,
+    dropText: 'Drop your Access database here',
+    browseText: 'Browse Databases',
+  },
+};
 
 export const FileUpload = React.memo(function FileUpload({
   file,
@@ -30,7 +54,27 @@ export const FileUpload = React.memo(function FileUpload({
   onFileSelect,
   onReset,
   hasData,
+  selectedFormat = 'excel',
+  onFormatChange,
 }: FileUploadProps) {
+  const [activeTab, setActiveTab] = useState<FileFormat>(selectedFormat);
+  const config = formatConfig[activeTab];
+  const Icon = config.icon;
+
+  const handleTabChange = (value: string) => {
+    const newFormat = value as FileFormat;
+    setActiveTab(newFormat);
+    onFormatChange?.(newFormat);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    onDrop(e, activeTab);
+  };
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    onFileSelect(e, activeTab);
+  };
+
   return (
     <Card className={cn(
       "transition-all duration-300",
@@ -48,12 +92,12 @@ export const FileUpload = React.memo(function FileUpload({
               ) : file && !parseError ? (
                 <FileCheck className="h-5 w-5 text-success" />
               ) : (
-                <FileSpreadsheet className="h-5 w-5 text-primary" />
+                <Icon className="h-5 w-5 text-primary" />
               )}
             </div>
             <div>
               <CardTitle className="text-base">Upload Student Data</CardTitle>
-              <CardDescription>Excel (.xlsx, .xls) or CSV format</CardDescription>
+              <CardDescription>{config.description}</CardDescription>
             </div>
           </div>
           {file && !parseError && (
@@ -63,11 +107,26 @@ export const FileUpload = React.memo(function FileUpload({
           )}
         </div>
       </CardHeader>
-      <CardContent>
+      <CardContent className="space-y-4">
+        {/* Format Selection Tabs */}
+        <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="excel" className="gap-2" disabled={!!file}>
+              <FileSpreadsheet className="h-4 w-4" />
+              Excel / CSV
+            </TabsTrigger>
+            <TabsTrigger value="mdb" className="gap-2" disabled={!!file}>
+              <Database className="h-4 w-4" />
+              Access DB (.mdb)
+            </TabsTrigger>
+          </TabsList>
+        </Tabs>
+
+        {/* Drop Zone */}
         <div
           onDragOver={onDragOver}
           onDragLeave={onDragLeave}
-          onDrop={onDrop}
+          onDrop={handleDrop}
           className={cn(
             "border-2 border-dashed rounded-xl p-6 text-center transition-all duration-200",
             isDragOver && "border-primary bg-primary/5 scale-[1.02]",
@@ -98,9 +157,9 @@ export const FileUpload = React.memo(function FileUpload({
               <label className="cursor-pointer inline-block">
                 <input
                   type="file"
-                  accept=".xlsx,.xls,.csv"
+                  accept={config.accept}
                   className="hidden"
-                  onChange={onFileSelect}
+                  onChange={handleFileSelect}
                 />
                 <Button variant="outline" size="sm" asChild>
                   <span>
@@ -124,9 +183,9 @@ export const FileUpload = React.memo(function FileUpload({
               <label className="cursor-pointer inline-block">
                 <input
                   type="file"
-                  accept=".xlsx,.xls,.csv"
+                  accept={config.accept}
                   className="hidden"
-                  onChange={onFileSelect}
+                  onChange={handleFileSelect}
                 />
                 <Button variant="outline" size="sm" asChild>
                   <span>Try Again</span>
@@ -140,7 +199,7 @@ export const FileUpload = React.memo(function FileUpload({
               </div>
               <div>
                 <p className="font-medium text-foreground">
-                  Drop your Excel file here
+                  {config.dropText}
                 </p>
                 <p className="text-sm text-muted-foreground mt-1">
                   or click to browse • Max 10MB
@@ -149,14 +208,14 @@ export const FileUpload = React.memo(function FileUpload({
               <label className="cursor-pointer inline-block">
                 <input
                   type="file"
-                  accept=".xlsx,.xls,.csv"
+                  accept={config.accept}
                   className="hidden"
-                  onChange={onFileSelect}
+                  onChange={handleFileSelect}
                 />
                 <Button variant="outline" asChild>
                   <span>
-                    <FileSpreadsheet className="h-4 w-4 mr-2" />
-                    Browse Files
+                    <Icon className="h-4 w-4 mr-2" />
+                    {config.browseText}
                   </span>
                 </Button>
               </label>
