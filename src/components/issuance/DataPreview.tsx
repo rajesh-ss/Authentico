@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Eye, Users, Columns, Sparkles, Loader2, Send } from 'lucide-react';
+import { Eye, Users, Columns, Sparkles, Loader2, Send, Package } from 'lucide-react';
 
 interface DataPreviewProps {
   headers: string[];
@@ -23,6 +23,7 @@ interface DataPreviewProps {
   canGoPrev: boolean;
   onSubmit: () => void;
   isSubmitting: boolean;
+  batchCount?: number;
 }
 
 export const DataPreview = React.memo(function DataPreview({
@@ -41,6 +42,7 @@ export const DataPreview = React.memo(function DataPreview({
   canGoPrev,
   onSubmit,
   isSubmitting,
+  batchCount,
 }: DataPreviewProps) {
   return (
     <Card className="animate-in slide-in-from-bottom-4 duration-300">
@@ -55,15 +57,21 @@ export const DataPreview = React.memo(function DataPreview({
               <CardDescription>Review your data before issuing</CardDescription>
             </div>
           </div>
-          <div className="flex gap-3">
+          <div className="flex flex-wrap gap-2">
             <Badge variant="secondary" className="gap-1.5">
               <Users className="h-3 w-3" />
-              {totalRecords} Records
+              {totalRecords.toLocaleString()} Records
             </Badge>
             <Badge variant="outline" className="gap-1.5">
               <Columns className="h-3 w-3" />
               {headers.length} Columns
             </Badge>
+            {batchCount && batchCount > 1 && (
+              <Badge variant="default" className="gap-1.5">
+                <Package className="h-3 w-3" />
+                {batchCount} Batches
+              </Badge>
+            )}
           </div>
         </div>
       </CardHeader>
@@ -156,7 +164,7 @@ export const DataPreview = React.memo(function DataPreview({
             size="lg"
             onClick={onSubmit}
             disabled={isSubmitting}
-            className="gap-2 min-w-[160px]"
+            className="gap-2 min-w-[180px]"
           >
             {isSubmitting ? (
               <>
@@ -166,7 +174,7 @@ export const DataPreview = React.memo(function DataPreview({
             ) : (
               <>
                 <Send className="h-4 w-4" />
-                Issue {totalRecords} Cards
+                Generate {batchCount && batchCount > 1 ? `${batchCount} Batches` : `${totalRecords.toLocaleString()} Cards`}
               </>
             )}
           </Button>
