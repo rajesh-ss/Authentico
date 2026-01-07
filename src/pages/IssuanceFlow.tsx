@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useRef, useMemo } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { toast } from 'sonner';
@@ -10,12 +10,12 @@ import {
   TemplatePreview,
   FileUpload,
   DataPreview,
-  SuccessScreen,
-  GeneratingScreen,
+  BatchConfirmationDialog,
 } from '@/components/issuance';
 import { type FileFormat } from '@/components/issuance/FileUpload';
 
 const ROWS_PER_PAGE = 10;
+const MAX_RECORDS_PER_BATCH = 3000;
 
 // Valid file extensions for each format
 const VALID_EXTENSIONS: Record<FileFormat, string[]> = {
@@ -30,13 +30,12 @@ export default function IssuanceFlow() {
   const [headers, setHeaders] = useState<string[]>([]);
   const [isDragOver, setIsDragOver] = useState(false);
   const [parseError, setParseError] = useState<string | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [isParsing, setIsParsing] = useState(false);
   const [templateOpen, setTemplateOpen] = useState(true);
-  const [lastSubmittedJobId, setLastSubmittedJobId] = useState<string | null>(null);
   const [selectedFormat, setSelectedFormat] = useState<FileFormat>('excel');
+  const [showBatchDialog, setShowBatchDialog] = useState(false);
 
-  const { jobs, activeJob, startGeneration, updateProgress, completeJob, failJob } = useGeneration();
+  const { activeJobs, startBatchGeneration, isGenerating, getJobsByParentFile } = useGeneration();
 
   // Pagination hook
   const pagination = usePagination({
@@ -44,19 +43,22 @@ export default function IssuanceFlow() {
     pageSize: ROWS_PER_PAGE,
   });
 
-  // Find the last completed job that we submitted
-  const completedJob = useMemo(() => {
-    if (!lastSubmittedJobId) return null;
-    const job = jobs.find(j => j.id === lastSubmittedJobId);
-    return job?.status === 'completed' ? job : null;
-  }, [jobs, lastSubmittedJobId]);
+  // Calculate batch info
+  const batchInfo = useMemo(() => {
+    if (rawData.length === 0) return null;
+    const totalBatches = Math.ceil(rawData.length / MAX_RECORDS_PER_BATCH);
+    return {
+      totalRecords: rawData.length,
+      totalBatches,
+      recordsPerBatch: MAX_RECORDS_PER_BATCH,
+    };
+  }, [rawData.length]);
 
-  // Check if we're currently generating the submitted job
-  const isGeneratingSubmittedJob = useMemo(() => {
-    if (!lastSubmittedJobId) return false;
-    const job = jobs.find(j => j.id === lastSubmittedJobId);
-    return job?.status === 'in_progress';
-  }, [jobs, lastSubmittedJobId]);
+  // Get jobs for current file
+  const currentFileJobs = useMemo(() => {
+    if (!excelFile) return [];
+    return getJobsByParentFile(excelFile.name);
+  }, [excelFile, getJobsByParentFile]);
 
   // Calculate current step
   const currentStep = useMemo(() => {
@@ -68,10 +70,12 @@ export default function IssuanceFlow() {
   // Data statistics
   const dataStats = useMemo(() => {
     if (rawData.length === 0) return null;
+    const totalBatches = Math.ceil(rawData.length / MAX_RECORDS_PER_BATCH);
     return {
       totalRecords: rawData.length,
       totalColumns: headers.length,
       estimatedTime: Math.ceil(rawData.length / 50),
+      totalBatches,
     };
   }, [rawData, headers]);
 
@@ -101,13 +105,13 @@ export default function IssuanceFlow() {
     // Simulate processing delay
     await new Promise(resolve => setTimeout(resolve, 1500));
     
-    // Return mock data structure that would come from server
-    const mockData = Array.from({ length: 25 }, (_, i) => ({
-      StudentID: `STU${String(i + 1).padStart(4, '0')}`,
+    // Return mock data structure that would come from server (larger dataset to demo batching)
+    const mockData = Array.from({ length: 7500 }, (_, i) => ({
+      StudentID: `STU${String(i + 1).padStart(5, '0')}`,
       Name: `Student ${i + 1}`,
-      RollNo: `${100 + i}`,
-      Department: 'Computer Science',
-      Semester: '6',
+      RollNo: `${1000 + i}`,
+      Department: ['Computer Science', 'Mechanical', 'Electrical', 'Civil'][i % 4],
+      Semester: String((i % 8) + 1),
       Subject1: Math.floor(Math.random() * 40) + 60,
       Subject2: Math.floor(Math.random() * 40) + 60,
       Subject3: Math.floor(Math.random() * 40) + 60,
@@ -140,7 +144,12 @@ export default function IssuanceFlow() {
       setRawData(result.data);
       setHeaders(result.headers);
       setParseError(null);
-      toast.success(`Loaded ${result.data.length} records from ${result.headers.length} columns`);
+      
+      const numBatches = Math.ceil(result.data.length / MAX_RECORDS_PER_BATCH);
+      toast.success(
+        `Loaded ${result.data.length.toLocaleString()} records from ${result.headers.length} columns. ` +
+        `Will be split into ${numBatches} batch${numBatches > 1 ? 'es' : ''}.`
+      );
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Failed to parse the file';
       setParseError(message);
@@ -194,53 +203,34 @@ export default function IssuanceFlow() {
     setSelectedFormat(format);
   }, []);
 
-  const generationIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  // Show batch confirmation dialog before generating
+  const handleSubmit = useCallback(() => {
+    if (!excelFile || rawData.length === 0) return;
+    setShowBatchDialog(true);
+  }, [excelFile, rawData.length]);
 
-  useEffect(() => {
-    return () => {
-      if (generationIntervalRef.current) {
-        clearInterval(generationIntervalRef.current);
-      }
-    };
-  }, []);
-
-  const handleSubmit = useCallback(async () => {
+  // Start batch generation
+  const handleConfirmGeneration = useCallback(() => {
     if (!excelFile || rawData.length === 0) return;
     
-    setIsSubmitting(true);
-    const totalCards = rawData.length;
-    const fileName = excelFile.name;
+    startBatchGeneration({
+      fileName: excelFile.name,
+      totalRecords: rawData.length,
+      maxRecordsPerBatch: MAX_RECORDS_PER_BATCH,
+    });
     
-    const jobId = startGeneration(fileName, totalCards);
-    setLastSubmittedJobId(jobId);
-    
+    // Clear the file/data but keep dialog open to show progress
     setExcelFile(null);
     setRawData([]);
     setHeaders([]);
-    setIsSubmitting(false);
     
-    let generated = 0;
-    const interval = setInterval(() => {
-      generated += Math.ceil(Math.random() * 3) + 1;
-      if (generated >= totalCards) {
-        generated = totalCards;
-        updateProgress(jobId, generated);
-        clearInterval(interval);
-        generationIntervalRef.current = null;
-        
-        if (Math.random() > 0.9) {
-          failJob(jobId, 'Network error during blockchain verification');
-          toast.error('Generation failed. Please try again.');
-        } else {
-          completeJob(jobId);
-        }
-      } else {
-        updateProgress(jobId, generated);
-      }
-    }, 200);
-    
-    generationIntervalRef.current = interval;
-  }, [excelFile, rawData, startGeneration, updateProgress, completeJob, failJob]);
+    toast.success(`Started generating ${batchInfo?.totalBatches} batch${(batchInfo?.totalBatches || 0) > 1 ? 'es' : ''}`);
+  }, [excelFile, rawData.length, startBatchGeneration, batchInfo]);
+
+  const handleNavigateToMarksCards = useCallback(() => {
+    setShowBatchDialog(false);
+    navigate('/generation-status');
+  }, [navigate]);
 
   const handleReset = useCallback(() => {
     setExcelFile(null);
@@ -248,48 +238,6 @@ export default function IssuanceFlow() {
     setHeaders([]);
     setParseError(null);
   }, []);
-
-  const handleNewIssuance = useCallback(() => {
-    setLastSubmittedJobId(null);
-  }, []);
-
-  const handleViewBatch = useCallback(() => {
-    if (lastSubmittedJobId) {
-      navigate(`/batch/${lastSubmittedJobId}`);
-    }
-  }, [lastSubmittedJobId, navigate]);
-
-  // Show success screen if we have a completed job
-  if (completedJob) {
-    return (
-      <DashboardLayout
-        title="Issue Marks Cards"
-        subtitle="Generation completed successfully"
-      >
-        <SuccessScreen 
-          job={completedJob} 
-          onNewIssuance={handleNewIssuance}
-          onViewBatch={handleViewBatch}
-        />
-      </DashboardLayout>
-    );
-  }
-
-  // Show generating state
-  if (isGeneratingSubmittedJob && activeJob) {
-    return (
-      <DashboardLayout
-        title="Issue Marks Cards"
-        subtitle="Generating marks cards..."
-      >
-        <GeneratingScreen
-          fileName={activeJob.fileName}
-          generatedCards={activeJob.generatedCards}
-          totalCards={activeJob.totalCards}
-        />
-      </DashboardLayout>
-    );
-  }
 
   return (
     <DashboardLayout
@@ -337,11 +285,24 @@ export default function IssuanceFlow() {
               canGoNext={pagination.canGoNext}
               canGoPrev={pagination.canGoPrev}
               onSubmit={handleSubmit}
-              isSubmitting={isSubmitting}
+              isSubmitting={false}
+              batchCount={dataStats.totalBatches}
             />
           )}
         </div>
       </div>
+
+      {/* Batch Confirmation & Progress Dialog */}
+      <BatchConfirmationDialog
+        open={showBatchDialog}
+        onOpenChange={setShowBatchDialog}
+        fileName={excelFile?.name || currentFileJobs[0]?.parentFileName || 'Unknown'}
+        totalRecords={rawData.length || currentFileJobs.reduce((sum, j) => sum + j.totalCards, 0)}
+        onConfirm={handleConfirmGeneration}
+        onNavigateToMarksCards={handleNavigateToMarksCards}
+        isGenerating={isGenerating && activeJobs.length > 0}
+        activeJobs={activeJobs.length > 0 ? activeJobs : currentFileJobs}
+      />
     </DashboardLayout>
   );
 }
