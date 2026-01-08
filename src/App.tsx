@@ -34,6 +34,7 @@ const TeacherDetailsApprovals = lazy(() => import("./pages/teacher/TeacherDetail
 const TeacherApproved = lazy(() => import("./pages/teacher/TeacherApproved"));
 const TeacherRejected = lazy(() => import("./pages/teacher/TeacherRejected"));
 const Analytics = lazy(() => import("./pages/admin/Analytics"));
+const Templates = lazy(() => import("./pages/issuer/Templates"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient({
@@ -87,6 +88,11 @@ const App = () => (
                 <Route path="/batch/:batchId" element={
                   <ProtectedRoute allowedRoles={['issuer']}>
                     <BatchDetails />
+                  </ProtectedRoute>
+                } />
+                <Route path="/templates" element={
+                  <ProtectedRoute allowedRoles={['issuer']}>
+                    <Templates />
                   </ProtectedRoute>
                 } />
                 <Route path="/cards" element={
