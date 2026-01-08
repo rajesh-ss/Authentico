@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ConfirmDialog } from '@/components/shared/ConfirmDialog';
 import { TemplatePreviewDialog } from '@/components/templates/TemplatePreviewDialog';
+import { TemplateFieldsEditor } from '@/components/templates/TemplateFieldsEditor';
 import { 
   Plus, 
   Search, 
@@ -74,6 +75,7 @@ const Templates = () => {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [deleteTemplate, setDeleteTemplate] = useState<MarksCardTemplate | null>(null);
   const [previewTemplate, setPreviewTemplate] = useState<MarksCardTemplate | null>(null);
+  const [editTemplate, setEditTemplate] = useState<MarksCardTemplate | null>(null);
   const [newTemplate, setNewTemplate] = useState({
     name: '',
     fileType: 'pdf' as 'pdf' | 'html',
@@ -112,6 +114,13 @@ const Templates = () => {
       toast.success('Template deleted successfully');
       setDeleteTemplate(null);
     }
+  };
+
+  const handleSaveTemplateFields = (updatedTemplate: MarksCardTemplate) => {
+    setTemplates(templates.map((t) => 
+      t.id === updatedTemplate.id ? updatedTemplate : t
+    ));
+    setEditTemplate(null);
   };
 
   const getFileTypeIcon = (fileType: 'pdf' | 'html') => {
@@ -249,9 +258,9 @@ const Templates = () => {
                             <Eye className="h-4 w-4 mr-2" />
                             Preview
                           </DropdownMenuItem>
-                          <DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => setEditTemplate(template)}>
                             <Pencil className="h-4 w-4 mr-2" />
-                            Edit
+                            Edit Fields
                           </DropdownMenuItem>
                           <DropdownMenuItem>
                             <Download className="h-4 w-4 mr-2" />
@@ -302,6 +311,14 @@ const Templates = () => {
         template={previewTemplate}
         open={!!previewTemplate}
         onOpenChange={(open) => !open && setPreviewTemplate(null)}
+      />
+
+      {/* Template Fields Editor Dialog */}
+      <TemplateFieldsEditor
+        template={editTemplate}
+        open={!!editTemplate}
+        onOpenChange={(open) => !open && setEditTemplate(null)}
+        onSave={handleSaveTemplateFields}
       />
     </DashboardLayout>
   );
