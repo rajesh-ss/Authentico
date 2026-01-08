@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ConfirmDialog } from '@/components/shared/ConfirmDialog';
+import { TemplatePreviewDialog } from '@/components/templates/TemplatePreviewDialog';
 import { 
   Plus, 
   Search, 
@@ -72,6 +73,7 @@ const Templates = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [deleteTemplate, setDeleteTemplate] = useState<MarksCardTemplate | null>(null);
+  const [previewTemplate, setPreviewTemplate] = useState<MarksCardTemplate | null>(null);
   const [newTemplate, setNewTemplate] = useState({
     name: '',
     fileType: 'pdf' as 'pdf' | 'html',
@@ -243,7 +245,7 @@ const Templates = () => {
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                          <DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => setPreviewTemplate(template)}>
                             <Eye className="h-4 w-4 mr-2" />
                             Preview
                           </DropdownMenuItem>
@@ -293,6 +295,13 @@ const Templates = () => {
         confirmLabel="Delete"
         variant="destructive"
         onConfirm={handleDeleteTemplate}
+      />
+
+      {/* Template Preview Dialog */}
+      <TemplatePreviewDialog
+        template={previewTemplate}
+        open={!!previewTemplate}
+        onOpenChange={(open) => !open && setPreviewTemplate(null)}
       />
     </DashboardLayout>
   );
