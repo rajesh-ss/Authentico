@@ -47,6 +47,7 @@ const roleNavItems: Record<UserRole, NavItem[]> = {
   issuer: [
     { label: 'Dashboard', icon: LayoutDashboard, href: '/dashboard' },
     { label: 'Issue Marks Cards', icon: Upload, href: '/issue/template' },
+    { label: 'Templates', icon: FileText, href: '/templates' },
     { label: 'Marks Cards', icon: GraduationCap, href: '/generation-status' },
   ],
   college_admin: [
