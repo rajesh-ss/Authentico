@@ -30,9 +30,11 @@ const CompletedUpdates = lazy(() => import("./pages/updater/CompletedUpdates"));
 const PendingSignatures = lazy(() => import("./pages/verifier/PendingSignatures"));
 const SignedRecords = lazy(() => import("./pages/verifier/SignedRecords"));
 const TeacherApprovals = lazy(() => import("./pages/teacher/TeacherApprovals"));
+const TeacherDetailsApprovals = lazy(() => import("./pages/teacher/TeacherDetailsApprovals"));
 const TeacherApproved = lazy(() => import("./pages/teacher/TeacherApproved"));
 const TeacherRejected = lazy(() => import("./pages/teacher/TeacherRejected"));
 const Analytics = lazy(() => import("./pages/admin/Analytics"));
+const Templates = lazy(() => import("./pages/issuer/Templates"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient({
@@ -86,6 +88,11 @@ const App = () => (
                 <Route path="/batch/:batchId" element={
                   <ProtectedRoute allowedRoles={['issuer']}>
                     <BatchDetails />
+                  </ProtectedRoute>
+                } />
+                <Route path="/templates" element={
+                  <ProtectedRoute allowedRoles={['issuer']}>
+                    <Templates />
                   </ProtectedRoute>
                 } />
                 <Route path="/cards" element={
@@ -173,6 +180,11 @@ const App = () => (
                 <Route path="/teacher/approvals" element={
                   <ProtectedRoute allowedRoles={['teacher']}>
                     <TeacherApprovals />
+                  </ProtectedRoute>
+                } />
+                <Route path="/teacher/details" element={
+                  <ProtectedRoute allowedRoles={['teacher']}>
+                    <TeacherDetailsApprovals />
                   </ProtectedRoute>
                 } />
                 <Route path="/teacher/approved" element={

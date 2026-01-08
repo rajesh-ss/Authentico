@@ -42,11 +42,14 @@ export interface SubjectMark {
   grade: string;
 }
 
+export type ReEvaluationType = 'marks_revaluation' | 'details_update';
+
 export interface ReEvaluationRequest {
   id: string;
   marksCardId: string;
   studentId: string;
   studentName: string;
+  type: ReEvaluationType;
   subjects: string[];
   reason: string;
   supportingDocuments: string[];
@@ -54,6 +57,12 @@ export interface ReEvaluationRequest {
   timeline: ReEvaluationTimelineEvent[];
   createdAt: Date;
   updatedAt: Date;
+  // Details update specific fields
+  detailsUpdate?: {
+    field: 'name' | 'roll_number' | 'registration_number' | 'other';
+    currentValue: string;
+    requestedValue: string;
+  };
 }
 
 export type ReEvaluationStatus = 

@@ -47,6 +47,7 @@ const roleNavItems: Record<UserRole, NavItem[]> = {
   issuer: [
     { label: 'Dashboard', icon: LayoutDashboard, href: '/dashboard' },
     { label: 'Issue Marks Cards', icon: Upload, href: '/issue/template' },
+    { label: 'Templates', icon: FileText, href: '/templates' },
     { label: 'Marks Cards', icon: GraduationCap, href: '/generation-status' },
   ],
   college_admin: [
@@ -80,7 +81,8 @@ const roleNavItems: Record<UserRole, NavItem[]> = {
   ],
   teacher: [
     { label: 'Dashboard', icon: LayoutDashboard, href: '/dashboard' },
-    { label: 'Pending Approvals', icon: ClipboardCheck, href: '/teacher/approvals', badge: '3' },
+    { label: 'Marks Re-Evaluation', icon: ClipboardCheck, href: '/teacher/approvals', badge: '3' },
+    { label: 'Details Updates', icon: Users, href: '/teacher/details', badge: '2' },
     { label: 'Approved Requests', icon: FileText, href: '/teacher/approved' },
     { label: 'Rejected Requests', icon: FileText, href: '/teacher/rejected' },
   ],

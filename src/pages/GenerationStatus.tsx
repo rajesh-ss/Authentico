@@ -23,8 +23,13 @@ import {
   Search,
   Filter,
   X,
-  Eye
+  Eye,
+  Hash,
+  ChevronDown,
+  ChevronRight,
+  FolderOpen
 } from 'lucide-react';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { useNavigate } from 'react-router-dom';
 import { format, formatDistanceToNow, isAfter, subDays, subMonths } from 'date-fns';
 import { cn } from '@/lib/utils';
@@ -75,7 +80,18 @@ function JobCard({ job, onRetry, onDownload, onViewDetails, isDownloading }: Job
                 <div className="flex items-center gap-2">
                   <FileSpreadsheet className="h-4 w-4 text-muted-foreground shrink-0" />
                   <p className="font-medium truncate">{job.fileName}</p>
+                  {job.batchNumber && job.totalBatches && job.totalBatches > 1 && (
+                    <Badge variant="outline" className="text-xs shrink-0">
+                      Batch {job.batchNumber}/{job.totalBatches}
+                    </Badge>
+                  )}
                 </div>
+                {job.transactionId && (
+                  <div className="flex items-center gap-1 text-xs text-muted-foreground mt-0.5">
+                    <Hash className="h-3 w-3" />
+                    <span className="font-mono">{job.transactionId}</span>
+                  </div>
+                )}
                 <p className="text-sm text-muted-foreground">
                   Started {formatDistanceToNow(job.startedAt, { addSuffix: true })}
                 </p>
@@ -198,48 +214,68 @@ function JobCard({ job, onRetry, onDownload, onViewDetails, isDownloading }: Job
 const historicalBatches: GenerationJob[] = [
   {
     id: 'hist_batch_001',
-    fileName: 'CS_Semester6_2024_Batch1.xlsx',
-    totalCards: 120,
-    generatedCards: 120,
+    fileName: 'CS_Semester6_2024_Batch1',
+    totalCards: 2500,
+    generatedCards: 2500,
     status: 'completed',
     startedAt: new Date('2024-12-20T10:30:00'),
     completedAt: new Date('2024-12-20T10:35:00'),
+    transactionId: 'TXN-M4K8J2-XYZ123AB',
+    batchNumber: 1,
+    totalBatches: 4,
+    parentFileName: 'CS_Semester6_2024.xlsx',
   },
   {
     id: 'hist_batch_002',
-    fileName: 'ECE_Semester4_2024.xlsx',
-    totalCards: 85,
-    generatedCards: 85,
+    fileName: 'CS_Semester6_2024_Batch2',
+    totalCards: 2500,
+    generatedCards: 2500,
     status: 'completed',
-    startedAt: new Date('2024-12-18T14:00:00'),
-    completedAt: new Date('2024-12-18T14:04:00'),
+    startedAt: new Date('2024-12-20T10:32:00'),
+    completedAt: new Date('2024-12-20T10:37:00'),
+    transactionId: 'TXN-M4K8J3-DEF456GH',
+    batchNumber: 2,
+    totalBatches: 4,
+    parentFileName: 'CS_Semester6_2024.xlsx',
   },
   {
     id: 'hist_batch_003',
-    fileName: 'ME_Semester2_2024.xlsx',
-    totalCards: 95,
-    generatedCards: 95,
+    fileName: 'ECE_Semester4_2024_Batch1',
+    totalCards: 1800,
+    generatedCards: 1800,
     status: 'completed',
-    startedAt: new Date('2024-12-15T09:15:00'),
-    completedAt: new Date('2024-12-15T09:20:00'),
+    startedAt: new Date('2024-12-18T14:00:00'),
+    completedAt: new Date('2024-12-18T14:04:00'),
+    transactionId: 'TXN-L3J7H1-JKL789MN',
+    batchNumber: 1,
+    totalBatches: 1,
+    parentFileName: 'ECE_Semester4_2024.xlsx',
   },
   {
     id: 'hist_batch_004',
-    fileName: 'Civil_Semester8_2024.xlsx',
-    totalCards: 60,
-    generatedCards: 60,
+    fileName: 'ME_Semester2_2024_Batch1',
+    totalCards: 3000,
+    generatedCards: 3000,
     status: 'completed',
-    startedAt: new Date('2024-12-10T11:00:00'),
-    completedAt: new Date('2024-12-10T11:03:00'),
+    startedAt: new Date('2024-12-15T09:15:00'),
+    completedAt: new Date('2024-12-15T09:20:00'),
+    transactionId: 'TXN-K2I6G0-OPQ012RS',
+    batchNumber: 1,
+    totalBatches: 2,
+    parentFileName: 'ME_Semester2_2024.xlsx',
   },
   {
     id: 'hist_batch_005',
-    fileName: 'IT_Semester6_2024.xlsx',
-    totalCards: 110,
-    generatedCards: 110,
+    fileName: 'ME_Semester2_2024_Batch2',
+    totalCards: 1500,
+    generatedCards: 1500,
     status: 'completed',
-    startedAt: new Date('2024-12-05T16:30:00'),
-    completedAt: new Date('2024-12-05T16:36:00'),
+    startedAt: new Date('2024-12-15T09:17:00'),
+    completedAt: new Date('2024-12-15T09:22:00'),
+    transactionId: 'TXN-K2I6G1-TUV345WX',
+    batchNumber: 2,
+    totalBatches: 2,
+    parentFileName: 'ME_Semester2_2024.xlsx',
   },
 ];
 
@@ -250,10 +286,23 @@ export default function GenerationStatus() {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [dateFilter, setDateFilter] = useState<string>('all');
+  const [parentFileFilter, setParentFileFilter] = useState<string>('all');
   const [downloadProgress, setDownloadProgress] = useState({ current: 0, total: 0, fileName: '' });
+  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
 
   // Combine current session jobs with historical batches
   const allJobs = [...jobs, ...historicalBatches.filter(h => !jobs.some(j => j.id === h.id))];
+
+  // Get unique parent file names for filter dropdown
+  const parentFileNames = useMemo(() => {
+    const names = new Set<string>();
+    allJobs.forEach(job => {
+      if (job.parentFileName) {
+        names.add(job.parentFileName);
+      }
+    });
+    return Array.from(names).sort();
+  }, [allJobs]);
 
   // Filter jobs based on search and filters
   const filteredJobs = useMemo(() => {
@@ -261,10 +310,14 @@ export default function GenerationStatus() {
       // Search filter
       const matchesSearch = searchQuery === '' || 
         job.fileName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        job.id.toLowerCase().includes(searchQuery.toLowerCase());
+        job.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (job.transactionId && job.transactionId.toLowerCase().includes(searchQuery.toLowerCase()));
 
       // Status filter
       const matchesStatus = statusFilter === 'all' || job.status === statusFilter;
+
+      // Parent file filter
+      const matchesParentFile = parentFileFilter === 'all' || job.parentFileName === parentFileFilter;
 
       // Date filter
       let matchesDate = true;
@@ -286,9 +339,53 @@ export default function GenerationStatus() {
           matchesDate = true;
       }
 
-      return matchesSearch && matchesStatus && matchesDate;
+      return matchesSearch && matchesStatus && matchesDate && matchesParentFile;
     });
-  }, [allJobs, searchQuery, statusFilter, dateFilter]);
+  }, [allJobs, searchQuery, statusFilter, dateFilter, parentFileFilter]);
+
+  // Group jobs by parent file name
+  const groupedJobs = useMemo(() => {
+    const groups = new Map<string, GenerationJob[]>();
+    
+    filteredJobs.forEach(job => {
+      const key = job.parentFileName || job.fileName;
+      if (!groups.has(key)) {
+        groups.set(key, []);
+      }
+      groups.get(key)!.push(job);
+    });
+    
+    // Sort batches within each group by batch number
+    groups.forEach((jobs, key) => {
+      jobs.sort((a, b) => (a.batchNumber || 0) - (b.batchNumber || 0));
+    });
+    
+    // Convert to array and sort groups by most recent
+    return Array.from(groups.entries())
+      .map(([parentFile, jobs]) => ({
+        parentFile,
+        jobs,
+        totalCards: jobs.reduce((sum, j) => sum + j.totalCards, 0),
+        completedCards: jobs.reduce((sum, j) => sum + j.generatedCards, 0),
+        allCompleted: jobs.every(j => j.status === 'completed'),
+        hasActive: jobs.some(j => j.status === 'in_progress'),
+        hasFailed: jobs.some(j => j.status === 'failed'),
+        latestDate: Math.max(...jobs.map(j => (j.completedAt || j.startedAt).getTime())),
+      }))
+      .sort((a, b) => b.latestDate - a.latestDate);
+  }, [filteredJobs]);
+
+  const toggleGroup = (parentFile: string) => {
+    setExpandedGroups(prev => {
+      const next = new Set(prev);
+      if (next.has(parentFile)) {
+        next.delete(parentFile);
+      } else {
+        next.add(parentFile);
+      }
+      return next;
+    });
+  };
   
   const completedJobs = filteredJobs.filter(j => j.status === 'completed');
   const failedJobs = filteredJobs.filter(j => j.status === 'failed');
@@ -298,9 +395,10 @@ export default function GenerationStatus() {
     setSearchQuery('');
     setStatusFilter('all');
     setDateFilter('all');
+    setParentFileFilter('all');
   };
 
-  const hasActiveFilters = searchQuery !== '' || statusFilter !== 'all' || dateFilter !== 'all';
+  const hasActiveFilters = searchQuery !== '' || statusFilter !== 'all' || dateFilter !== 'all' || parentFileFilter !== 'all';
 
   const handleViewDetails = (jobId: string) => {
     navigate(`/batch/${jobId}`);
@@ -563,50 +661,68 @@ export default function GenerationStatus() {
             </div>
 
             {/* Search and Filters */}
-            <div className="flex flex-col sm:flex-row gap-3">
-              <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search by file name..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-9"
-                />
-              </div>
-              <div className="flex gap-2">
-                <Select value={statusFilter} onValueChange={setStatusFilter}>
-                  <SelectTrigger className="w-[140px]">
-                    <Filter className="h-4 w-4 mr-2" />
-                    <SelectValue placeholder="Status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Status</SelectItem>
-                    <SelectItem value="completed">Completed</SelectItem>
-                    <SelectItem value="in_progress">In Progress</SelectItem>
-                    <SelectItem value="failed">Failed</SelectItem>
-                  </SelectContent>
-                </Select>
-                <Select value={dateFilter} onValueChange={setDateFilter}>
-                  <SelectTrigger className="w-[140px]">
-                    <SelectValue placeholder="Date" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Time</SelectItem>
-                    <SelectItem value="today">Today</SelectItem>
-                    <SelectItem value="week">Last 7 Days</SelectItem>
-                    <SelectItem value="month">Last Month</SelectItem>
-                  </SelectContent>
-                </Select>
-                {hasActiveFilters && (
-                  <Button 
-                    variant="ghost" 
-                    size="icon"
-                    onClick={clearFilters}
-                    className="shrink-0"
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
-                )}
+            <div className="flex flex-col gap-3">
+              <div className="flex flex-col sm:flex-row gap-3">
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search by file name or transaction ID..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-9"
+                  />
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <Select value={statusFilter} onValueChange={setStatusFilter}>
+                    <SelectTrigger className="w-[130px]">
+                      <Filter className="h-4 w-4 mr-2" />
+                      <SelectValue placeholder="Status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Status</SelectItem>
+                      <SelectItem value="completed">Completed</SelectItem>
+                      <SelectItem value="in_progress">In Progress</SelectItem>
+                      <SelectItem value="failed">Failed</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Select value={dateFilter} onValueChange={setDateFilter}>
+                    <SelectTrigger className="w-[130px]">
+                      <SelectValue placeholder="Date" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Time</SelectItem>
+                      <SelectItem value="today">Today</SelectItem>
+                      <SelectItem value="week">Last 7 Days</SelectItem>
+                      <SelectItem value="month">Last Month</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  {parentFileNames.length > 0 && (
+                    <Select value={parentFileFilter} onValueChange={setParentFileFilter}>
+                      <SelectTrigger className="w-[180px]">
+                        <FolderOpen className="h-4 w-4 mr-2" />
+                        <SelectValue placeholder="Source File" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Uploads</SelectItem>
+                        {parentFileNames.map(name => (
+                          <SelectItem key={name} value={name}>
+                            {name.length > 20 ? `${name.slice(0, 20)}...` : name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                  {hasActiveFilters && (
+                    <Button 
+                      variant="ghost" 
+                      size="icon"
+                      onClick={clearFilters}
+                      className="shrink-0"
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
               </div>
             </div>
           </CardHeader>
@@ -641,11 +757,115 @@ export default function GenerationStatus() {
                 )}
               </div>
             ) : (
-              <ScrollArea className="h-[500px] pr-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {filteredJobs.filter(j => j.id !== activeJob?.id).map((job) => (
-                    <JobCard key={job.id} job={job} onRetry={retryJob} onDownload={handleDownloadJob} onViewDetails={handleViewDetails} isDownloading={isDownloading} />
-                  ))}
+              <ScrollArea className="h-[600px] pr-4">
+                <div className="space-y-4">
+                  {groupedJobs.map((group) => {
+                    const isExpanded = expandedGroups.has(group.parentFile);
+                    const hasSingleBatch = group.jobs.length === 1;
+                    
+                    // For single batch uploads, show directly without grouping
+                    if (hasSingleBatch) {
+                      const job = group.jobs[0];
+                      if (job.id === activeJob?.id) return null;
+                      return (
+                        <JobCard 
+                          key={job.id} 
+                          job={job} 
+                          onRetry={retryJob} 
+                          onDownload={handleDownloadJob} 
+                          onViewDetails={handleViewDetails} 
+                          isDownloading={isDownloading} 
+                        />
+                      );
+                    }
+                    
+                    // For multi-batch uploads, show collapsible group
+                    return (
+                      <Collapsible key={group.parentFile} open={isExpanded} onOpenChange={() => toggleGroup(group.parentFile)}>
+                        <Card className={cn(
+                          "transition-all",
+                          group.hasActive && "border-primary/50",
+                          group.hasFailed && "border-destructive/30"
+                        )}>
+                          <CollapsibleTrigger asChild>
+                            <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors pb-3">
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-3">
+                                  {isExpanded ? (
+                                    <ChevronDown className="h-5 w-5 text-muted-foreground" />
+                                  ) : (
+                                    <ChevronRight className="h-5 w-5 text-muted-foreground" />
+                                  )}
+                                  <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
+                                    <FolderOpen className="h-5 w-5 text-primary" />
+                                  </div>
+                                  <div>
+                                    <p className="font-medium">{group.parentFile}</p>
+                                    <p className="text-sm text-muted-foreground">
+                                      {group.jobs.length} batches • {group.totalCards.toLocaleString()} total records
+                                    </p>
+                                  </div>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  {group.hasActive && (
+                                    <Badge variant="default" className="gap-1">
+                                      <Loader2 className="h-3 w-3 animate-spin" />
+                                      Generating
+                                    </Badge>
+                                  )}
+                                  {group.allCompleted && (
+                                    <Badge variant="success" className="gap-1">
+                                      <CheckCircle2 className="h-3 w-3" />
+                                      Completed
+                                    </Badge>
+                                  )}
+                                  {group.hasFailed && !group.hasActive && (
+                                    <Badge variant="destructive" className="gap-1">
+                                      <XCircle className="h-3 w-3" />
+                                      Has Failures
+                                    </Badge>
+                                  )}
+                                </div>
+                              </div>
+                              
+                              {/* Progress bar for the entire group */}
+                              {(group.hasActive || !group.allCompleted) && (
+                                <div className="mt-3 pt-3 border-t">
+                                  <div className="flex justify-between text-xs text-muted-foreground mb-1">
+                                    <span>Overall Progress</span>
+                                    <span>{group.completedCards.toLocaleString()} / {group.totalCards.toLocaleString()}</span>
+                                  </div>
+                                  <Progress 
+                                    value={(group.completedCards / group.totalCards) * 100} 
+                                    className="h-2"
+                                  />
+                                </div>
+                              )}
+                            </CardHeader>
+                          </CollapsibleTrigger>
+                          
+                          <CollapsibleContent>
+                            <CardContent className="pt-0">
+                              <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 pt-2 border-t">
+                                {group.jobs
+                                  .filter(j => j.id !== activeJob?.id)
+                                  .map((job) => (
+                                    <JobCard 
+                                      key={job.id} 
+                                      job={job} 
+                                      onRetry={retryJob} 
+                                      onDownload={handleDownloadJob} 
+                                      onViewDetails={handleViewDetails} 
+                                      isDownloading={isDownloading} 
+                                    />
+                                  ))}
+                              </div>
+                            </CardContent>
+                          </CollapsibleContent>
+                        </Card>
+                      </Collapsible>
+                    );
+                  })}
                 </div>
               </ScrollArea>
             )}

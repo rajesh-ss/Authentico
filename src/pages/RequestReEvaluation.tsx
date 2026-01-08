@@ -6,7 +6,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { CheckCircle, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
-import { MarksCardOption } from '@/types/reevaluation';
+import { MarksCardOption, ReEvaluationFormData } from '@/types/reevaluation';
 
 // Mock marks cards data for the form
 const marksCards: MarksCardOption[] = [
@@ -14,6 +14,9 @@ const marksCards: MarksCardOption[] = [
     id: '1',
     semester: 'Semester 6',
     academicYear: '2023-24',
+    studentName: 'John Doe',
+    rollNo: '101',
+    registrationNo: 'REG2024001',
     subjects: [
       { code: 'CS601', name: 'Machine Learning', currentMarks: 72, maxMarks: 100, grade: 'A' },
       { code: 'CS602', name: 'Data Structures', currentMarks: 65, maxMarks: 100, grade: 'B+' },
@@ -26,6 +29,9 @@ const marksCards: MarksCardOption[] = [
     id: '2',
     semester: 'Semester 5',
     academicYear: '2023-24',
+    studentName: 'John Doe',
+    rollNo: '101',
+    registrationNo: 'REG2024001',
     subjects: [
       { code: 'CS501', name: 'Operating Systems', currentMarks: 68, maxMarks: 100, grade: 'B+' },
       { code: 'CS502', name: 'Software Engineering', currentMarks: 75, maxMarks: 100, grade: 'A' },
@@ -40,7 +46,7 @@ export default function RequestReEvaluation() {
   const [isLoading, setIsLoading] = useState(false);
   const [submittedId, setSubmittedId] = useState<string | null>(null);
 
-  const handleSubmit = async (data: { marksCardId: string; subjects: string[]; reason: string; supportingDocuments: File[] }) => {
+  const handleSubmit = async (data: ReEvaluationFormData) => {
     setIsLoading(true);
     try {
       // Simulate API call
@@ -49,7 +55,7 @@ export default function RequestReEvaluation() {
       setSubmittedId(requestId);
       toast({
         title: "Request Submitted Successfully",
-        description: `Your re-evaluation request ${requestId} has been submitted.`,
+        description: `Your ${data.type === 'marks_revaluation' ? 're-evaluation' : 'details update'} request ${requestId} has been submitted.`,
       });
     } catch (error) {
       toast({
