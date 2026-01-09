@@ -12,7 +12,7 @@ import { AnswerSheetViewer } from '@/components/teacher/AnswerSheetViewer';
 import { useDialog } from '@/hooks/useDialog';
 import { Clock, CheckCircle, XCircle, AlertCircle, FileText, Calculator, ClipboardList } from 'lucide-react';
 
-export default function TeacherApprovals() {
+export default function MakerApprovals() {
   const [requests, setRequests] = useState<ReEvaluationItem[]>(
     mockReEvaluations.filter(r => r.status === 'submitted' || r.status === 'under_review')
   );

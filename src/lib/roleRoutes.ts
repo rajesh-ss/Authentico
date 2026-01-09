@@ -4,11 +4,11 @@ export const getRoleDefaultRoute = (role: UserRole): string => {
   const routes: Record<UserRole, string> = {
     issuer: '/dashboard',
     college_admin: '/dashboard',
-    reevaluation_approver: '/approvals',
+    reevaluation_checker: '/approvals',
     reevaluation_updater: '/update-marks',
-    verifying_admin: '/signatures',
+    reevaluation_approver: '/signatures',
     student: '/my-cards',
-    teacher: '/teacher/approvals',
+    maker: '/maker/approvals',
   };
   return routes[role] || '/dashboard';
 };

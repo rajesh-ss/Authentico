@@ -101,7 +101,7 @@ const getFieldIcon = (field: string) => {
   }
 };
 
-export default function TeacherDetailsApprovals() {
+export default function MakerDetailsApprovals() {
   const [requests, setRequests] = useState<DetailsUpdateRequest[]>(mockDetailsRequests);
   const viewDialog = useDialog<DetailsUpdateRequest>();
   const { searchQuery, setSearchQuery, filteredData } = useSearch<DetailsUpdateRequest>({
@@ -157,11 +157,11 @@ export default function TeacherDetailsApprovals() {
               <div className="flex items-center gap-1">
                 <Badge variant="secondary" className="text-xs">Student</Badge>
                 <ArrowRight className="h-3 w-3" />
-                <Badge variant="default" className="text-xs">Teacher (You)</Badge>
+                <Badge variant="default" className="text-xs">Maker (You)</Badge>
+                <ArrowRight className="h-3 w-3" />
+                <Badge variant="secondary" className="text-xs">Checker</Badge>
                 <ArrowRight className="h-3 w-3" />
                 <Badge variant="secondary" className="text-xs">Approver</Badge>
-                <ArrowRight className="h-3 w-3" />
-                <Badge variant="secondary" className="text-xs">Verifier</Badge>
               </div>
             </div>
           </CardContent>
@@ -343,14 +343,13 @@ export default function TeacherDetailsApprovals() {
                 </div>
               )}
 
-              {/* Actions */}
               <div className="flex gap-2 pt-4 border-t">
                 <Button 
                   className="flex-1 gap-2" 
                   onClick={() => handleApprove(viewDialog.data!.id)}
                 >
                   <CheckCircle className="h-4 w-4" />
-                  Approve & Forward to Approver
+                  Approve & Forward to Checker
                 </Button>
                 <Button 
                   variant="destructive" 
