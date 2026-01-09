@@ -57,9 +57,9 @@ const roleNavItems: Record<UserRole, NavItem[]> = {
     { label: 'All Marks Cards', icon: FileText, href: '/cards' },
     { label: 'Re-Evaluations', icon: RefreshCcw, href: '/reevaluations', badge: '5' },
   ],
-  reevaluation_approver: [
+  reevaluation_checker: [
     { label: 'Dashboard', icon: LayoutDashboard, href: '/dashboard' },
-    { label: 'Pending Approvals', icon: ClipboardCheck, href: '/approvals', badge: '8' },
+    { label: 'Pending Checks', icon: ClipboardCheck, href: '/approvals', badge: '8' },
     { label: 'Approved Requests', icon: FileText, href: '/approved' },
     { label: 'Rejected Requests', icon: FileText, href: '/rejected' },
   ],
@@ -68,7 +68,7 @@ const roleNavItems: Record<UserRole, NavItem[]> = {
     { label: 'Update Marks', icon: RefreshCcw, href: '/update-marks', badge: '4' },
     { label: 'Completed Updates', icon: FileText, href: '/completed' },
   ],
-  verifying_admin: [
+  reevaluation_approver: [
     { label: 'Dashboard', icon: LayoutDashboard, href: '/dashboard' },
     { label: 'Pending Signatures', icon: Shield, href: '/signatures', badge: '6' },
     { label: 'Signed Records', icon: FileText, href: '/signed' },
@@ -79,12 +79,12 @@ const roleNavItems: Record<UserRole, NavItem[]> = {
     { label: 'Re-Evaluations', icon: RefreshCcw, href: '/my-reevaluations' },
     { label: 'Verify Certificate', icon: QrCode, href: '/verify' },
   ],
-  teacher: [
+  maker: [
     { label: 'Dashboard', icon: LayoutDashboard, href: '/dashboard' },
-    { label: 'Marks Re-Evaluation', icon: ClipboardCheck, href: '/teacher/approvals', badge: '3' },
-    { label: 'Details Updates', icon: Users, href: '/teacher/details', badge: '2' },
-    { label: 'Approved Requests', icon: FileText, href: '/teacher/approved' },
-    { label: 'Rejected Requests', icon: FileText, href: '/teacher/rejected' },
+    { label: 'Marks Re-Evaluation', icon: ClipboardCheck, href: '/maker/approvals', badge: '3' },
+    { label: 'Details Updates', icon: Users, href: '/maker/details', badge: '2' },
+    { label: 'Approved Requests', icon: FileText, href: '/maker/approved' },
+    { label: 'Rejected Requests', icon: FileText, href: '/maker/rejected' },
   ],
 };
 

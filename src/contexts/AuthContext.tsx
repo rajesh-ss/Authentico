@@ -30,11 +30,11 @@ const mockUsers: Record<string, User> = {
     department: 'Administration',
     institution: 'State University',
   },
-  'approver@university.edu': {
+  'checker@university.edu': {
     id: '3',
-    email: 'approver@university.edu',
+    email: 'checker@university.edu',
     name: 'Dr. Emily Davis',
-    role: 'reevaluation_approver',
+    role: 'reevaluation_checker',
     department: 'Examination Cell',
     institution: 'State University',
   },
@@ -46,11 +46,11 @@ const mockUsers: Record<string, User> = {
     department: 'Examination Cell',
     institution: 'State University',
   },
-  'verifier@university.edu': {
+  'approver@university.edu': {
     id: '5',
-    email: 'verifier@university.edu',
+    email: 'approver@university.edu',
     name: 'Dr. Michael Brown',
-    role: 'verifying_admin',
+    role: 'reevaluation_approver',
     department: 'Quality Assurance',
     institution: 'State University',
   },
@@ -62,11 +62,11 @@ const mockUsers: Record<string, User> = {
     department: 'Computer Science',
     institution: 'State University',
   },
-  'teacher@university.edu': {
+  'maker@university.edu': {
     id: '7',
-    email: 'teacher@university.edu',
+    email: 'maker@university.edu',
     name: 'Prof. Anita Desai',
-    role: 'teacher',
+    role: 'maker',
     department: 'Computer Science',
     institution: 'State University',
   },

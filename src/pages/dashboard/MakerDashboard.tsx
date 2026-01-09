@@ -32,7 +32,7 @@ const pendingRequests = [
   },
 ];
 
-export default function TeacherDashboard() {
+export default function MakerDashboard() {
   const stats = [
     { label: 'Pending Approvals', value: '3', icon: Clock, trend: { value: 2, isPositive: false } },
     { label: 'Approved This Week', value: '8', icon: CheckCircle, trend: { value: 15, isPositive: true } },
@@ -42,8 +42,8 @@ export default function TeacherDashboard() {
 
   return (
     <DashboardLayout 
-      title="Teacher Dashboard" 
-      subtitle="Validate and approve student re-evaluation requests"
+      title="Maker Dashboard" 
+      subtitle="Validate and initiate student re-evaluation requests"
     >
       <div className="space-y-6">
         <StatsGrid stats={stats} />

@@ -8,11 +8,11 @@ import { FilterBar, DataTable, FormDialog, MobileCard, StatusBadge, StatsGrid, t
 import { mockReEvaluations, type ReEvaluationItem } from '@/data';
 import { useDialog } from '@/hooks/useDialog';
 import { useSearch } from '@/hooks/useSearch';
-import { CheckCircle, Eye, Calendar } from 'lucide-react';
+import { XCircle, Eye, Calendar } from 'lucide-react';
 
-export default function TeacherApproved() {
+export default function MakerRejected() {
   const [requests] = useState<ReEvaluationItem[]>(
-    mockReEvaluations.filter(r => r.status === 'approved')
+    mockReEvaluations.filter(r => r.status === 'rejected')
   );
 
   const viewDialog = useDialog<ReEvaluationItem>();
@@ -23,7 +23,7 @@ export default function TeacherApproved() {
   });
 
   const stats = [
-    { icon: CheckCircle, value: requests.length, label: 'Approved Requests', color: 'success' as const },
+    { icon: XCircle, value: requests.length, label: 'Rejected Requests', color: 'destructive' as const },
     { icon: Calendar, value: requests.filter(r => {
       const weekAgo = new Date();
       weekAgo.setDate(weekAgo.getDate() - 7);
@@ -37,7 +37,7 @@ export default function TeacherApproved() {
     { key: 'semester', header: 'Semester', render: (r) => r.semester },
     { key: 'subjects', header: 'Subjects', render: (r) => <span className="text-muted-foreground">{r.subjects.length} subject(s)</span> },
     { key: 'status', header: 'Status', render: (r) => <StatusBadge status={r.status} /> },
-    { key: 'approved', header: 'Approved On', render: (r) => <span className="text-muted-foreground">{r.updatedAt.toLocaleDateString()}</span> },
+    { key: 'rejected', header: 'Rejected On', render: (r) => <span className="text-muted-foreground">{r.updatedAt.toLocaleDateString()}</span> },
     { key: 'actions', header: 'Actions', className: 'text-right', render: (r) => (
       <div className="flex justify-end">
         <Button variant="ghost" size="icon" onClick={() => viewDialog.open(r)}><Eye className="h-4 w-4" /></Button>
@@ -46,7 +46,7 @@ export default function TeacherApproved() {
   ];
 
   return (
-    <DashboardLayout title="Approved Requests" subtitle="View all re-evaluation requests you have approved">
+    <DashboardLayout title="Rejected Requests" subtitle="View all re-evaluation requests you have rejected">
       <StatsGrid stats={stats} columns={2} />
 
       <FilterBar
@@ -57,7 +57,7 @@ export default function TeacherApproved() {
 
       {/* Desktop Table */}
       <div className="hidden md:block">
-        <DataTable data={filteredData} columns={columns} title="Approved Requests" keyExtractor={(r) => r.id} emptyMessage="No approved requests" />
+        <DataTable data={filteredData} columns={columns} title="Rejected Requests" keyExtractor={(r) => r.id} emptyMessage="No rejected requests" />
       </div>
 
       {/* Mobile Cards */}
@@ -73,7 +73,7 @@ export default function TeacherApproved() {
               </div>
             }
             badges={<StatusBadge status={request.status} size="sm" />}
-            footer={<span className="text-xs text-muted-foreground">Approved: {request.updatedAt.toLocaleDateString()}</span>}
+            footer={<span className="text-xs text-muted-foreground">Rejected: {request.updatedAt.toLocaleDateString()}</span>}
             actions={
               <DropdownMenuItem onClick={() => viewDialog.open(request)}>View Details</DropdownMenuItem>
             }
@@ -91,8 +91,8 @@ export default function TeacherApproved() {
             </div>
             <div><Label className="text-xs text-muted-foreground">Subjects</Label><div className="flex flex-wrap gap-1 mt-1">{viewDialog.data.subjects.map((s, i) => <Badge key={i} variant="secondary" className="text-xs">{s}</Badge>)}</div></div>
             <div><Label className="text-xs text-muted-foreground">Reason</Label><p className="text-sm bg-muted/50 p-3 rounded-lg mt-1">{viewDialog.data.reason}</p></div>
-            <div className="p-3 bg-success/10 border border-success/20 rounded-lg">
-              <p className="text-sm text-success font-medium">✓ Approved on {viewDialog.data.updatedAt.toLocaleDateString()}</p>
+            <div className="p-3 bg-destructive/10 border border-destructive/20 rounded-lg">
+              <p className="text-sm text-destructive font-medium">✗ Rejected on {viewDialog.data.updatedAt.toLocaleDateString()}</p>
             </div>
           </div>
         )}

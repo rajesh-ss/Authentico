@@ -4,10 +4,10 @@ import { UserRole } from '@/types/auth';
 export const demoAccounts = [
   { email: 'issuer@university.edu', role: 'Marks Card Issuer' },
   { email: 'admin@university.edu', role: 'College Admin' },
+  { email: 'checker@university.edu', role: 'Re-Evaluation Checker' },
   { email: 'approver@university.edu', role: 'Re-Evaluation Approver' },
-  { email: 'verifier@university.edu', role: 'Verifying Admin' },
   { email: 'student@university.edu', role: 'Student' },
-  { email: 'teacher@university.edu', role: 'Teacher' },
+  { email: 'maker@university.edu', role: 'Maker' },
 ];
 
 // Role filter options
@@ -20,11 +20,11 @@ export const roleFilterOptions = (roles: UserRole[]) => [
 export const roleLabels: Record<UserRole, string> = {
   issuer: 'Marks Card Issuer',
   college_admin: 'College Admin',
-  reevaluation_approver: 'Re-Evaluation Approver',
+  reevaluation_checker: 'Re-Evaluation Checker',
   reevaluation_updater: 'Re-Evaluation Updater',
-  verifying_admin: 'Verifying Admin',
+  reevaluation_approver: 'Re-Evaluation Approver',
   student: 'Student',
-  teacher: 'Teacher',
+  maker: 'Maker',
 };
 
 // Status badge variants mapping
