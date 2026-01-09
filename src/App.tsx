@@ -29,7 +29,6 @@ const UpdateMarks = lazy(() => import("./pages/updater/UpdateMarks"));
 const CompletedUpdates = lazy(() => import("./pages/updater/CompletedUpdates"));
 const PendingSignatures = lazy(() => import("./pages/approver/PendingSignatures"));
 const SignedRecords = lazy(() => import("./pages/approver/SignedRecords"));
-const MakerApprovals = lazy(() => import("./pages/maker/MakerApprovals"));
 const MakerDetailsApprovals = lazy(() => import("./pages/maker/MakerDetailsApprovals"));
 const MakerApproved = lazy(() => import("./pages/maker/MakerApproved"));
 const MakerRejected = lazy(() => import("./pages/maker/MakerRejected"));
@@ -177,11 +176,6 @@ const App = () => (
                 } />
                 
                 {/* Maker Routes */}
-                <Route path="/maker/approvals" element={
-                  <ProtectedRoute allowedRoles={['maker']}>
-                    <MakerApprovals />
-                  </ProtectedRoute>
-                } />
                 <Route path="/maker/details" element={
                   <ProtectedRoute allowedRoles={['maker']}>
                     <MakerDetailsApprovals />
