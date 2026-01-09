@@ -13,7 +13,7 @@ const requests: ReEvaluationRequest[] = mockReEvaluations.map(item => ({
   marksCardId: item.marksCardId,
   studentId: item.studentId,
   studentName: item.studentName,
-  type: 'marks_revaluation' as const,
+  type: 'details_update' as const,
   subjects: item.subjects,
   reason: item.reason,
   supportingDocuments: [],
@@ -36,8 +36,8 @@ export default function MyReEvaluations() {
 
   return (
     <DashboardLayout
-      title="My Re-Evaluations"
-      subtitle="Track your re-evaluation requests"
+      title="My Details Updates"
+      subtitle="Track your details update requests"
     >
       <div className="max-w-4xl mx-auto">
         {/* Header Actions */}

@@ -8,7 +8,7 @@ export const getRoleDefaultRoute = (role: UserRole): string => {
     reevaluation_updater: '/update-marks',
     reevaluation_approver: '/signatures',
     student: '/my-cards',
-    maker: '/maker/approvals',
+    maker: '/maker/details',
   };
   return routes[role] || '/dashboard';
 };

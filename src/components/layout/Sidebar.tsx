@@ -76,13 +76,12 @@ const roleNavItems: Record<UserRole, NavItem[]> = {
   student: [
     { label: 'Dashboard', icon: LayoutDashboard, href: '/dashboard' },
     { label: 'My Marks Cards', icon: GraduationCap, href: '/my-cards' },
-    { label: 'Re-Evaluations', icon: RefreshCcw, href: '/my-reevaluations' },
+    { label: 'Details Updates', icon: RefreshCcw, href: '/my-reevaluations' },
     { label: 'Verify Certificate', icon: QrCode, href: '/verify' },
   ],
   maker: [
     { label: 'Dashboard', icon: LayoutDashboard, href: '/dashboard' },
-    { label: 'Marks Re-Evaluation', icon: ClipboardCheck, href: '/maker/approvals', badge: '3' },
-    { label: 'Details Updates', icon: Users, href: '/maker/details', badge: '2' },
+    { label: 'Details Updates', icon: Users, href: '/maker/details', badge: '5' },
     { label: 'Approved Requests', icon: FileText, href: '/maker/approved' },
     { label: 'Rejected Requests', icon: FileText, href: '/maker/rejected' },
   ],
