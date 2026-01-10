@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { TransactionBadge } from '@/components/blockchain/TransactionBadge';
-import { FileText, Upload, RefreshCcw, ArrowRight, Eye, Download, MoreHorizontal, Loader2, CheckCircle, Clock, XCircle } from 'lucide-react';
+import { FileText, Upload, ArrowRight, Eye, Download, MoreHorizontal, Loader2, CheckCircle, Clock, XCircle } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
@@ -13,7 +13,6 @@ import { useGeneration, GenerationJob } from '@/contexts/GenerationContext';
 const quickActions = [
   { to: '/issue/template', icon: Upload, title: 'Issue New Cards', desc: 'Upload template & data', color: 'primary' },
   { to: '/generation-status', icon: FileText, title: 'View All Batches', desc: 'View generation history', color: 'success' },
-  { to: '/reevaluations', icon: RefreshCcw, title: 'Re-Evaluations', desc: '8 pending requests', color: 'warning', badge: '8' },
 ];
 
 // Mock recent batches for display
@@ -109,11 +108,7 @@ export default function IssuerDashboard() {
                   <h3 className="font-semibold text-foreground">{action.title}</h3>
                   <p className="text-sm text-muted-foreground">{action.desc}</p>
                 </div>
-                {action.badge ? (
-                  <Badge variant="warning" className="group-hover:animate-pulse">{action.badge}</Badge>
-                ) : (
-                  <ArrowRight className="h-5 w-5 text-muted-foreground group-hover:text-accent transition-colors" />
-                )}
+                <ArrowRight className="h-5 w-5 text-muted-foreground group-hover:text-accent transition-colors" />
               </CardContent>
             </Card>
           </Link>
