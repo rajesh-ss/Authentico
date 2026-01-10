@@ -13,6 +13,15 @@ export interface MarksCardTemplate {
   fileUrl: string;
   fields: TemplateField[];
   createdAt: Date;
+  isDefault?: boolean;
+}
+
+export interface TemplateExport {
+  name: string;
+  fileType: 'pdf' | 'html';
+  fields: TemplateField[];
+  exportedAt: string;
+  version: string;
 }
 
 export interface StudentRecord {
