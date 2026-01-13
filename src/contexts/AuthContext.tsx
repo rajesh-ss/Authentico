@@ -12,7 +12,23 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 const AUTH_STORAGE_KEY = 'blockcert_auth';
 
-// Mock users for demonstration
+/**
+ * ⚠️ DEMO MODE WARNING
+ * 
+ * This authentication implementation is for DEMONSTRATION PURPOSES ONLY.
+ * It uses hardcoded mock users and client-side authentication which is NOT SECURE.
+ * 
+ * Before deploying to production, you MUST:
+ * 1. Implement proper backend authentication (e.g., Lovable Cloud/Supabase Auth)
+ * 2. Use secure password hashing (bcrypt/argon2)
+ * 3. Implement server-side session management
+ * 4. Add proper JWT token validation
+ * 5. Remove all hardcoded credentials
+ * 
+ * See: https://docs.lovable.dev/features/security
+ */
+
+// Mock users for demonstration - REMOVE IN PRODUCTION
 const mockUsers: Record<string, User> = {
   'issuer@university.edu': {
     id: '1',
