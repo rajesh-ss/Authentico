@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useCallback, ReactNode, useRef } from 'react';
+import { toast } from 'sonner';
 
 export interface GenerationJob {
   id: string;
@@ -136,23 +137,74 @@ export function GenerationProvider({ children }: { children: ReactNode }) {
         generationIntervalRefs.current.delete(jobId);
         
         // Complete the job (small chance of failure for demo)
-        if (Math.random() > 0.95) {
-          setJobs(prev =>
-            prev.map(job =>
-              job.id === jobId
-                ? { ...job, status: 'failed', completedAt: new Date(), errorMessage: 'Network error during blockchain verification' }
-                : job
-            )
-          );
-        } else {
-          setJobs(prev =>
-            prev.map(job =>
-              job.id === jobId
-                ? { ...job, status: 'completed', completedAt: new Date(), generatedCards: totalCards }
-                : job
-            )
-          );
-        }
+        const isFailed = Math.random() > 0.95;
+        
+        setJobs(prev => {
+          const updatedJobs = prev.map(job => {
+            if (job.id !== jobId) return job;
+            
+            if (isFailed) {
+              return { 
+                ...job, 
+                status: 'failed' as const, 
+                completedAt: new Date(), 
+                errorMessage: 'Network error during blockchain verification' 
+              };
+            } else {
+              return { 
+                ...job, 
+                status: 'completed' as const, 
+                completedAt: new Date(), 
+                generatedCards: totalCards 
+              };
+            }
+          });
+          
+          // Get the job that just finished
+          const finishedJob = updatedJobs.find(j => j.id === jobId);
+          const batchLabel = finishedJob?.batchNumber 
+            ? `Batch ${finishedJob.batchNumber}/${finishedJob.totalBatches}` 
+            : finishedJob?.fileName || 'Batch';
+          
+          // Show toast notification
+          if (isFailed) {
+            toast.error(`${batchLabel} failed to generate`, {
+              description: 'Network error during blockchain verification. You can retry this batch.',
+            });
+          } else {
+            toast.success(`${batchLabel} generated successfully`, {
+              description: `${totalCards.toLocaleString()} marks cards verified on blockchain.`,
+            });
+          }
+          
+          // Check if all batches from the same parent file are done
+          if (finishedJob?.parentFileName) {
+            const siblingJobs = updatedJobs.filter(j => j.parentFileName === finishedJob.parentFileName);
+            const allCompleted = siblingJobs.every(j => j.status === 'completed' || j.status === 'failed');
+            
+            if (allCompleted) {
+              const successCount = siblingJobs.filter(j => j.status === 'completed').length;
+              const failedCount = siblingJobs.filter(j => j.status === 'failed').length;
+              const totalCards = siblingJobs.reduce((sum, j) => sum + j.totalCards, 0);
+              
+              if (failedCount === 0) {
+                toast.success(`All ${successCount} batches completed!`, {
+                  description: `${totalCards.toLocaleString()} marks cards from "${finishedJob.parentFileName}" are now verified.`,
+                });
+              } else if (successCount === 0) {
+                toast.error(`All ${failedCount} batches failed`, {
+                  description: `Please retry the failed batches for "${finishedJob.parentFileName}".`,
+                });
+              } else {
+                toast.warning(`Batch generation partially complete`, {
+                  description: `${successCount} succeeded, ${failedCount} failed for "${finishedJob.parentFileName}".`,
+                });
+              }
+            }
+          }
+          
+          return updatedJobs;
+        });
         
         // Hide overlay if no more active jobs
         setJobs(prevJobs => {

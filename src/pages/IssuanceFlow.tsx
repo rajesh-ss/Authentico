@@ -128,8 +128,12 @@ export default function IssuanceFlow() {
   const handleUpload = useCallback(async (file: File, format: FileFormat) => {
     setIsParsing(true);
     try {
-      if (file.size > 10 * 1024 * 1024) {
-        throw new Error('File size exceeds 10MB limit');
+      // Access DB files can be larger, allow up to 100MB; Excel/CSV limited to 10MB
+      const maxSize = format === 'mdb' ? 100 * 1024 * 1024 : 10 * 1024 * 1024;
+      const maxSizeLabel = format === 'mdb' ? '100MB' : '10MB';
+      
+      if (file.size > maxSize) {
+        throw new Error(`File size exceeds ${maxSizeLabel} limit`);
       }
 
       let result: { data: Record<string, unknown>[]; headers: string[] };

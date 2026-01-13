@@ -55,7 +55,7 @@ export default function RequestReEvaluation() {
       setSubmittedId(requestId);
       toast({
         title: "Request Submitted Successfully",
-        description: `Your ${data.type === 'marks_revaluation' ? 're-evaluation' : 'details update'} request ${requestId} has been submitted.`,
+        description: `Your details update request ${requestId} has been submitted.`,
       });
     } catch (error) {
       toast({
@@ -106,8 +106,8 @@ export default function RequestReEvaluation() {
 
   return (
     <DashboardLayout
-      title="Request Re-Evaluation"
-      subtitle="Submit a request to re-evaluate your marks"
+      title="Request Details Update"
+      subtitle="Submit a request to update your personal details"
     >
       <div className="max-w-3xl mx-auto">
         <ReEvaluationForm

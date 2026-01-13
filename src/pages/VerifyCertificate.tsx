@@ -175,16 +175,31 @@ export default function VerifyCertificate() {
         )}
 
         {!result && (
-          <Card className="bg-muted/30">
-            <CardContent className="pt-6">
-              <h4 className="font-medium mb-3">How Verification Works</h4>
-              <ul className="space-y-2 text-sm text-muted-foreground">
-                {['Certificates are cryptographically signed on blockchain', 'Transaction hash is unique identifier', 'QR codes contain verification hash', 'Verification is instant and tamper-proof'].map((item, i) => (
-                  <li key={i} className="flex items-start gap-2"><CheckCircle2 className="h-4 w-4 mt-0.5 text-success shrink-0" /><span>{item}</span></li>
-                ))}
-              </ul>
-            </CardContent>
-          </Card>
+          <>
+            <Card className="bg-amber-50 border-amber-200 mb-4">
+              <CardContent className="pt-4 pb-4">
+                <div className="flex items-start gap-3">
+                  <Badge variant="outline" className="bg-amber-100 text-amber-800 border-amber-300 shrink-0">
+                    ⚠️ Demo Mode
+                  </Badge>
+                  <p className="text-sm text-amber-800">
+                    <strong>Prototype demonstration only.</strong> Verification uses simulated data. 
+                    Production deployment requires actual blockchain integration.
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+            <Card className="bg-muted/30">
+              <CardContent className="pt-6">
+                <h4 className="font-medium mb-3">How Verification Works</h4>
+                <ul className="space-y-2 text-sm text-muted-foreground">
+                  {['Certificates are cryptographically signed on blockchain', 'Transaction hash is unique identifier', 'QR codes contain verification hash', 'Verification is instant and tamper-proof'].map((item, i) => (
+                    <li key={i} className="flex items-start gap-2"><CheckCircle2 className="h-4 w-4 mt-0.5 text-success shrink-0" /><span>{item}</span></li>
+                  ))}
+                </ul>
+              </CardContent>
+            </Card>
+          </>
         )}
       </div>
     </DashboardLayout>

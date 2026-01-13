@@ -27,12 +27,11 @@ const ApprovedRequests = lazy(() => import("./pages/approver/ApprovedRequests"))
 const RejectedRequests = lazy(() => import("./pages/approver/RejectedRequests"));
 const UpdateMarks = lazy(() => import("./pages/updater/UpdateMarks"));
 const CompletedUpdates = lazy(() => import("./pages/updater/CompletedUpdates"));
-const PendingSignatures = lazy(() => import("./pages/verifier/PendingSignatures"));
-const SignedRecords = lazy(() => import("./pages/verifier/SignedRecords"));
-const TeacherApprovals = lazy(() => import("./pages/teacher/TeacherApprovals"));
-const TeacherDetailsApprovals = lazy(() => import("./pages/teacher/TeacherDetailsApprovals"));
-const TeacherApproved = lazy(() => import("./pages/teacher/TeacherApproved"));
-const TeacherRejected = lazy(() => import("./pages/teacher/TeacherRejected"));
+const PendingSignatures = lazy(() => import("./pages/approver/PendingSignatures"));
+const SignedRecords = lazy(() => import("./pages/approver/SignedRecords"));
+const MakerDetailsApprovals = lazy(() => import("./pages/maker/MakerDetailsApprovals"));
+const MakerApproved = lazy(() => import("./pages/maker/MakerApproved"));
+const MakerRejected = lazy(() => import("./pages/maker/MakerRejected"));
 const Analytics = lazy(() => import("./pages/admin/Analytics"));
 const Templates = lazy(() => import("./pages/issuer/Templates"));
 const NotFound = lazy(() => import("./pages/NotFound"));
@@ -125,7 +124,7 @@ const App = () => (
                 </ProtectedRoute>
               } />
               <Route path="/reevaluations" element={
-                <ProtectedRoute allowedRoles={['college_admin', 'reevaluation_approver', 'reevaluation_updater']}>
+                <ProtectedRoute allowedRoles={['college_admin', 'reevaluation_checker', 'reevaluation_updater']}>
                   <ReEvaluationsAdmin />
                 </ProtectedRoute>
               } />
@@ -135,19 +134,19 @@ const App = () => (
                 </ProtectedRoute>
               } />
               
-              {/* Approver Routes */}
+              {/* Checker Routes */}
               <Route path="/approvals" element={
-                <ProtectedRoute allowedRoles={['reevaluation_approver']}>
+                <ProtectedRoute allowedRoles={['reevaluation_checker']}>
                   <PendingApprovals />
                 </ProtectedRoute>
               } />
               <Route path="/approved" element={
-                <ProtectedRoute allowedRoles={['reevaluation_approver']}>
+                <ProtectedRoute allowedRoles={['reevaluation_checker']}>
                   <ApprovedRequests />
                 </ProtectedRoute>
               } />
               <Route path="/rejected" element={
-                <ProtectedRoute allowedRoles={['reevaluation_approver']}>
+                <ProtectedRoute allowedRoles={['reevaluation_checker']}>
                   <RejectedRequests />
                 </ProtectedRoute>
               } />
@@ -164,37 +163,32 @@ const App = () => (
                 </ProtectedRoute>
               } />
               
-                {/* Verifier Routes */}
+                {/* Approver Routes */}
                 <Route path="/signatures" element={
-                  <ProtectedRoute allowedRoles={['verifying_admin']}>
+                  <ProtectedRoute allowedRoles={['reevaluation_approver']}>
                     <PendingSignatures />
                   </ProtectedRoute>
                 } />
                 <Route path="/signed" element={
-                  <ProtectedRoute allowedRoles={['verifying_admin']}>
+                  <ProtectedRoute allowedRoles={['reevaluation_approver']}>
                     <SignedRecords />
                   </ProtectedRoute>
                 } />
                 
-                {/* Teacher Routes */}
-                <Route path="/teacher/approvals" element={
-                  <ProtectedRoute allowedRoles={['teacher']}>
-                    <TeacherApprovals />
+                {/* Maker Routes */}
+                <Route path="/maker/details" element={
+                  <ProtectedRoute allowedRoles={['maker']}>
+                    <MakerDetailsApprovals />
                   </ProtectedRoute>
                 } />
-                <Route path="/teacher/details" element={
-                  <ProtectedRoute allowedRoles={['teacher']}>
-                    <TeacherDetailsApprovals />
+                <Route path="/maker/approved" element={
+                  <ProtectedRoute allowedRoles={['maker']}>
+                    <MakerApproved />
                   </ProtectedRoute>
                 } />
-                <Route path="/teacher/approved" element={
-                  <ProtectedRoute allowedRoles={['teacher']}>
-                    <TeacherApproved />
-                  </ProtectedRoute>
-                } />
-                <Route path="/teacher/rejected" element={
-                  <ProtectedRoute allowedRoles={['teacher']}>
-                    <TeacherRejected />
+                <Route path="/maker/rejected" element={
+                  <ProtectedRoute allowedRoles={['maker']}>
+                    <MakerRejected />
                   </ProtectedRoute>
                 } />
                 

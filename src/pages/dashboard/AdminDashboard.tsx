@@ -8,9 +8,9 @@ import { Link } from 'react-router-dom';
 
 const userStats = [
   { role: 'Marks Card Issuers', count: 5, active: 4 },
-  { role: 'Re-Evaluation Approvers', count: 3, active: 3 },
+  { role: 'Re-Evaluation Checkers', count: 3, active: 3 },
   { role: 'Re-Evaluation Updaters', count: 2, active: 2 },
-  { role: 'Verifying Admins', count: 6, active: 5 },
+  { role: 'Re-Evaluation Approvers', count: 6, active: 5 },
 ];
 
 export default function AdminDashboard() {

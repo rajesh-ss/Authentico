@@ -3,38 +3,41 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { StatsGrid } from '@/components/shared';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
-import { ClipboardCheck, CheckCircle, XCircle, Clock, Eye, ThumbsUp, ThumbsDown, FileText } from 'lucide-react';
+import { ClipboardCheck, CheckCircle, XCircle, Clock, Eye, ThumbsUp, ThumbsDown, User, ArrowRight, Hash } from 'lucide-react';
 
 const pendingRequests = [
   { 
-    id: 'REQ-2024-001', 
-    studentName: 'Rahul Kumar', 
-    subject: 'Database Management Systems',
-    currentMarks: 68,
+    id: 'DET-2024-001', 
+    studentName: 'Rahul Sharma', 
+    field: 'Student Name',
+    currentValue: 'Rahul Sharma',
+    requestedValue: 'Rahul Kumar Sharma',
     submittedAt: '2 hours ago',
-    reason: 'Answer sheet evaluation discrepancy in Q3 and Q5'
+    reason: 'Full legal name as per official documents'
   },
   { 
-    id: 'REQ-2024-002', 
-    studentName: 'Priya Sharma', 
-    subject: 'Computer Networks',
-    currentMarks: 55,
+    id: 'DET-2024-002', 
+    studentName: 'Priya Patel', 
+    field: 'Roll Number',
+    currentValue: '2024CS045',
+    requestedValue: '2024CS054',
     submittedAt: '4 hours ago',
-    reason: 'Believe practical marks were not properly counted'
+    reason: 'Clerical error in roll number assignment'
   },
   { 
-    id: 'REQ-2024-003', 
-    studentName: 'Amit Patel', 
-    subject: 'Software Engineering',
-    currentMarks: 72,
+    id: 'DET-2024-003', 
+    studentName: 'Amit Singh', 
+    field: 'Registration Number',
+    currentValue: 'REG2024078',
+    requestedValue: 'REG2024087',
     submittedAt: '1 day ago',
-    reason: 'Discrepancy in theory section marks calculation'
+    reason: 'Registration number was swapped with another student'
   },
 ];
 
-export default function TeacherDashboard() {
+export default function MakerDashboard() {
   const stats = [
-    { label: 'Pending Approvals', value: '3', icon: Clock, trend: { value: 2, isPositive: false } },
+    { label: 'Pending Requests', value: '5', icon: Clock, trend: { value: 2, isPositive: false } },
     { label: 'Approved This Week', value: '8', icon: CheckCircle, trend: { value: 15, isPositive: true } },
     { label: 'Rejected This Week', value: '2', icon: XCircle },
     { label: 'Total Reviewed', value: '45', icon: ClipboardCheck, trend: { value: 12, isPositive: true } },
@@ -42,8 +45,8 @@ export default function TeacherDashboard() {
 
   return (
     <DashboardLayout 
-      title="Teacher Dashboard" 
-      subtitle="Validate and approve student re-evaluation requests"
+      title="Maker Dashboard" 
+      subtitle="Review and validate student details update requests"
     >
       <div className="space-y-6">
         <StatsGrid stats={stats} />
@@ -51,11 +54,11 @@ export default function TeacherDashboard() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <FileText className="h-5 w-5" />
-              Pending Re-Evaluation Requests
+              <User className="h-5 w-5" />
+              Pending Details Update Requests
             </CardTitle>
             <CardDescription>
-              Review and validate student requests for marks re-evaluation
+              Review and validate student requests for personal details correction
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -72,10 +75,15 @@ export default function TeacherDashboard() {
                       </div>
                       <div>
                         <p className="font-medium">{request.studentName}</p>
-                        <p className="text-sm text-muted-foreground">{request.subject}</p>
+                        <p className="text-sm text-muted-foreground">{request.field}</p>
                       </div>
-                      <div className="flex items-center gap-4 text-sm">
-                        <span>Current Marks: <strong>{request.currentMarks}</strong></span>
+                      <div className="flex items-center gap-3 p-2 rounded bg-muted/50">
+                        <div className="h-6 w-6 rounded-full bg-primary/10 flex items-center justify-center">
+                          <Hash className="h-3 w-3 text-primary" />
+                        </div>
+                        <span className="text-sm text-muted-foreground line-through">{request.currentValue}</span>
+                        <ArrowRight className="h-3 w-3 text-muted-foreground" />
+                        <span className="text-sm font-medium text-primary">{request.requestedValue}</span>
                       </div>
                       <p className="text-sm text-muted-foreground bg-muted/50 p-2 rounded">
                         <strong>Reason:</strong> {request.reason}

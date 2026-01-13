@@ -42,7 +42,7 @@ export interface SubjectMark {
   grade: string;
 }
 
-export type ReEvaluationType = 'marks_revaluation' | 'details_update';
+export type ReEvaluationType = 'details_update';
 
 export interface ReEvaluationRequest {
   id: string;

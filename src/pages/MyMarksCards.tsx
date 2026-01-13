@@ -57,7 +57,7 @@ export default function MyMarksCards() {
                 <div className="flex flex-wrap gap-2">
                   <Button variant="outline" size="sm" onClick={() => handleDownload(selectedCard)}><Download className="h-4 w-4 mr-2" /><span className="hidden sm:inline">Download</span></Button>
                   <Button variant="outline" size="sm" onClick={() => qrDialog.open(selectedCard)}><QrCode className="h-4 w-4 mr-2" /><span className="hidden sm:inline">QR Code</span></Button>
-                  <Button variant="outline" size="sm" asChild><Link to="/request-reevaluation"><RefreshCcw className="h-4 w-4 mr-2" /><span className="hidden sm:inline">Re-evaluation</span></Link></Button>
+                  <Button variant="outline" size="sm" asChild><Link to="/request-reevaluation"><RefreshCcw className="h-4 w-4 mr-2" /><span className="hidden sm:inline">Update Details</span></Link></Button>
                 </div>
               </div>
 

@@ -12,8 +12,6 @@ export interface DetailsUpdateData {
 export interface ReEvaluationFormData {
   type: ReEvaluationType;
   marksCardId: string;
-  // For marks revaluation
-  subjects: string[];
   // For details update
   detailsUpdate?: DetailsUpdateData;
   reason: string;
@@ -40,12 +38,8 @@ export interface MarksCardOption {
 
 // Workflow configuration based on request type
 export const WORKFLOW_CONFIG: Record<ReEvaluationType, { route: string[]; description: string }> = {
-  marks_revaluation: {
-    route: ['student', 'approver'],
-    description: 'Request goes directly to the Approver for review',
-  },
   details_update: {
-    route: ['student', 'teacher', 'approver', 'verifier'],
-    description: 'Request goes through Teacher → Approver → Verifier for verification',
+    route: ['student', 'maker', 'checker', 'approver'],
+    description: 'Request goes through Maker → Checker → Approver for verification',
   },
 };

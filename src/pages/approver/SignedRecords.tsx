@@ -104,7 +104,7 @@ export default function SignedRecords() {
   ];
 
   return (
-    <DashboardLayout title="Signed Records" subtitle="View blockchain-verified records">
+    <DashboardLayout title="Approved Records" subtitle="View blockchain-verified approved records">
       <StatsGrid stats={stats} columns={3} />
 
       <FilterBar
