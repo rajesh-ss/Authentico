@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Badge } from '@/components/ui/badge';
 import { Shield, Lock, Mail, AlertCircle, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { demoAccounts } from '@/data';
@@ -129,10 +130,16 @@ const Login = memo(function Login() {
                 </Button>
               </form>
 
-              {/* Demo Accounts */}
+              {/* Demo Accounts - For Development Only */}
               <div className="mt-6 pt-6 border-t">
-                <p className="text-sm text-muted-foreground mb-3">
-                  Demo accounts (password: <code className="bg-muted px-1 py-0.5 rounded text-xs">password</code>)
+                <div className="flex items-center gap-2 mb-3">
+                  <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200">
+                    ⚠️ Demo Mode
+                  </Badge>
+                </div>
+                <p className="text-xs text-muted-foreground mb-3">
+                  <strong>For demonstration purposes only.</strong> These mock accounts should not be used in production. 
+                  Implement real authentication before deployment.
                 </p>
                 <div className="space-y-2">
                   {demoAccounts.map((account) => (
