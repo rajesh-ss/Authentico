@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Shield, Pen, CheckCircle2, Clock, User, ArrowLeftRight, Eye } from 'lucide-react';
 import { format } from 'date-fns';
+import { toast } from 'sonner';
 
 const pendingSignatures = [
   {
@@ -99,7 +100,11 @@ export default function ApproverDashboard() {
                   </div>
                 </div>
 
-                <SignatureProgress approval={sig.approval} canSign={true} onSign={() => {/* TODO: Implement sign functionality */}} />
+                <SignatureProgress 
+                  approval={sig.approval} 
+                  canSign={true} 
+                  onSign={() => toast.info('Digital signature functionality requires backend integration')} 
+                />
               </div>
             </CardContent>
           </Card>

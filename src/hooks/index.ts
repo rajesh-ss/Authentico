@@ -4,3 +4,4 @@ export { useSearch } from './useSearch';
 export { usePagination } from './usePagination';
 export { useAutoRefresh } from './useAutoRefresh';
 export { useDateRangeFilter } from './useDateRangeFilter';
+export { useJobDownload } from './useJobDownload';
