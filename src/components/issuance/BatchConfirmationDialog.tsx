@@ -11,6 +11,12 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 import { 
   Layers, 
   Package, 
@@ -22,11 +28,14 @@ import {
   Hash,
   AlertTriangle,
   RefreshCw,
-  PartyPopper
+  PartyPopper,
+  Info,
+  Clock
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { GenerationJob, useGeneration } from '@/contexts/GenerationContext';
 import { toast } from 'sonner';
+import { format } from 'date-fns';
 
 const MAX_RECORDS_PER_BATCH = 3000;
 
@@ -226,24 +235,54 @@ export const BatchConfirmationDialog = memo(function BatchConfirmationDialog({
                 {failedJobs.map((job) => (
                   <div 
                     key={job.id}
-                    className="flex items-center justify-between p-2 rounded-lg border border-destructive/50 bg-destructive/5"
+                    className="p-2 rounded-lg border border-destructive/50 bg-destructive/5 space-y-2"
                   >
-                    <div className="flex items-center gap-2">
-                      <Package className="h-4 w-4 text-destructive" />
-                      <span className="text-sm font-medium">Batch {job.batchNumber}</span>
-                      <Badge variant="outline" className="text-xs">
-                        {job.totalCards.toLocaleString()} records
-                      </Badge>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Package className="h-4 w-4 text-destructive" />
+                        <span className="text-sm font-medium">Batch {job.batchNumber}</span>
+                        <Badge variant="outline" className="text-xs">
+                          {job.totalCards.toLocaleString()} records
+                        </Badge>
+                      </div>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-7 gap-1"
+                        onClick={() => retryJob(job.id)}
+                      >
+                        <RefreshCw className="h-3 w-3" />
+                        Retry
+                      </Button>
                     </div>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="h-7 gap-1"
-                      onClick={() => retryJob(job.id)}
-                    >
-                      <RefreshCw className="h-3 w-3" />
-                      Retry
-                    </Button>
+                    {/* Error details inline */}
+                    <div className="flex items-start gap-2 text-xs bg-destructive/10 rounded p-2">
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Info className="h-3.5 w-3.5 text-destructive shrink-0 mt-0.5 cursor-help" />
+                          </TooltipTrigger>
+                          <TooltipContent side="bottom" className="max-w-[300px]">
+                            <p className="font-medium">Error Details</p>
+                            <p className="text-muted-foreground">{job.errorMessage || 'Unknown error occurred'}</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-destructive font-medium truncate">
+                          {job.errorMessage || 'Unknown error occurred'}
+                        </p>
+                        <div className="flex items-center gap-1 text-muted-foreground mt-0.5">
+                          <Clock className="h-3 w-3" />
+                          <span>
+                            {job.completedAt 
+                              ? format(new Date(job.completedAt), 'MMM d, yyyy h:mm:ss a')
+                              : 'N/A'
+                            }
+                          </span>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 ))}
               </div>
