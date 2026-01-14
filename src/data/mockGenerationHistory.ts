@@ -1,0 +1,73 @@
+import { GenerationJob } from '@/contexts/GenerationContext';
+
+/**
+ * Mock historical batches for demonstration purposes.
+ * In production, this would come from a database.
+ */
+export const historicalBatches: GenerationJob[] = [
+  {
+    id: 'hist_batch_001',
+    fileName: 'CS_Semester6_2024_Batch1',
+    totalCards: 2500,
+    generatedCards: 2500,
+    status: 'completed',
+    startedAt: new Date('2024-12-20T10:30:00'),
+    completedAt: new Date('2024-12-20T10:35:00'),
+    transactionId: 'TXN-M4K8J2-XYZ123AB',
+    batchNumber: 1,
+    totalBatches: 4,
+    parentFileName: 'CS_Semester6_2024.xlsx',
+  },
+  {
+    id: 'hist_batch_002',
+    fileName: 'CS_Semester6_2024_Batch2',
+    totalCards: 2500,
+    generatedCards: 2500,
+    status: 'completed',
+    startedAt: new Date('2024-12-20T10:32:00'),
+    completedAt: new Date('2024-12-20T10:37:00'),
+    transactionId: 'TXN-M4K8J3-DEF456GH',
+    batchNumber: 2,
+    totalBatches: 4,
+    parentFileName: 'CS_Semester6_2024.xlsx',
+  },
+  {
+    id: 'hist_batch_003',
+    fileName: 'ECE_Semester4_2024_Batch1',
+    totalCards: 1800,
+    generatedCards: 1800,
+    status: 'completed',
+    startedAt: new Date('2024-12-18T14:00:00'),
+    completedAt: new Date('2024-12-18T14:04:00'),
+    transactionId: 'TXN-L3J7H1-JKL789MN',
+    batchNumber: 1,
+    totalBatches: 1,
+    parentFileName: 'ECE_Semester4_2024.xlsx',
+  },
+  {
+    id: 'hist_batch_004',
+    fileName: 'ME_Semester2_2024_Batch1',
+    totalCards: 3000,
+    generatedCards: 3000,
+    status: 'completed',
+    startedAt: new Date('2024-12-15T09:15:00'),
+    completedAt: new Date('2024-12-15T09:20:00'),
+    transactionId: 'TXN-K2I6G0-OPQ012RS',
+    batchNumber: 1,
+    totalBatches: 2,
+    parentFileName: 'ME_Semester2_2024.xlsx',
+  },
+  {
+    id: 'hist_batch_005',
+    fileName: 'ME_Semester2_2024_Batch2',
+    totalCards: 1500,
+    generatedCards: 1500,
+    status: 'completed',
+    startedAt: new Date('2024-12-15T09:17:00'),
+    completedAt: new Date('2024-12-15T09:22:00'),
+    transactionId: 'TXN-K2I6G1-TUV345WX',
+    batchNumber: 2,
+    totalBatches: 2,
+    parentFileName: 'ME_Semester2_2024.xlsx',
+  },
+];
