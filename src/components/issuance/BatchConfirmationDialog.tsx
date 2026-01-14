@@ -25,7 +25,7 @@ import {
   PartyPopper
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { GenerationJob } from '@/contexts/GenerationContext';
+import { GenerationJob, useGeneration } from '@/contexts/GenerationContext';
 import { toast } from 'sonner';
 
 const MAX_RECORDS_PER_BATCH = 3000;
@@ -56,6 +56,7 @@ export const BatchConfirmationDialog = memo(function BatchConfirmationDialog({
   isGenerating,
   activeJobs,
 }: BatchConfirmationDialogProps) {
+  const { retryJob } = useGeneration();
   // Use totalRecords from props OR calculate from jobs if data was cleared
   const effectiveTotalRecords = useMemo(() => {
     if (totalRecords > 0) return totalRecords;
@@ -234,7 +235,12 @@ export const BatchConfirmationDialog = memo(function BatchConfirmationDialog({
                         {job.totalCards.toLocaleString()} records
                       </Badge>
                     </div>
-                    <Button size="sm" variant="outline" className="h-7 gap-1">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-7 gap-1"
+                      onClick={() => retryJob(job.id)}
+                    >
                       <RefreshCw className="h-3 w-3" />
                       Retry
                     </Button>
