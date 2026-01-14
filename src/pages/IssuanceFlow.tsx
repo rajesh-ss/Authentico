@@ -2,7 +2,7 @@ import { useState, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { toast } from 'sonner';
-import * as XLSX from 'xlsx';
+import * as XLSX from '@e965/xlsx';
 import { useGeneration } from '@/contexts/GenerationContext';
 import { usePagination } from '@/hooks';
 import {
