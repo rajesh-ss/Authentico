@@ -5,3 +5,4 @@ export { usePagination } from './usePagination';
 export { useAutoRefresh } from './useAutoRefresh';
 export { useDateRangeFilter } from './useDateRangeFilter';
 export { useJobDownload } from './useJobDownload';
+export { useAnalyticsExport } from './useAnalyticsExport';
