@@ -53,22 +53,24 @@ export function AnalyticsHeader({
             <Button
               variant="outline"
               className={cn(
-                "justify-start text-left font-normal min-w-[280px]",
+                "justify-start text-left font-normal w-full sm:w-auto sm:min-w-[280px]",
                 !dateRange && "text-muted-foreground"
               )}
             >
-              <CalendarIcon className="mr-2 h-4 w-4" />
-              {dateRange?.from ? (
-                dateRange.to ? (
-                  <>
-                    {format(dateRange.from, "MMM dd, yyyy")} - {format(dateRange.to, "MMM dd, yyyy")}
-                  </>
+              <CalendarIcon className="mr-2 h-4 w-4 shrink-0" />
+              <span className="truncate">
+                {dateRange?.from ? (
+                  dateRange.to ? (
+                    <>
+                      {format(dateRange.from, "MMM dd")} - {format(dateRange.to, "MMM dd, yyyy")}
+                    </>
+                  ) : (
+                    format(dateRange.from, "MMM dd, yyyy")
+                  )
                 ) : (
-                  format(dateRange.from, "MMM dd, yyyy")
-                )
-              ) : (
-                <span>Select date range</span>
-              )}
+                  "Select date range"
+                )}
+              </span>
             </Button>
           </PopoverTrigger>
           <PopoverContent className="w-auto p-0" align="end">
@@ -78,21 +80,28 @@ export function AnalyticsHeader({
               defaultMonth={dateRange?.from}
               selected={dateRange}
               onSelect={setDateRange}
-              numberOfMonths={2}
-              className="pointer-events-auto"
+              numberOfMonths={1}
+              className="pointer-events-auto sm:hidden"
             />
-            <div className="flex items-center justify-between p-3 border-t">
-              <div className="flex gap-2">
-                <Button variant="ghost" size="sm" onClick={setLast7Days}>
-                  Last 7 days
-                </Button>
-                <Button variant="ghost" size="sm" onClick={setLast30Days}>
-                  Last 30 days
-                </Button>
-                <Button variant="ghost" size="sm" onClick={setLast90Days}>
-                  Last 90 days
-                </Button>
-              </div>
+            <Calendar
+              initialFocus
+              mode="range"
+              defaultMonth={dateRange?.from}
+              selected={dateRange}
+              onSelect={setDateRange}
+              numberOfMonths={2}
+              className="pointer-events-auto hidden sm:block"
+            />
+            <div className="flex flex-wrap items-center justify-center sm:justify-between gap-2 p-3 border-t">
+              <Button variant="ghost" size="sm" onClick={setLast7Days}>
+                7 days
+              </Button>
+              <Button variant="ghost" size="sm" onClick={setLast30Days}>
+                30 days
+              </Button>
+              <Button variant="ghost" size="sm" onClick={setLast90Days}>
+                90 days
+              </Button>
             </div>
           </PopoverContent>
         </Popover>

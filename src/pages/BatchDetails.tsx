@@ -135,7 +135,7 @@ export default function BatchDetails() {
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 md:gap-4">
           <Card>
             <CardContent className="pt-6">
               <div className="flex items-center gap-3">
@@ -231,7 +231,54 @@ export default function BatchDetails() {
             </div>
           </CardHeader>
           <CardContent>
-            <ScrollArea className="h-[500px]">
+            {/* Mobile Card View */}
+            <div className="md:hidden space-y-3 max-h-[500px] overflow-y-auto">
+              {filteredStudents.map((student) => (
+                <div key={student.id} className="p-4 border rounded-lg space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="font-medium">{student.studentName}</p>
+                      <p className="text-xs text-muted-foreground font-mono">{student.registrationNo}</p>
+                    </div>
+                    <Badge variant={student.percentage >= 75 ? 'success' : student.percentage >= 60 ? 'default' : 'secondary'}>
+                      {student.grade.split(' ')[0]}
+                    </Badge>
+                  </div>
+                  <div className="flex items-center justify-between text-sm">
+                    <div className="flex items-center gap-4">
+                      <span className="text-muted-foreground">Roll: <span className="font-mono text-foreground">{student.rollNo}</span></span>
+                      <span className={cn(
+                        "font-medium",
+                        student.percentage >= 75 && "text-success",
+                        student.percentage < 50 && "text-destructive"
+                      )}>
+                        {student.percentage}%
+                      </span>
+                    </div>
+                    <div className="flex gap-1">
+                      <Button variant="ghost" size="icon" onClick={() => handleViewStudent(student)}>
+                        <Eye className="h-4 w-4" />
+                      </Button>
+                      <Button 
+                        variant="ghost" 
+                        size="icon"
+                        onClick={() => handleDownloadSinglePDF(student)}
+                        disabled={downloadingStudentId === student.id}
+                      >
+                        {downloadingStudentId === student.id ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <Download className="h-4 w-4" />
+                        )}
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Desktop Table View */}
+            <ScrollArea className="h-[500px] hidden md:block">
               <Table>
                 <TableHeader>
                   <TableRow>
