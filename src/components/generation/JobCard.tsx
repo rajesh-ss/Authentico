@@ -45,29 +45,29 @@ export const JobCard = memo(function JobCard({
       "transition-all",
       isActive && "border-primary/50 bg-primary/5"
     )}>
-      <CardContent className="pt-6">
-        <div className="flex items-start gap-4">
+      <CardContent className="pt-4 md:pt-6">
+        <div className="flex flex-col sm:flex-row sm:items-start gap-3 sm:gap-4">
           {/* Status Icon */}
           <div className={cn(
-            "h-12 w-12 rounded-full flex items-center justify-center shrink-0",
+            "h-10 w-10 sm:h-12 sm:w-12 rounded-full flex items-center justify-center shrink-0 self-start",
             isActive && "bg-primary/10",
             isCompleted && "bg-success/10",
             isFailed && "bg-destructive/10",
             job.status === 'pending' && "bg-muted"
           )}>
-            {isActive && <Loader2 className="h-6 w-6 text-primary animate-spin" />}
-            {isCompleted && <CheckCircle2 className="h-6 w-6 text-success" />}
-            {isFailed && <XCircle className="h-6 w-6 text-destructive" />}
-            {job.status === 'pending' && <Clock className="h-6 w-6 text-muted-foreground" />}
+            {isActive && <Loader2 className="h-5 w-5 sm:h-6 sm:w-6 text-primary animate-spin" />}
+            {isCompleted && <CheckCircle2 className="h-5 w-5 sm:h-6 sm:w-6 text-success" />}
+            {isFailed && <XCircle className="h-5 w-5 sm:h-6 sm:w-6 text-destructive" />}
+            {job.status === 'pending' && <Clock className="h-5 w-5 sm:h-6 sm:w-6 text-muted-foreground" />}
           </div>
 
           {/* Job Info */}
           <div className="flex-1 min-w-0 space-y-3">
-            <div className="flex items-start justify-between gap-4">
+            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 sm:gap-4">
               <div className="min-w-0">
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
                   <FileSpreadsheet className="h-4 w-4 text-muted-foreground shrink-0" />
-                  <p className="font-medium truncate">{job.fileName}</p>
+                  <p className="font-medium truncate text-sm sm:text-base">{job.fileName}</p>
                   {job.batchNumber && job.totalBatches && job.totalBatches > 1 && (
                     <Badge variant="outline" className="text-xs shrink-0">
                       Batch {job.batchNumber}/{job.totalBatches}
@@ -77,10 +77,10 @@ export const JobCard = memo(function JobCard({
                 {job.transactionId && (
                   <div className="flex items-center gap-1 text-xs text-muted-foreground mt-0.5">
                     <Hash className="h-3 w-3" />
-                    <span className="font-mono">{job.transactionId}</span>
+                    <span className="font-mono truncate">{job.transactionId}</span>
                   </div>
                 )}
-                <p className="text-sm text-muted-foreground">
+                <p className="text-xs sm:text-sm text-muted-foreground">
                   Started {formatDistanceToNow(job.startedAt, { addSuffix: true })}
                 </p>
               </div>
@@ -91,7 +91,7 @@ export const JobCard = memo(function JobCard({
                   isFailed ? 'destructive' : 
                   'secondary'
                 }
-                className="shrink-0"
+                className="shrink-0 self-start"
               >
                 {job.status === 'in_progress' && 'Generating'}
                 {job.status === 'completed' && 'Completed'}

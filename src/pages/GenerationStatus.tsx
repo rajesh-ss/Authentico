@@ -222,10 +222,10 @@ export default function GenerationStatus() {
                   className="pl-9"
                 />
               </div>
-              <div className="flex flex-wrap gap-2">
+              <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2">
                 <Select value={statusFilter} onValueChange={setStatusFilter}>
-                  <SelectTrigger className="w-[130px]">
-                    <Filter className="h-4 w-4 mr-2" />
+                  <SelectTrigger className="w-full sm:w-[130px]">
+                    <Filter className="h-4 w-4 mr-2 hidden sm:block" />
                     <SelectValue placeholder="Status" />
                   </SelectTrigger>
                   <SelectContent>
@@ -236,7 +236,7 @@ export default function GenerationStatus() {
                   </SelectContent>
                 </Select>
                 <Select value={dateFilter} onValueChange={setDateFilter}>
-                  <SelectTrigger className="w-[130px]">
+                  <SelectTrigger className="w-full sm:w-[130px]">
                     <SelectValue placeholder="Date" />
                   </SelectTrigger>
                   <SelectContent>
@@ -248,8 +248,8 @@ export default function GenerationStatus() {
                 </Select>
                 {parentFileNames.length > 0 && (
                   <Select value={parentFileFilter} onValueChange={setParentFileFilter}>
-                    <SelectTrigger className="w-[180px]">
-                      <FolderOpen className="h-4 w-4 mr-2" />
+                    <SelectTrigger className="w-full sm:w-[180px] col-span-2 sm:col-span-1">
+                      <FolderOpen className="h-4 w-4 mr-2 hidden sm:block" />
                       <SelectValue placeholder="Source File" />
                     </SelectTrigger>
                     <SelectContent>
@@ -263,7 +263,7 @@ export default function GenerationStatus() {
                   </Select>
                 )}
                 {hasActiveFilters && (
-                  <Button variant="ghost" size="icon" onClick={clearFilters} className="shrink-0">
+                  <Button variant="ghost" size="icon" onClick={clearFilters} className="shrink-0 col-span-2 sm:col-span-1 justify-self-end sm:justify-self-auto">
                     <X className="h-4 w-4" />
                   </Button>
                 )}
