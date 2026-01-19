@@ -129,16 +129,6 @@ export default function GenerationStatus() {
       .sort((a, b) => b.latestDate - a.latestDate);
   }, [filteredJobs]);
 
-  // Separate groups into successful and failed sections
-  const successfulGroups = useMemo(() => 
-    groupedJobs.filter(g => g.successfulBatches > 0 || g.hasActive),
-    [groupedJobs]
-  );
-
-  const failedGroups = useMemo(() => 
-    groupedJobs.filter(g => g.failedBatches > 0 && !g.hasActive),
-    [groupedJobs]
-  );
 
   const completedJobs = filteredJobs.filter(j => j.status === 'completed');
   const failedJobs = filteredJobs.filter(j => j.status === 'failed');
@@ -299,64 +289,20 @@ export default function GenerationStatus() {
               />
             ) : (
               <ScrollArea className="h-[600px] pr-4">
-                <div className="space-y-6">
-                  {/* Successful Batches Section */}
-                  {successfulGroups.length > 0 && (
-                    <div className="space-y-4">
-                      <div className="flex items-center gap-2">
-                        <CheckCircle2 className="h-5 w-5 text-success" />
-                        <h3 className="font-semibold text-base">Successful Generations</h3>
-                        <Badge variant="success" className="ml-auto">
-                          {successfulGroups.reduce((sum, g) => sum + g.successfulBatches, 0)} batches
-                        </Badge>
-                      </div>
-                      <div className="space-y-4">
-                        {successfulGroups.map((group) => (
-                          <JobGroupCard
-                            key={`success-${group.parentFile}`}
-                            group={group}
-                            isExpanded={expandedGroups.has(group.parentFile)}
-                            activeJobId={activeJob?.id}
-                            onToggle={() => toggleGroup(group.parentFile)}
-                            onRetry={retryJob}
-                            onDownload={downloadJob}
-                            onViewDetails={handleViewDetails}
-                            isDownloading={isDownloading}
-                            showSuccessOnly
-                          />
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Failed Batches Section */}
-                  {failedGroups.length > 0 && (
-                    <div className="space-y-4">
-                      <div className="flex items-center gap-2">
-                        <XCircle className="h-5 w-5 text-destructive" />
-                        <h3 className="font-semibold text-base">Failed Generations</h3>
-                        <Badge variant="destructive" className="ml-auto">
-                          {failedGroups.reduce((sum, g) => sum + g.failedBatches, 0)} batches
-                        </Badge>
-                      </div>
-                      <div className="space-y-4">
-                        {failedGroups.map((group) => (
-                          <JobGroupCard
-                            key={`failed-${group.parentFile}`}
-                            group={group}
-                            isExpanded={expandedGroups.has(`failed-${group.parentFile}`)}
-                            activeJobId={activeJob?.id}
-                            onToggle={() => toggleGroup(`failed-${group.parentFile}`)}
-                            onRetry={retryJob}
-                            onDownload={downloadJob}
-                            onViewDetails={handleViewDetails}
-                            isDownloading={isDownloading}
-                            showFailedOnly
-                          />
-                        ))}
-                      </div>
-                    </div>
-                  )}
+                <div className="space-y-4">
+                  {groupedJobs.map((group) => (
+                    <JobGroupCard
+                      key={group.parentFile}
+                      group={group}
+                      isExpanded={expandedGroups.has(group.parentFile)}
+                      activeJobId={activeJob?.id}
+                      onToggle={() => toggleGroup(group.parentFile)}
+                      onRetry={retryJob}
+                      onDownload={downloadJob}
+                      onViewDetails={handleViewDetails}
+                      isDownloading={isDownloading}
+                    />
+                  ))}
                 </div>
               </ScrollArea>
             )}
@@ -433,9 +379,7 @@ function JobGroupCard({
   onRetry, 
   onDownload, 
   onViewDetails,
-  isDownloading,
-  showSuccessOnly,
-  showFailedOnly
+  isDownloading
 }: {
   group: JobGroup;
   isExpanded: boolean;
@@ -445,21 +389,14 @@ function JobGroupCard({
   onDownload: (job: GenerationJob) => void;
   onViewDetails: (id: string) => void;
   isDownloading: boolean;
-  showSuccessOnly?: boolean;
-  showFailedOnly?: boolean;
 }) {
-  // Filter jobs based on section type
-  const filteredGroupJobs = group.jobs.filter(job => {
-    if (showSuccessOnly) return job.status === 'completed' || job.status === 'in_progress';
-    if (showFailedOnly) return job.status === 'failed';
-    return true;
-  });
+  const allJobs = group.jobs;
 
-  if (filteredGroupJobs.length === 0) return null;
+  if (allJobs.length === 0) return null;
 
   // For single batch uploads, show directly without grouping
-  if (filteredGroupJobs.length === 1) {
-    const job = filteredGroupJobs[0];
+  if (allJobs.length === 1) {
+    const job = allJobs[0];
     if (job.id === activeJobId) return null;
     return (
       <JobCard 
@@ -472,32 +409,29 @@ function JobGroupCard({
     );
   }
 
-  const displaySuccessCount = filteredGroupJobs.filter(j => j.status === 'completed').length;
-  const displayFailedCount = filteredGroupJobs.filter(j => j.status === 'failed').length;
-  const displayActiveCount = filteredGroupJobs.filter(j => j.status === 'in_progress').length;
+  const displaySuccessCount = group.successfulBatches;
+  const displayFailedCount = group.failedBatches;
+  const displayActiveCount = allJobs.filter(j => j.status === 'in_progress').length;
 
   return (
     <Collapsible open={isExpanded} onOpenChange={onToggle}>
       <Card className={cn(
         "transition-all",
-        group.hasActive && !showFailedOnly && "border-primary/50",
-        showFailedOnly && "border-destructive/30"
+        group.hasActive && "border-primary/50",
+        group.hasFailed && !group.hasActive && "border-destructive/30"
       )}>
         <CollapsibleTrigger asChild>
           <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors pb-3">
             <div className="flex items-center justify-between flex-wrap gap-2">
               <div className="flex items-center gap-3">
                 {isExpanded ? <ChevronDown className="h-5 w-5 text-muted-foreground" /> : <ChevronRight className="h-5 w-5 text-muted-foreground" />}
-                <div className={cn(
-                  "h-10 w-10 rounded-full flex items-center justify-center",
-                  showFailedOnly ? "bg-destructive/10" : "bg-primary/10"
-                )}>
-                  <FolderOpen className={cn("h-5 w-5", showFailedOnly ? "text-destructive" : "text-primary")} />
+                <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
+                  <FolderOpen className="h-5 w-5 text-primary" />
                 </div>
                 <div>
                   <p className="font-medium">{group.parentFile}</p>
                   <p className="text-sm text-muted-foreground">
-                    {filteredGroupJobs.length} batches • {filteredGroupJobs.reduce((sum, j) => sum + j.totalCards, 0).toLocaleString()} records
+                    {allJobs.length} batches • {group.totalCards.toLocaleString()} records
                   </p>
                 </div>
               </div>
@@ -520,17 +454,17 @@ function JobGroupCard({
               </div>
             </div>
             
-            {(displayActiveCount > 0 || (!showSuccessOnly && displayFailedCount > 0)) && (
+            {(displayActiveCount > 0 || displayFailedCount > 0) && (
               <div className="mt-3 pt-3 border-t">
                 <div className="flex justify-between text-xs text-muted-foreground mb-1">
                   <span>Overall Progress</span>
                   <span>
-                    {filteredGroupJobs.reduce((sum, j) => sum + j.generatedCards, 0).toLocaleString()} / {filteredGroupJobs.reduce((sum, j) => sum + j.totalCards, 0).toLocaleString()}
+                    {group.completedCards.toLocaleString()} / {group.totalCards.toLocaleString()}
                   </span>
                 </div>
                 <Progress 
-                  value={(filteredGroupJobs.reduce((sum, j) => sum + j.generatedCards, 0) / filteredGroupJobs.reduce((sum, j) => sum + j.totalCards, 0)) * 100} 
-                  className={cn("h-2", showFailedOnly && "[&>div]:bg-destructive")} 
+                  value={(group.completedCards / group.totalCards) * 100} 
+                  className="h-2"
                 />
               </div>
             )}
@@ -540,7 +474,7 @@ function JobGroupCard({
         <CollapsibleContent>
           <CardContent className="pt-0">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 pt-2 border-t">
-              {filteredGroupJobs
+              {allJobs
                 .filter(j => j.id !== activeJobId)
                 .map((job) => (
                   <JobCard 
