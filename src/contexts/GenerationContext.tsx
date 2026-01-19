@@ -11,7 +11,7 @@ export interface GenerationJob {
   completedAt?: Date;
   errorMessage?: string;
   // New batch-related fields
-  transactionId: string;
+  transactionId?: string;
   batchNumber?: number;
   totalBatches?: number;
   parentFileName?: string;
