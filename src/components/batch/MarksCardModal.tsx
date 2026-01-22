@@ -19,6 +19,13 @@ interface MarksCardModalProps {
   onClose: () => void;
 }
 
+// HTML escape utility to prevent XSS attacks
+const escapeHtml = (text: string | number): string => {
+  const div = document.createElement('div');
+  div.textContent = String(text);
+  return div.innerHTML;
+};
+
 export const MarksCardModal = React.memo(function MarksCardModal({ 
   student, 
   open, 
@@ -27,7 +34,7 @@ export const MarksCardModal = React.memo(function MarksCardModal({
   const handleDownloadPDF = () => {
     if (student) {
       downloadSinglePDF(student);
-      toast.success(`Downloaded marks card for ${student.studentName}`);
+      toast.success(`Downloaded marks card for ${escapeHtml(student.studentName)}`);
     }
   };
 
@@ -44,7 +51,7 @@ export const MarksCardModal = React.memo(function MarksCardModal({
       <!DOCTYPE html>
       <html>
         <head>
-          <title>Marks Card - ${student.studentName}</title>
+          <title>Marks Card - ${escapeHtml(student.studentName)}</title>
           <style>
             * { margin: 0; padding: 0; box-sizing: border-box; }
             body { 
@@ -175,27 +182,27 @@ export const MarksCardModal = React.memo(function MarksCardModal({
             <div class="info-grid">
               <div class="info-item">
                 <label>Student Name</label>
-                <span>${student.studentName}</span>
+                <span>${escapeHtml(student.studentName)}</span>
               </div>
               <div class="info-item">
                 <label>Registration No</label>
-                <span>${student.registrationNo}</span>
+                <span>${escapeHtml(student.registrationNo)}</span>
               </div>
               <div class="info-item">
                 <label>Roll No</label>
-                <span>${student.rollNo}</span>
+                <span>${escapeHtml(student.rollNo)}</span>
               </div>
               <div class="info-item">
                 <label>Semester</label>
-                <span>${student.semester}</span>
+                <span>${escapeHtml(student.semester)}</span>
               </div>
               <div class="info-item">
                 <label>Academic Year</label>
-                <span>${student.academicYear}</span>
+                <span>${escapeHtml(student.academicYear)}</span>
               </div>
               <div class="info-item">
                 <label>Department</label>
-                <span>${student.department}</span>
+                <span>${escapeHtml(student.department)}</span>
               </div>
             </div>
 
@@ -215,13 +222,13 @@ export const MarksCardModal = React.memo(function MarksCardModal({
               <tbody>
                 ${student.subjects.map(sub => `
                   <tr>
-                    <td>${sub.code}</td>
-                    <td>${sub.name}</td>
-                    <td class="text-center">${sub.credits}</td>
-                    <td class="text-center">${sub.internal}</td>
-                    <td class="text-center">${sub.external}</td>
-                    <td class="text-center" style="font-weight: 600;">${sub.total}</td>
-                    <td class="text-center"><span class="grade-badge">${sub.grade}</span></td>
+                    <td>${escapeHtml(sub.code)}</td>
+                    <td>${escapeHtml(sub.name)}</td>
+                    <td class="text-center">${escapeHtml(sub.credits)}</td>
+                    <td class="text-center">${escapeHtml(sub.internal)}</td>
+                    <td class="text-center">${escapeHtml(sub.external)}</td>
+                    <td class="text-center" style="font-weight: 600;">${escapeHtml(sub.total)}</td>
+                    <td class="text-center"><span class="grade-badge">${escapeHtml(sub.grade)}</span></td>
                   </tr>
                 `).join('')}
               </tbody>
@@ -230,28 +237,28 @@ export const MarksCardModal = React.memo(function MarksCardModal({
             <div class="summary-box">
               <div class="summary-row">
                 <span class="summary-label">Total Marks</span>
-                <span class="summary-value">${student.totalMarks} / ${student.maxMarks}</span>
+                <span class="summary-value">${escapeHtml(student.totalMarks)} / ${escapeHtml(student.maxMarks)}</span>
               </div>
               <div class="summary-row">
                 <span class="summary-label">Percentage</span>
-                <span class="summary-value">${student.percentage}%</span>
+                <span class="summary-value">${escapeHtml(student.percentage)}%</span>
               </div>
               <div class="summary-row">
                 <span class="summary-label">Result</span>
-                <span class="result-badge">${student.grade}</span>
+                <span class="result-badge">${escapeHtml(student.grade)}</span>
               </div>
             </div>
 
             <div class="blockchain-box">
               <h4>Blockchain Verification</h4>
               <p>Transaction Hash:</p>
-              <p class="hash">${student.blockchainHash}</p>
+              <p class="hash">${escapeHtml(student.blockchainHash)}</p>
               <p style="margin-top: 8px; color: #6b7280;">Issued: ${format(student.issuedAt, 'PPpp')}</p>
             </div>
 
             <div class="footer">
               <p>This is a computer-generated document and does not require a signature.</p>
-              <p>Document ID: ${student.id}</p>
+              <p>Document ID: ${escapeHtml(student.id)}</p>
             </div>
           </div>
         </body>
@@ -270,21 +277,21 @@ export const MarksCardModal = React.memo(function MarksCardModal({
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <div className="flex items-center justify-between gap-2">
-            <DialogTitle className="flex items-center gap-2">
-              <Award className="h-5 w-5 text-primary" />
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto p-4 sm:p-6">
+        <DialogHeader className="pb-2">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <DialogTitle className="flex items-center gap-2 text-base sm:text-lg">
+              <Award className="h-5 w-5 text-primary shrink-0" />
               Marks Card Details
             </DialogTitle>
             <div className="flex gap-2">
-              <Button onClick={handlePrint} variant="outline" size="sm" className="gap-2">
+              <Button onClick={handlePrint} variant="outline" size="sm" className="gap-1.5 flex-1 sm:flex-none">
                 <Printer className="h-4 w-4" />
-                Print
+                <span className="hidden sm:inline">Print</span>
               </Button>
-              <Button onClick={handleDownloadPDF} size="sm" className="gap-2">
+              <Button onClick={handleDownloadPDF} size="sm" className="gap-1.5 flex-1 sm:flex-none">
                 <Download className="h-4 w-4" />
-                PDF
+                <span className="hidden sm:inline">PDF</span>
               </Button>
             </div>
           </div>
@@ -347,7 +354,42 @@ export const MarksCardModal = React.memo(function MarksCardModal({
           {/* Subjects Table */}
           <div className="space-y-3">
             <p className="text-sm font-medium text-muted-foreground">Subject-wise Marks</p>
-            <div className="border rounded-md overflow-hidden">
+            
+            {/* Mobile View */}
+            <div className="sm:hidden space-y-2">
+              {student.subjects.map((subject) => (
+                <div key={subject.code} className="p-3 border rounded-lg space-y-2">
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <p className="font-medium text-sm">{subject.name}</p>
+                      <p className="text-xs text-muted-foreground">{subject.code}</p>
+                    </div>
+                    <Badge variant="outline" className="text-xs">{subject.grade}</Badge>
+                  </div>
+                  <div className="grid grid-cols-4 gap-2 text-xs text-center">
+                    <div>
+                      <p className="text-muted-foreground">Cr</p>
+                      <p className="font-medium">{subject.credits}</p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground">Int</p>
+                      <p className="font-medium">{subject.internal}</p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground">Ext</p>
+                      <p className="font-medium">{subject.external}</p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground">Total</p>
+                      <p className="font-bold">{subject.total}</p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Desktop View */}
+            <div className="hidden sm:block border rounded-md overflow-hidden">
               <Table>
                 <TableHeader>
                   <TableRow className="bg-muted/50">

@@ -2,7 +2,7 @@ import { useState, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { toast } from 'sonner';
-import * as XLSX from 'xlsx';
+import * as XLSX from '@e965/xlsx';
 import { useGeneration } from '@/contexts/GenerationContext';
 import { usePagination } from '@/hooks';
 import {
@@ -34,6 +34,9 @@ export default function IssuanceFlow() {
   const [templateOpen, setTemplateOpen] = useState(true);
   const [selectedFormat, setSelectedFormat] = useState<FileFormat>('excel');
   const [showBatchDialog, setShowBatchDialog] = useState(false);
+  
+  // Store generation info for dialog to use after data is cleared
+  const [generationInfo, setGenerationInfo] = useState<{ fileName: string; totalRecords: number } | null>(null);
 
   const { activeJobs, startBatchGeneration, isGenerating, getJobsByParentFile } = useGeneration();
 
@@ -54,11 +57,12 @@ export default function IssuanceFlow() {
     };
   }, [rawData.length]);
 
-  // Get jobs for current file
+  // Get jobs for current file (use generationInfo.fileName if file was cleared during generation)
   const currentFileJobs = useMemo(() => {
-    if (!excelFile) return [];
-    return getJobsByParentFile(excelFile.name);
-  }, [excelFile, getJobsByParentFile]);
+    const fileName = excelFile?.name || generationInfo?.fileName;
+    if (!fileName) return [];
+    return getJobsByParentFile(fileName);
+  }, [excelFile, generationInfo, getJobsByParentFile]);
 
   // Calculate current step
   const currentStep = useMemo(() => {
@@ -217,6 +221,12 @@ export default function IssuanceFlow() {
   const handleConfirmGeneration = useCallback(() => {
     if (!excelFile || rawData.length === 0) return;
     
+    // Store generation info BEFORE clearing data so dialog can reference it
+    setGenerationInfo({
+      fileName: excelFile.name,
+      totalRecords: rawData.length,
+    });
+    
     startBatchGeneration({
       fileName: excelFile.name,
       totalRecords: rawData.length,
@@ -241,6 +251,7 @@ export default function IssuanceFlow() {
     setRawData([]);
     setHeaders([]);
     setParseError(null);
+    setGenerationInfo(null);
   }, []);
 
   return (
@@ -300,8 +311,8 @@ export default function IssuanceFlow() {
       <BatchConfirmationDialog
         open={showBatchDialog}
         onOpenChange={setShowBatchDialog}
-        fileName={excelFile?.name || currentFileJobs[0]?.parentFileName || 'Unknown'}
-        totalRecords={rawData.length || currentFileJobs.reduce((sum, j) => sum + j.totalCards, 0)}
+        fileName={excelFile?.name || generationInfo?.fileName || currentFileJobs[0]?.parentFileName || 'Unknown'}
+        totalRecords={rawData.length || generationInfo?.totalRecords || currentFileJobs.reduce((sum, j) => sum + j.totalCards, 0)}
         onConfirm={handleConfirmGeneration}
         onNavigateToMarksCards={handleNavigateToMarksCards}
         isGenerating={isGenerating && activeJobs.length > 0}

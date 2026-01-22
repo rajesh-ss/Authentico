@@ -115,11 +115,11 @@ export default function PendingSignatures() {
                   </div>
                   <div className="p-4 bg-muted/30 rounded-lg">
                     <p className="text-sm font-medium mb-3">Marks Update</p>
-                    <div className="flex items-center justify-between">
-                      <div className="text-center flex-1"><p className="text-xs text-muted-foreground">Previous</p><p className="text-2xl font-bold">{sig.oldMarks}</p></div>
-                      <ArrowLeftRight className="h-5 w-5 text-muted-foreground mx-4" />
-                      <div className="text-center flex-1"><p className="text-xs text-muted-foreground">Updated</p><p className="text-2xl font-bold text-success">{sig.newMarks}</p></div>
-                      <div className="text-center flex-1"><p className="text-xs text-muted-foreground">Change</p><p className="text-2xl font-bold text-accent">+{sig.newMarks - sig.oldMarks}</p></div>
+                    <div className="grid grid-cols-3 gap-2 sm:flex sm:items-center sm:justify-between">
+                      <div className="text-center flex-1"><p className="text-xs text-muted-foreground">Previous</p><p className="text-xl sm:text-2xl font-bold">{sig.oldMarks}</p></div>
+                      <div className="hidden sm:flex items-center justify-center"><ArrowLeftRight className="h-5 w-5 text-muted-foreground" /></div>
+                      <div className="text-center flex-1"><p className="text-xs text-muted-foreground">Updated</p><p className="text-xl sm:text-2xl font-bold text-success">{sig.newMarks}</p></div>
+                      <div className="text-center flex-1"><p className="text-xs text-muted-foreground">Change</p><p className="text-xl sm:text-2xl font-bold text-accent">+{sig.newMarks - sig.oldMarks}</p></div>
                     </div>
                   </div>
                 </div>

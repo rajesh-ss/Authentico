@@ -96,7 +96,7 @@ export default function IssuerDashboard() {
   return (
     <DashboardLayout title="Dashboard" subtitle="Welcome back, Dr. Sarah Johnson">
       {/* Quick Actions */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4 mb-6">
         {quickActions.map((action) => (
           <Link key={action.to} to={action.to}>
             <Card className="group hover:border-primary/50 transition-colors">
@@ -124,7 +124,7 @@ export default function IssuerDashboard() {
           </Button>
         </CardHeader>
         <CardContent className="pt-0">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
             {recentBatches.map((batch) => (
               <div 
                 key={batch.id} 
@@ -134,11 +134,11 @@ export default function IssuerDashboard() {
                     : 'border-border hover:border-muted-foreground/30'
                 }`}
               >
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center gap-3">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2">
+                  <div className="flex items-center gap-3 min-w-0">
                     {getStatusIcon(batch.status)}
-                    <div>
-                      <p className="font-medium text-foreground">{batch.fileName}</p>
+                    <div className="min-w-0">
+                      <p className="font-medium text-foreground truncate">{batch.fileName}</p>
                       <p className="text-xs text-muted-foreground">
                         {batch.status === 'in_progress' 
                           ? `Started ${format(batch.startedAt, 'dd MMM yyyy, HH:mm')}`
@@ -149,7 +149,7 @@ export default function IssuerDashboard() {
                       </p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-2 sm:gap-3 ml-8 sm:ml-0">
                     {getStatusBadge(batch.status)}
                     {batch.status === 'completed' && (
                       <DropdownMenu>
