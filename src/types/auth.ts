@@ -1,17 +1,20 @@
-export type UserRole = 
-  | 'issuer' 
-  | 'college_admin' 
-  | 'reevaluation_checker' 
-  | 'reevaluation_updater' 
-  | 'reevaluation_approver' 
-  | 'student'
-  | 'maker';
+export enum Roles {
+  ADMIN = 'ADMIN',
+  ISSUER = 'ISSUER',
+  STUDENT = 'STUDENT',
+  MAKER = 'MAKER',
+  CHECKER = 'CHECKER',
+  APPROVER = 'APPROVER',
+}
+
+export type RoleNameTypes = Roles;
+export type UserRole = Roles;
 
 export interface User {
-  id: string;
+  userId: string;
   email: string;
   name: string;
-  role: UserRole;
+  roles: Roles[];
   avatar?: string;
   department?: string;
   institution?: string;
@@ -25,22 +28,38 @@ export interface AuthState {
   isLoading: boolean;
 }
 
-export const roleLabels: Record<UserRole, string> = {
-  issuer: 'Marks Card Issuer',
-  college_admin: 'College Administrator',
-  reevaluation_checker: 'Re-Evaluation Checker',
-  reevaluation_updater: 'Re-Evaluation Updater',
-  reevaluation_approver: 'Re-Evaluation Approver',
-  student: 'Student',
-  maker: 'Maker',
+export const roleLabels: Record<Roles, string> = {
+  [Roles.ISSUER]: 'Marks Card Issuer',
+  [Roles.ADMIN]: 'System Administrator',
+  [Roles.CHECKER]: 'Re-Evaluation Checker',
+  [Roles.APPROVER]: 'Re-Evaluation Approver',
+  [Roles.STUDENT]: 'Student',
+  [Roles.MAKER]: 'Maker',
 };
 
-export const roleDescriptions: Record<UserRole, string> = {
-  issuer: 'Generate and issue blockchain-verified marks cards',
-  college_admin: 'Full administrative access to manage users and verify records',
-  reevaluation_checker: 'Review and check re-evaluation requests',
-  reevaluation_updater: 'Update marks after re-evaluation approval',
-  reevaluation_approver: 'Provide final approval and digital signatures for verification',
-  student: 'View marks cards and submit re-evaluation requests',
-  maker: 'Validate and initiate re-evaluation requests from students',
+export const roleDescriptions: Record<Roles, string> = {
+  [Roles.ISSUER]: 'Generate and issue blockchain-verified marks cards',
+  [Roles.ADMIN]: 'Super admin access to all system features and user management',
+  [Roles.CHECKER]: 'Review, check, and update re-evaluation requests',
+  [Roles.APPROVER]: 'Provide final approval and digital signatures for verification',
+  [Roles.STUDENT]: 'View marks cards and submit re-evaluation requests',
+  [Roles.MAKER]: 'Validate and initiate re-evaluation requests from students',
+};
+
+export const rolePriority: Roles[] = [
+  Roles.ADMIN,
+  Roles.APPROVER,
+  Roles.ISSUER,
+  Roles.CHECKER,
+  Roles.MAKER,
+  Roles.STUDENT,
+];
+
+export const getPrimaryRole = (roles: Roles[]): Roles | undefined => {
+  if (!roles || roles.length === 0) return undefined;
+  return rolePriority.find((role) => roles.includes(role)) || roles[0];
+};
+
+export const getRoleLabel = (role: Roles): string => {
+  return roleLabels[role] || role;
 };

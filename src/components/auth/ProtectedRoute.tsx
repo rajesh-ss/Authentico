@@ -14,8 +14,8 @@ export function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) 
     return <Navigate to="/" replace />;
   }
 
-  if (allowedRoles && !allowedRoles.includes(user.role)) {
-    return <Navigate to="/dashboard" replace />;
+  if (allowedRoles && !allowedRoles.some((role) => user.roles.includes(role))) {
+    return <Navigate to="/" replace />;
   }
 
   return <>{children}</>;

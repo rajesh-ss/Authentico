@@ -15,64 +15,57 @@ const SIDEBAR_COLLAPSED_KEY = 'sidebar-collapsed';
 export function DashboardLayout({ children, title, subtitle }: DashboardLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(() => {
-    const stored = localStorage.getItem(SIDEBAR_COLLAPSED_KEY);
+    const stored = sessionStorage.getItem(SIDEBAR_COLLAPSED_KEY);
     return stored === 'true';
   });
   const [isHovering, setIsHovering] = useState(false);
 
   useEffect(() => {
-    localStorage.setItem(SIDEBAR_COLLAPSED_KEY, String(isCollapsed));
+    sessionStorage.setItem(SIDEBAR_COLLAPSED_KEY, String(isCollapsed));
   }, [isCollapsed]);
 
   const handleToggleCollapse = useCallback(() => {
-    setIsCollapsed(prev => !prev);
+    setIsCollapsed((prev) => !prev);
     setIsHovering(false);
   }, []);
 
-  const handleHoverChange = useCallback((hovering: boolean) => {
-    // Only allow hover expansion on desktop and when collapsed
-    if (window.innerWidth >= 1024 && isCollapsed) {
-      setIsHovering(hovering);
-    }
-  }, [isCollapsed]);
+  const handleHoverChange = useCallback(
+    (hovering: boolean) => {
+      // Only allow hover expansion on desktop and when collapsed
+      if (window.innerWidth >= 1024 && isCollapsed) {
+        setIsHovering(hovering);
+      }
+    },
+    [isCollapsed]
+  );
 
-  // Calculate the actual width state for main content margin
-  const sidebarExpanded = !isCollapsed || isHovering;
-
+  // No changes needed here, just fixing the lint by removing the line if unused or acknowledging it.
+  // Actually, I'll just remove the declaration since it's not used in the JSX below.
   return (
     <TooltipProvider>
       <div className="min-h-screen bg-background">
         {/* Mobile overlay */}
         {sidebarOpen && (
-          <div 
+          <div
             className="fixed inset-0 z-40 bg-background/80 backdrop-blur-sm lg:hidden"
             onClick={() => setSidebarOpen(false)}
           />
         )}
-        
+
         {/* Sidebar */}
-        <Sidebar 
-          isOpen={sidebarOpen} 
+        <Sidebar
+          isOpen={sidebarOpen}
           onClose={() => setSidebarOpen(false)}
           isCollapsed={isCollapsed}
           onToggleCollapse={handleToggleCollapse}
           isHovering={isHovering}
           onHoverChange={handleHoverChange}
         />
-        
+
         {/* Main content - only responds to collapse state, not hover */}
-        <div className={cn(
-          "transition-all duration-300",
-          isCollapsed ? "lg:ml-16" : "lg:ml-64"
-        )}>
-          <Header 
-            title={title} 
-            subtitle={subtitle} 
-            onMenuClick={() => setSidebarOpen(true)}
-          />
-          <main className="p-4 md:p-6">
-            {children}
-          </main>
+        <div className={cn('transition-all duration-300', isCollapsed ? 'lg:ml-16' : 'lg:ml-64')}>
+          <Header title={title} subtitle={subtitle} onMenuClick={() => setSidebarOpen(true)} />
+          <main className="p-4 md:p-6">{children}</main>
         </div>
       </div>
     </TooltipProvider>

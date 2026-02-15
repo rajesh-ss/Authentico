@@ -26,19 +26,29 @@ export function useSearch<T>({
   const [filterValue, setFilterValue] = useState(initialFilterValue);
 
   const filteredData = useMemo(() => {
-    return data.filter(item => {
+    return data.filter((item) => {
       // Search filter
-      const matchesSearch = searchQuery === '' || searchFields.some(field => {
-        const value = item[field];
-        if (typeof value === 'string') {
-          return value.toLowerCase().includes(searchQuery.toLowerCase());
-        }
-        return false;
-      });
+      const matchesSearch =
+        searchQuery === '' ||
+        searchFields.some((field) => {
+          const value = item[field];
+          if (typeof value === 'string') {
+            return value.toLowerCase().includes(searchQuery.toLowerCase());
+          }
+          return false;
+        });
 
       // Category filter
-      const matchesFilter = filterValue === 'all' || 
-        (filterField && item[filterField] === filterValue);
+      const matchesFilter =
+        filterValue === 'all' ||
+        (filterField &&
+          (() => {
+            const val = item[filterField];
+            if (Array.isArray(val)) {
+              return (val as string[]).includes(filterValue);
+            }
+            return val === filterValue;
+          })());
 
       return matchesSearch && matchesFilter;
     });

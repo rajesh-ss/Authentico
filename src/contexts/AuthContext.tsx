@@ -1,97 +1,23 @@
 import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
-import { User, UserRole, AuthState } from '@/types/auth';
+import { User, AuthState } from '@/types/auth';
+import { authService } from '@/services/auth.service';
 
 interface AuthContextType extends AuthState {
   login: (email: string, password: string) => Promise<User>;
   logout: () => void;
   connectWallet: () => Promise<void>;
   disconnectWallet: () => void;
+  setCredentials: (user: User, token: string) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 const AUTH_STORAGE_KEY = 'blockcert_auth';
 
-/**
- * ⚠️ DEMO MODE WARNING
- * 
- * This authentication implementation is for DEMONSTRATION PURPOSES ONLY.
- * It uses hardcoded mock users and client-side authentication which is NOT SECURE.
- * 
- * Before deploying to production, you MUST:
- * 1. Implement proper backend authentication (e.g., Lovable Cloud/Supabase Auth)
- * 2. Use secure password hashing (bcrypt/argon2)
- * 3. Implement server-side session management
- * 4. Add proper JWT token validation
- * 5. Remove all hardcoded credentials
- * 
- * See: https://docs.lovable.dev/features/security
- */
-
-// Mock users for demonstration - REMOVE IN PRODUCTION
-const mockUsers: Record<string, User> = {
-  'issuer@university.edu': {
-    id: '1',
-    email: 'issuer@university.edu',
-    name: 'Dr. Sarah Johnson',
-    role: 'issuer',
-    department: 'Computer Science',
-    institution: 'State University',
-  },
-  'admin@university.edu': {
-    id: '2',
-    email: 'admin@university.edu',
-    name: 'Prof. Robert Chen',
-    role: 'college_admin',
-    department: 'Administration',
-    institution: 'State University',
-  },
-  'checker@university.edu': {
-    id: '3',
-    email: 'checker@university.edu',
-    name: 'Dr. Emily Davis',
-    role: 'reevaluation_checker',
-    department: 'Examination Cell',
-    institution: 'State University',
-  },
-  'updater@university.edu': {
-    id: '4',
-    email: 'updater@university.edu',
-    name: 'Mr. James Wilson',
-    role: 'reevaluation_updater',
-    department: 'Examination Cell',
-    institution: 'State University',
-  },
-  'approver@university.edu': {
-    id: '5',
-    email: 'approver@university.edu',
-    name: 'Dr. Michael Brown',
-    role: 'reevaluation_approver',
-    department: 'Quality Assurance',
-    institution: 'State University',
-  },
-  'student@university.edu': {
-    id: '6',
-    email: 'student@university.edu',
-    name: 'Alex Thompson',
-    role: 'student',
-    department: 'Computer Science',
-    institution: 'State University',
-  },
-  'maker@university.edu': {
-    id: '7',
-    email: 'maker@university.edu',
-    name: 'Prof. Anita Desai',
-    role: 'maker',
-    department: 'Computer Science',
-    institution: 'State University',
-  },
-};
-
 // Get initial auth state from localStorage
 const getInitialAuthState = (): AuthState => {
   try {
-    const stored = localStorage.getItem(AUTH_STORAGE_KEY);
+    const stored = sessionStorage.getItem(AUTH_STORAGE_KEY);
     if (stored) {
       const parsed = JSON.parse(stored);
       return {
@@ -101,7 +27,7 @@ const getInitialAuthState = (): AuthState => {
       };
     }
   } catch {
-    localStorage.removeItem(AUTH_STORAGE_KEY);
+    sessionStorage.removeItem(AUTH_STORAGE_KEY);
   }
   return {
     user: null,
@@ -113,29 +39,46 @@ const getInitialAuthState = (): AuthState => {
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [authState, setAuthState] = useState<AuthState>(getInitialAuthState);
 
+  const setCredentials = useCallback((user: User, token: string) => {
+    sessionStorage.setItem('auth_token', token);
+    setAuthState({
+      user,
+      isAuthenticated: true,
+      isLoading: false,
+    });
+  }, []);
+
   const login = useCallback(async (email: string, password: string): Promise<User> => {
-    setAuthState(prev => ({ ...prev, isLoading: true }));
-    
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    const user = mockUsers[email.toLowerCase()];
-    
-    if (user && password === 'password') {
+    setAuthState((prev) => ({ ...prev, isLoading: true }));
+
+    try {
+      // Use the auth service
+      const response = await authService.login({ email, password });
+
+      // Basic password check happens in service for now (mock)
+      if (password !== 'password') {
+        throw new Error('Invalid credentials');
+      }
+
       setAuthState({
-        user,
+        user: response.user,
         isAuthenticated: true,
         isLoading: false,
       });
-      return user;
-    } else {
-      setAuthState(prev => ({ ...prev, isLoading: false }));
-      throw new Error('Invalid credentials');
+
+      // Store token
+      sessionStorage.setItem('auth_token', response.token);
+
+      return response.user;
+    } catch (error) {
+      setAuthState((prev) => ({ ...prev, isLoading: false }));
+      throw error;
     }
   }, []);
 
   const logout = useCallback(() => {
-    localStorage.removeItem(AUTH_STORAGE_KEY);
+    sessionStorage.removeItem(AUTH_STORAGE_KEY);
+    sessionStorage.removeItem('auth_token');
     setAuthState({
       user: null,
       isAuthenticated: false,
@@ -143,44 +86,50 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
   }, []);
 
-  // Persist auth state changes to localStorage
+  // Persist auth state changes to sessionStorage
   useEffect(() => {
     if (authState.isAuthenticated && authState.user) {
-      localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify({ user: authState.user }));
+      sessionStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify({ user: authState.user }));
     }
   }, [authState.isAuthenticated, authState.user]);
 
   const connectWallet = useCallback(async () => {
     // Simulate wallet connection
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    
+    await new Promise((resolve) => setTimeout(resolve, 1500));
+
     if (authState.user) {
-      setAuthState(prev => ({
+      setAuthState((prev) => ({
         ...prev,
-        user: prev.user ? {
-          ...prev.user,
-          walletConnected: true,
-          walletAddress: '0x742d35Cc6634C0532925a3b844Bc9e7595f8a2c1',
-        } : null,
+        user: prev.user
+          ? {
+              ...prev.user,
+              walletConnected: true,
+              walletAddress: '0x742d35Cc6634C0532925a3b844Bc9e7595f8a2c1',
+            }
+          : null,
       }));
     }
   }, [authState.user]);
 
   const disconnectWallet = useCallback(() => {
     if (authState.user) {
-      setAuthState(prev => ({
+      setAuthState((prev) => ({
         ...prev,
-        user: prev.user ? {
-          ...prev.user,
-          walletConnected: false,
-          walletAddress: undefined,
-        } : null,
+        user: prev.user
+          ? {
+              ...prev.user,
+              walletConnected: false,
+              walletAddress: undefined,
+            }
+          : null,
       }));
     }
   }, [authState.user]);
 
   return (
-    <AuthContext.Provider value={{ ...authState, login, logout, connectWallet, disconnectWallet }}>
+    <AuthContext.Provider
+      value={{ ...authState, login, logout, connectWallet, disconnectWallet, setCredentials }}
+    >
       {children}
     </AuthContext.Provider>
   );

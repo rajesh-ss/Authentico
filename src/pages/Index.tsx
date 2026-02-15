@@ -1,14 +1,14 @@
 import { memo } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
-import { Navigate } from 'react-router-dom';
-import Login from './Login';
+// import { useAuth } from '@/contexts/AuthContext';
+// import { Navigate } from 'react-router-dom';
+import Login from './auth/Login';
 
 const Index = memo(function Index() {
-  const { isAuthenticated, user } = useAuth();
+  // const { isAuthenticated, user } = useAuth();
 
-  if (isAuthenticated && user) {
-    return <Navigate to="/dashboard" replace />;
-  }
+  // if (isAuthenticated && user && ['ADMIN'].includes(user.role)) {
+  //   return <Navigate to="/admin/dashboard" replace />;
+  // }
 
   return <Login />;
 });

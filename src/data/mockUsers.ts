@@ -1,23 +1,71 @@
-import { UserRole } from '@/types/auth';
+import { Roles, User } from '@/types/auth';
 
-export interface ManagedUser {
-  id: string;
-  name: string;
-  email: string;
-  role: UserRole;
-  department: string;
+export interface ManagedUser extends User {
   status: 'active' | 'inactive';
   createdAt: Date;
 }
 
 export const mockUsers: ManagedUser[] = [
-  { id: '1', name: 'Dr. Sarah Johnson', email: 'issuer@university.edu', role: 'issuer', department: 'Computer Science', status: 'active', createdAt: new Date('2024-01-15') },
-  { id: '2', name: 'Dr. Emily Davis', email: 'checker@university.edu', role: 'reevaluation_checker', department: 'Examination Cell', status: 'active', createdAt: new Date('2024-02-20') },
-  { id: '3', name: 'Mr. James Wilson', email: 'updater@university.edu', role: 'reevaluation_updater', department: 'Examination Cell', status: 'active', createdAt: new Date('2024-03-10') },
-  { id: '4', name: 'Dr. Michael Brown', email: 'approver@university.edu', role: 'reevaluation_approver', department: 'Quality Assurance', status: 'active', createdAt: new Date('2024-01-05') },
-  { id: '5', name: 'Prof. Lisa Anderson', email: 'lisa@university.edu', role: 'issuer', department: 'Mathematics', status: 'inactive', createdAt: new Date('2023-11-20') },
-  { id: '6', name: 'Dr. Robert Taylor', email: 'robert@university.edu', role: 'reevaluation_approver', department: 'Administration', status: 'active', createdAt: new Date('2024-04-01') },
-  { id: '7', name: 'Prof. Anita Desai', email: 'maker@university.edu', role: 'maker', department: 'Computer Science', status: 'active', createdAt: new Date('2024-05-15') },
+  {
+    userId: '1',
+    email: 'issuer@university.edu',
+    name: 'Dr. Sarah Johnson',
+    roles: [Roles.ISSUER],
+    department: 'Computer Science',
+    institution: 'State University',
+    status: 'active',
+    createdAt: new Date('2024-01-15'),
+  },
+  {
+    userId: '2',
+    email: 'admin@university.edu',
+    name: 'Admin User',
+    roles: [Roles.ADMIN],
+    department: 'Administration',
+    institution: 'State University',
+    status: 'active',
+    createdAt: new Date('2024-01-10'),
+  },
+  {
+    userId: '3',
+    email: 'checker@university.edu',
+    name: 'Robert Wilson',
+    roles: [Roles.CHECKER],
+    department: 'Examination',
+    institution: 'State University',
+    status: 'active',
+    createdAt: new Date('2024-01-20'),
+  },
+  {
+    userId: '4',
+    email: 'approver@university.edu',
+    name: 'Dr. Emily Chen',
+    roles: [Roles.APPROVER],
+    department: 'Registry',
+    institution: 'State University',
+    status: 'active',
+    createdAt: new Date('2024-01-22'),
+  },
+  {
+    userId: '5',
+    email: 'student@university.edu',
+    name: 'John Doe',
+    roles: [Roles.STUDENT],
+    department: 'Engineering',
+    institution: 'State University',
+    status: 'active',
+    createdAt: new Date('2024-01-25'),
+  },
+  {
+    userId: '6',
+    email: 'maker@university.edu',
+    name: 'Alice Smith',
+    roles: [Roles.MAKER],
+    department: 'Examination',
+    institution: 'State University',
+    status: 'active',
+    createdAt: new Date('2024-02-01'),
+  },
 ];
 
-export const availableRoles: UserRole[] = ['issuer', 'reevaluation_checker', 'reevaluation_updater', 'reevaluation_approver', 'maker'];
+export const availableRoles = Object.values(Roles);

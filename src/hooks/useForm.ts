@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react';
 
 interface FormField {
-  [key: string]: string | number | boolean | Date | null | undefined;
+  [key: string]: string | number | boolean | Date | string[] | number[] | null | undefined;
 }
 
 interface UseFormOptions<T extends FormField> {
@@ -31,9 +31,9 @@ export function useForm<T extends FormField>({
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleChange = useCallback(<K extends keyof T>(field: K, value: T[K]) => {
-    setValues(prev => ({ ...prev, [field]: value }));
+    setValues((prev) => ({ ...prev, [field]: value }));
     // Clear error when field changes
-    setErrors(prev => ({ ...prev, [field]: undefined }));
+    setErrors((prev) => ({ ...prev, [field]: undefined }));
   }, []);
 
   const setFieldValue = handleChange;

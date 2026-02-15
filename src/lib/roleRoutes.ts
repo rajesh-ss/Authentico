@@ -1,14 +1,23 @@
-import { UserRole } from '@/types/auth';
+import { Roles, getPrimaryRole } from '@/types/auth';
 
-export const getRoleDefaultRoute = (role: UserRole): string => {
-  const routes: Record<UserRole, string> = {
-    issuer: '/dashboard',
-    college_admin: '/dashboard',
-    reevaluation_checker: '/approvals',
-    reevaluation_updater: '/update-marks',
-    reevaluation_approver: '/signatures',
-    student: '/my-cards',
-    maker: '/maker/details',
-  };
-  return routes[role] || '/dashboard';
+export const getRoleDefaultRoute = (roles: Roles[]): string => {
+  const primaryRole = getPrimaryRole(roles);
+
+  if (!primaryRole) return '/';
+
+  console.log('primaryRole', primaryRole);
+
+  // Define priority of roles and their routes
+  switch (primaryRole) {
+    case Roles.ADMIN:
+      return '/admin/dashboard';
+    case Roles.ISSUER:
+    case Roles.APPROVER:
+    case Roles.CHECKER:
+    case Roles.MAKER:
+    case Roles.STUDENT:
+      return '/dashboard';
+    default:
+      return '/';
+  }
 };
