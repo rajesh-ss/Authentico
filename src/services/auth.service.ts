@@ -50,7 +50,11 @@ export const authService = {
   },
 
   getCurrentUser: async (): Promise<User> => {
-    const response = await apiClient.get<User>(authApi.me);
-    return response.data;
+    const response = await apiClient.get<{
+      data: User;
+      success: boolean;
+      message: string;
+    }>(authApi.me);
+    return response.data.data;
   },
 };

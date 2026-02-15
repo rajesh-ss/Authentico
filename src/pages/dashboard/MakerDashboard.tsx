@@ -1,53 +1,75 @@
+import { useEffect, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { StatsGrid } from '@/components/shared';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
-import { ClipboardCheck, CheckCircle, XCircle, Clock, Eye, ThumbsUp, ThumbsDown, User, ArrowRight, Hash } from 'lucide-react';
-
-const pendingRequests = [
-  { 
-    id: 'DET-2024-001', 
-    studentName: 'Rahul Sharma', 
-    field: 'Student Name',
-    currentValue: 'Rahul Sharma',
-    requestedValue: 'Rahul Kumar Sharma',
-    submittedAt: '2 hours ago',
-    reason: 'Full legal name as per official documents'
-  },
-  { 
-    id: 'DET-2024-002', 
-    studentName: 'Priya Patel', 
-    field: 'Roll Number',
-    currentValue: '2024CS045',
-    requestedValue: '2024CS054',
-    submittedAt: '4 hours ago',
-    reason: 'Clerical error in roll number assignment'
-  },
-  { 
-    id: 'DET-2024-003', 
-    studentName: 'Amit Singh', 
-    field: 'Registration Number',
-    currentValue: 'REG2024078',
-    requestedValue: 'REG2024087',
-    submittedAt: '1 day ago',
-    reason: 'Registration number was swapped with another student'
-  },
-];
+import {
+  ClipboardCheck,
+  CheckCircle,
+  XCircle,
+  Clock,
+  Eye,
+  User,
+  ArrowRight,
+  Loader2,
+  AlertCircle,
+  FileText,
+} from 'lucide-react';
+import { workflowService, WorkflowItem } from '@/services/workflow.service';
+import { format } from 'date-fns';
 
 export default function MakerDashboard() {
+  const [requests, setRequests] = useState<WorkflowItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchRequests = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const response = await workflowService.getPendingRequests();
+        if (response.success) {
+          setRequests(response.data);
+        } else {
+          setError(response.message || 'Failed to fetch pending requests');
+        }
+      } catch (err) {
+        setError('Failed to fetch requests. Please try again.');
+        console.error('Error:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchRequests();
+  }, []);
+
   const stats = [
-    { label: 'Pending Requests', value: '5', icon: Clock, trend: { value: 2, isPositive: false } },
-    { label: 'Approved This Week', value: '8', icon: CheckCircle, trend: { value: 15, isPositive: true } },
-    { label: 'Rejected This Week', value: '2', icon: XCircle },
-    { label: 'Total Reviewed', value: '45', icon: ClipboardCheck, trend: { value: 12, isPositive: true } },
+    {
+      label: 'Pending Requests',
+      value: requests.length,
+      icon: Clock,
+      trend: { value: requests.length, isPositive: false },
+    },
+    {
+      label: 'Approved This Week',
+      value: '0',
+      icon: CheckCircle,
+      trend: { value: 0, isPositive: true },
+    },
+    { label: 'Rejected This Week', value: '0', icon: XCircle },
+    {
+      label: 'Total Reviewed',
+      value: '0',
+      icon: ClipboardCheck,
+      trend: { value: 0, isPositive: true },
+    },
   ];
 
   return (
-    <DashboardLayout 
-      title="Maker Dashboard" 
-      subtitle="Review and validate student details update requests"
-    >
+    <DashboardLayout title="Maker Dashboard" subtitle="Overview of pending student requests">
       <div className="space-y-6">
         <StatsGrid stats={stats} />
 
@@ -55,58 +77,132 @@ export default function MakerDashboard() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <User className="h-5 w-5" />
-              Pending Details Update Requests
+              Pending Workflow Requests
             </CardTitle>
-            <CardDescription>
-              Review and validate student requests for personal details correction
-            </CardDescription>
+            <CardDescription>Recent automated requests awaiting your review</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              {pendingRequests.map((request) => (
-                <div key={request.id} className="p-4 rounded-lg border bg-card hover:bg-muted/50 transition-colors">
-                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-2">
-                        <Badge variant="outline" className="font-mono text-xs">
-                          {request.id}
-                        </Badge>
-                        <span className="text-xs text-muted-foreground">{request.submittedAt}</span>
-                      </div>
-                      <div>
-                        <p className="font-medium">{request.studentName}</p>
-                        <p className="text-sm text-muted-foreground">{request.field}</p>
-                      </div>
-                      <div className="flex items-center gap-3 p-2 rounded bg-muted/50">
-                        <div className="h-6 w-6 rounded-full bg-primary/10 flex items-center justify-center">
-                          <Hash className="h-3 w-3 text-primary" />
+            {loading && (
+              <div className="flex items-center justify-center py-12">
+                <Loader2 className="h-6 w-6 animate-spin text-primary mr-2" />
+                <span className="text-muted-foreground">Loading requests...</span>
+              </div>
+            )}
+
+            {error && (
+              <div className="flex items-center justify-center py-12 text-destructive">
+                <AlertCircle className="h-5 w-5 mr-2" />
+                <span>{error}</span>
+              </div>
+            )}
+
+            {!loading && !error && requests.length === 0 && (
+              <div className="text-center py-12 text-muted-foreground">
+                <FileText className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                <p>No pending requests found</p>
+              </div>
+            )}
+
+            {!loading && !error && requests.length > 0 && (
+              <div className="space-y-4">
+                {requests.map((request) => (
+                  <div
+                    key={request._id}
+                    className="p-4 rounded-lg border bg-card hover:bg-muted/50 transition-colors"
+                  >
+                    <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
+                      <div className="space-y-3 flex-1">
+                        <div className="flex items-center gap-3 flex-wrap">
+                          <Badge variant="outline" className="font-mono text-xs">
+                            {request._id.slice(-8).toUpperCase()}
+                          </Badge>
+                          <span className="text-xs text-muted-foreground">
+                            {format(new Date(request.createdAt), 'PPp')}
+                          </span>
+                          <Badge
+                            variant={request.status.includes('REJECT') ? 'destructive' : 'warning'}
+                            className="text-xs"
+                          >
+                            {request.status}
+                          </Badge>
+                          <Badge variant="secondary" className="text-xs">
+                            {request.type}
+                          </Badge>
                         </div>
-                        <span className="text-sm text-muted-foreground line-through">{request.currentValue}</span>
-                        <ArrowRight className="h-3 w-3 text-muted-foreground" />
-                        <span className="text-sm font-medium text-primary">{request.requestedValue}</span>
+
+                        <div>
+                          <p className="font-medium">Student Roll No: {request.rollNo}</p>
+                          <p className="text-sm text-muted-foreground truncate max-w-md">
+                            Requested by: {request.requestedBy}
+                          </p>
+                        </div>
+
+                        {/* Details Change Specific */}
+                        {request.type === 'DETAILS_CHANGE' && (
+                          <div className="space-y-2">
+                            {Object.entries(request.changes).map(([field, value]) => (
+                              <div
+                                key={field}
+                                className="flex items-center gap-3 p-2 rounded bg-muted/50 max-w-2xl"
+                              >
+                                <span className="text-sm font-medium min-w-[120px] capitalize">
+                                  {field.replace(/([A-Z])/g, ' $1').trim()}
+                                </span>
+                                <ArrowRight className="h-3 w-3 text-muted-foreground shrink-0" />
+                                <span className="text-sm font-medium text-primary break-all">
+                                  {value as string}
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+
+                        {/* Re-evaluation Specific */}
+                        {request.type === 'REEVALUATION' && (
+                          <div className="space-y-2">
+                            <div className="flex items-center gap-3 p-2 rounded bg-muted/50 max-w-2xl">
+                              <span className="text-sm font-medium min-w-[120px]">
+                                Subject Code
+                              </span>
+                              <ArrowRight className="h-3 w-3 text-muted-foreground shrink-0" />
+                              <span className="text-sm font-medium text-primary">
+                                {request.subjectCode}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-3 p-2 rounded bg-muted/50 max-w-2xl">
+                              <span className="text-sm font-medium min-w-[120px]">Pass Year</span>
+                              <ArrowRight className="h-3 w-3 text-muted-foreground shrink-0" />
+                              <span className="text-sm font-medium text-primary">
+                                {request.passYear}
+                              </span>
+                            </div>
+                          </div>
+                        )}
+
+                        {request.reason && (
+                          <div className="p-2 bg-muted/30 rounded text-sm text-muted-foreground italic">
+                            "{request.reason}"
+                          </div>
+                        )}
                       </div>
-                      <p className="text-sm text-muted-foreground bg-muted/50 p-2 rounded">
-                        <strong>Reason:</strong> {request.reason}
-                      </p>
-                    </div>
-                    <div className="flex flex-col gap-2 min-w-[140px]">
-                      <Button size="sm" variant="outline" className="gap-2">
-                        <Eye className="h-4 w-4" />
-                        Review
-                      </Button>
-                      <Button size="sm" variant="default" className="gap-2">
-                        <ThumbsUp className="h-4 w-4" />
-                        Approve
-                      </Button>
-                      <Button size="sm" variant="destructive" className="gap-2">
-                        <ThumbsDown className="h-4 w-4" />
-                        Reject
-                      </Button>
+
+                      <div className="flex flex-row md:flex-col gap-2 min-w-[120px] pt-2 md:pt-0">
+                        <a href="/maker/approvals">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="gap-2 flex-1 md:flex-none w-full"
+                          >
+                            <Eye className="h-4 w-4" />
+                            Review
+                          </Button>
+                        </a>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>

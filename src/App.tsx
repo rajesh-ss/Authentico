@@ -36,6 +36,7 @@ const MakerRejected = lazy(() => import('./pages/maker/MakerRejected'));
 const Analytics = lazy(() => import('./pages/admin/Analytics'));
 const Templates = lazy(() => import('./pages/issuer/Templates'));
 const NotFound = lazy(() => import('./pages/NotFound'));
+const Inbox = lazy(() => import('./pages/workflow/Inbox'));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -78,6 +79,36 @@ const App = () => (
                       <Dashboard />
                     </ProtectedRoute>
                   }
+                />
+
+                {/* Maker Routes */}
+                <Route
+                  element={
+                    <ProtectedRoute allowedRoles={[Roles.MAKER]}>
+                      <Inbox />
+                    </ProtectedRoute>
+                  }
+                  path="/maker/approvals"
+                />
+
+                {/* Checker Routes */}
+                <Route
+                  element={
+                    <ProtectedRoute allowedRoles={[Roles.CHECKER]}>
+                      <Inbox />
+                    </ProtectedRoute>
+                  }
+                  path="/checker/approvals"
+                />
+
+                {/* Approver Routes */}
+                <Route
+                  element={
+                    <ProtectedRoute allowedRoles={[Roles.APPROVER]}>
+                      <Inbox />
+                    </ProtectedRoute>
+                  }
+                  path="/approver/pending"
                 />
 
                 {/* Issuer Routes */}
@@ -174,88 +205,32 @@ const App = () => (
                   }
                 />
 
-                {/* Checker Routes (Consolidated) */}
+                {/* Maker Routes */}
                 <Route
-                  path="/approvals"
+                  path="/maker/approvals"
                   element={
-                    <ProtectedRoute allowedRoles={[Roles.CHECKER]}>
-                      <PendingApprovals />
+                    <ProtectedRoute allowedRoles={[Roles.MAKER]}>
+                      <Inbox />
                     </ProtectedRoute>
                   }
                 />
+
+                {/* Checker Routes */}
                 <Route
-                  path="/approved"
+                  path="/checker/approvals"
                   element={
                     <ProtectedRoute allowedRoles={[Roles.CHECKER]}>
-                      <ApprovedRequests />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/rejected"
-                  element={
-                    <ProtectedRoute allowedRoles={[Roles.CHECKER]}>
-                      <RejectedRequests />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/update-marks"
-                  element={
-                    <ProtectedRoute allowedRoles={[Roles.CHECKER]}>
-                      <UpdateMarks />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/completed"
-                  element={
-                    <ProtectedRoute allowedRoles={[Roles.CHECKER]}>
-                      <CompletedUpdates />
+                      <Inbox />
                     </ProtectedRoute>
                   }
                 />
 
                 {/* Approver Routes */}
                 <Route
-                  path="/signatures"
+                  path="/approver/pending"
                   element={
                     <ProtectedRoute allowedRoles={[Roles.APPROVER]}>
-                      <PendingSignatures />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/signed"
-                  element={
-                    <ProtectedRoute allowedRoles={[Roles.APPROVER]}>
-                      <SignedRecords />
-                    </ProtectedRoute>
-                  }
-                />
-
-                {/* Maker Routes */}
-                <Route
-                  path="/maker/details"
-                  element={
-                    <ProtectedRoute allowedRoles={[Roles.MAKER]}>
-                      <MakerDetailsApprovals />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/maker/approved"
-                  element={
-                    <ProtectedRoute allowedRoles={[Roles.MAKER]}>
-                      <MakerApproved />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/maker/rejected"
-                  element={
-                    <ProtectedRoute allowedRoles={[Roles.MAKER]}>
-                      <MakerRejected />
+                      <Inbox />
                     </ProtectedRoute>
                   }
                 />

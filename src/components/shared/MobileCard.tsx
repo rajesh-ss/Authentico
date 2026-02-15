@@ -13,10 +13,18 @@ interface MobileCardProps {
   badges?: ReactNode;
   footer?: ReactNode;
   actions?: ReactNode;
+  children?: ReactNode;
   className?: string;
 }
 
-export function MobileCard({ header, badges, footer, actions, className }: MobileCardProps) {
+export function MobileCard({
+  header,
+  badges,
+  footer,
+  actions,
+  children,
+  className,
+}: MobileCardProps) {
   return (
     <Card className={className}>
       <CardContent className="p-4">
@@ -34,6 +42,7 @@ export function MobileCard({ header, badges, footer, actions, className }: Mobil
           )}
         </div>
         {badges && <div className="flex flex-wrap gap-2 mt-3">{badges}</div>}
+        {children}
         {footer && <div className="mt-2">{footer}</div>}
       </CardContent>
     </Card>

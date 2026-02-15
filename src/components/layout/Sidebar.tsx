@@ -59,26 +59,26 @@ const roleNavItems: Record<Roles, NavItem[]> = {
   ],
   [Roles.CHECKER]: [
     { label: 'Dashboard', icon: LayoutDashboard, href: '/dashboard' },
-    { label: 'Pending Checks', icon: ClipboardCheck, href: '/approvals', badge: '8' },
-    { label: 'Update Marks', icon: RefreshCcw, href: '/update-marks', badge: '4' },
-    { label: 'Completed Updates', icon: FileText, href: '/completed' },
+    { label: 'Pending Checks', icon: ClipboardCheck, href: '/checker/approvals', badge: '8' },
+    // { label: 'Update Marks', icon: RefreshCcw, href: '/update-marks', badge: '4' },
+    // { label: 'Completed Updates', icon: FileText, href: '/completed' },
   ],
   [Roles.APPROVER]: [
     { label: 'Dashboard', icon: LayoutDashboard, href: '/dashboard' },
-    { label: 'Pending Signatures', icon: Shield, href: '/signatures', badge: '6' },
-    { label: 'Signed Records', icon: FileText, href: '/signed' },
+    { label: 'Pending Signatures', icon: Shield, href: '/approver/pending', badge: '6' },
+    // { label: 'Signed Records', icon: FileText, href: '/signed' },
   ],
   [Roles.STUDENT]: [
     { label: 'Dashboard', icon: LayoutDashboard, href: '/dashboard' },
     { label: 'My Marks Cards', icon: GraduationCap, href: '/my-cards' },
     { label: 'Details Updates', icon: RefreshCcw, href: '/my-reevaluations' },
-    { label: 'Verify Certificate', icon: QrCode, href: '/verify' },
+    // { label: 'Verify Certificate', icon: QrCode, href: '/verify' },
   ],
   [Roles.MAKER]: [
     { label: 'Dashboard', icon: LayoutDashboard, href: '/dashboard' },
-    { label: 'Details Updates', icon: Users, href: '/maker/details', badge: '5' },
-    { label: 'Approved Requests', icon: FileText, href: '/maker/approved' },
-    { label: 'Rejected Requests', icon: FileText, href: '/maker/rejected' },
+    { label: 'Details Updates', icon: Users, href: '/maker/approvals', badge: '5' },
+    // { label: 'Approved Requests', icon: FileText, href: '/maker/approved' },
+    // { label: 'Rejected Requests', icon: FileText, href: '/maker/rejected' },
   ],
 };
 
@@ -331,7 +331,7 @@ export function Sidebar({
       >
         {!showExpanded ? (
           <>
-            <Tooltip delayDuration={0}>
+            {/* <Tooltip delayDuration={0}>
               <TooltipTrigger asChild>
                 <Link
                   to="/notifications"
@@ -355,7 +355,7 @@ export function Sidebar({
                 </Link>
               </TooltipTrigger>
               <TooltipContent side="right">Settings</TooltipContent>
-            </Tooltip>
+            </Tooltip> */}
             <Tooltip delayDuration={0}>
               <TooltipTrigger asChild>
                 <button
@@ -370,7 +370,7 @@ export function Sidebar({
           </>
         ) : (
           <>
-            <Link
+            {/* <Link
               to="/notifications"
               onClick={handleNavClick}
               className="flex items-center justify-between px-3 py-2.5 rounded-lg text-sm text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50 transition-colors"
@@ -390,7 +390,7 @@ export function Sidebar({
             >
               <Settings className="h-4 w-4" />
               Settings
-            </Link>
+            </Link> */}
             <button
               onClick={logout}
               className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-destructive/80 hover:text-destructive hover:bg-destructive/10 transition-colors"
