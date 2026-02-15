@@ -4,3 +4,5 @@ export { FileUpload } from './FileUpload';
 export { DataPreview } from './DataPreview';
 export { SuccessScreen, GeneratingScreen } from './GenerationScreens';
 export { BatchConfirmationDialog } from './BatchConfirmationDialog';
+export { BatchList } from './BatchList';
+export { BatchPreviewDialog } from './BatchPreviewDialog';

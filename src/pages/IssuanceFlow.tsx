@@ -1,18 +1,21 @@
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { toast } from 'sonner';
-import * as XLSX from '@e965/xlsx';
 import { useGeneration } from '@/contexts/GenerationContext';
 import { usePagination } from '@/hooks';
 import {
   StepProgress,
   TemplatePreview,
   FileUpload,
-  DataPreview,
+  // DataPreview,
+  BatchList,
+  BatchPreviewDialog,
   BatchConfirmationDialog,
 } from '@/components/issuance';
 import { type FileFormat } from '@/components/issuance/FileUpload';
+import { uploadService, type StudentRecord, type UploadBatch } from '@/services/upload.service';
+import { useMutation, useQuery } from '@tanstack/react-query';
 
 const ROWS_PER_PAGE = 10;
 const MAX_RECORDS_PER_BATCH = 3000;
@@ -25,147 +28,165 @@ const VALID_EXTENSIONS: Record<FileFormat, string[]> = {
 
 export default function IssuanceFlow() {
   const navigate = useNavigate();
-  const [excelFile, setExcelFile] = useState<File | null>(null);
-  const [rawData, setRawData] = useState<Record<string, unknown>[]>([]);
+  const [file, setFile] = useState<File | null>(null);
+  const [previewData, setPreviewData] = useState<StudentRecord[]>([]);
+  // Use a map to store headers dynamically based on the first record
   const [headers, setHeaders] = useState<string[]>([]);
   const [isDragOver, setIsDragOver] = useState(false);
   const [parseError, setParseError] = useState<string | null>(null);
-  const [isParsing, setIsParsing] = useState(false);
   const [templateOpen, setTemplateOpen] = useState(true);
   const [selectedFormat, setSelectedFormat] = useState<FileFormat>('excel');
   const [showBatchDialog, setShowBatchDialog] = useState(false);
-  
-  // Store generation info for dialog to use after data is cleared
-  const [generationInfo, setGenerationInfo] = useState<{ fileName: string; totalRecords: number } | null>(null);
+  const [uploadId, setUploadId] = useState<string | null>(null);
 
-  const { activeJobs, startBatchGeneration, isGenerating, getJobsByParentFile } = useGeneration();
+  // Batch management state
+  const [batches, setBatches] = useState<UploadBatch[]>([]);
+  const [previewBatchId, setPreviewBatchId] = useState<string | null>(null);
+  const [showPreviewDialog, setShowPreviewDialog] = useState(false);
+
+  // Store generation info for dialog to use after data is cleared
+  const [committingBatchIds, setCommittingBatchIds] = useState<string[]>([]);
+  const [committedBatchIds, setCommittedBatchIds] = useState<string[]>([]);
+
+  const [generationInfo, setGenerationInfo] = useState<{
+    fileName: string;
+    totalRecords: number;
+  } | null>(null);
+
+  const { activeJobs, isGenerating, getJobsByParentFile } = useGeneration();
+
+  // Mutation for file upload
+  const uploadMutation = useMutation({
+    mutationFn: async ({ file, format }: { file: File; format: FileFormat }) => {
+      return await uploadService.uploadFile(file, format);
+    },
+    onSuccess: (response) => {
+      toast.success(response.message);
+
+      if (response.data.batches && response.data.batches.length > 0) {
+        setBatches(response.data.batches);
+        // We don't auto-set uploadId anymore, user selects batch to view
+        // setUploadId(response.data.batches[0].uploadId);
+      }
+    },
+    onError: (error: Error) => {
+      setParseError(error.message);
+      toast.error(`Upload failed: ${error.message}`);
+    },
+  });
+
+  // Query to fetch preview data when we have an uploadId
+  const { data: previewResponse, isLoading: isLoadingPreview } = useQuery({
+    queryKey: ['uploadPreview', uploadId],
+    queryFn: () => {
+      if (!uploadId) throw new Error('Upload ID is required');
+      return uploadService.getUploadPreview(uploadId);
+    },
+    enabled: !!uploadId,
+  });
+
+  // Update local state when preview data arrives
+  useEffect(() => {
+    if (previewResponse?.success && previewResponse.data) {
+      setPreviewData(previewResponse.data.previewData);
+
+      // Extract headers from the first record's student object and top-level fields
+      if (previewResponse.data.previewData.length > 0) {
+        const firstRecord = previewResponse.data.previewData[0];
+        // Flatten for display: show direct fields + student fields
+        const studentKeys = Object.keys(firstRecord.student || {}).map((k) => `student.${k}`);
+        const directKeys = Object.keys(firstRecord).filter(
+          (k) =>
+            k !== 'student' &&
+            k !== 'subjects' &&
+            k !== 'remarks' &&
+            typeof firstRecord[k] !== 'object'
+        );
+
+        // For simple display, let's just show some key fields or all flat keys
+        // Ideally we map this to user-friendly headers
+        setHeaders([...directKeys, ...studentKeys]);
+      }
+    }
+  }, [previewResponse]);
+
+  // Check for staging status on mount
+  useEffect(() => {
+    const checkStaging = async () => {
+      try {
+        const response = await uploadService.getUploadsByStatus('STAGING');
+        if (response.success && response.data) {
+          // If we get a valid preview/status response, restore state
+          setUploadId(response.data.uploadId);
+          toast.info('Restored release-pending upload session');
+        }
+      } catch (error) {
+        // No active staging upload, ignore
+        console.debug('No staging session found', error);
+      }
+    };
+    checkStaging();
+  }, []);
 
   // Pagination hook
   const pagination = usePagination({
-    data: rawData,
+    data: previewData,
     pageSize: ROWS_PER_PAGE,
   });
 
-  // Calculate batch info
+  // Calculate total batch info
   const batchInfo = useMemo(() => {
-    if (rawData.length === 0) return null;
-    const totalBatches = Math.ceil(rawData.length / MAX_RECORDS_PER_BATCH);
+    // If we have batches array, use that
+    if (batches.length > 0) {
+      const totalRecords = batches.reduce((sum, b) => sum + b.count, 0);
+      return {
+        totalRecords,
+        totalBatches: batches.length,
+        recordsPerBatch: MAX_RECORDS_PER_BATCH, // Approximate
+      };
+    }
+
+    if (previewData.length === 0 && !previewResponse?.data?.totalRecords) return null;
+    const totalRecords = previewResponse?.data?.totalRecords || previewData.length;
+
+    // If the API already batched it, we use that info
+    // But here we are just showing preview.
+    // The "totalRecords" from API is what matters.
+    const totalBatches = Math.ceil(totalRecords / MAX_RECORDS_PER_BATCH);
+
     return {
-      totalRecords: rawData.length,
+      totalRecords,
       totalBatches,
       recordsPerBatch: MAX_RECORDS_PER_BATCH,
     };
-  }, [rawData.length]);
+  }, [batches, previewData.length, previewResponse]);
 
-  // Get jobs for current file (use generationInfo.fileName if file was cleared during generation)
+  // Get jobs for current file
   const currentFileJobs = useMemo(() => {
-    const fileName = excelFile?.name || generationInfo?.fileName;
+    const fileName = file?.name || generationInfo?.fileName;
     if (!fileName) return [];
     return getJobsByParentFile(fileName);
-  }, [excelFile, generationInfo, getJobsByParentFile]);
+  }, [file, generationInfo, getJobsByParentFile]);
 
   // Calculate current step
   const currentStep = useMemo(() => {
-    if (rawData.length > 0) return 3;
-    if (excelFile) return 2;
+    if (previewData.length > 0) return 2; // Preview step
+    if (file) return 1; // Upload step (processing/uploaded)
     return 1;
-  }, [excelFile, rawData.length]);
+  }, [file, previewData.length]);
 
-  // Data statistics
-  const dataStats = useMemo(() => {
-    if (rawData.length === 0) return null;
-    const totalBatches = Math.ceil(rawData.length / MAX_RECORDS_PER_BATCH);
-    return {
-      totalRecords: rawData.length,
-      totalColumns: headers.length,
-      estimatedTime: Math.ceil(rawData.length / 50),
-      totalBatches,
-    };
-  }, [rawData, headers]);
-
-  // Parse Excel/CSV files
-  const parseExcelFile = useCallback(async (file: File) => {
-    const buffer = await file.arrayBuffer();
-    const workbook = XLSX.read(buffer, { type: 'array' });
-    const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-    const jsonData = XLSX.utils.sheet_to_json(firstSheet);
-    
-    if (jsonData.length === 0) {
-      throw new Error('The file appears to be empty');
-    }
-    
-    return {
-      data: jsonData as Record<string, unknown>[],
-      headers: Object.keys(jsonData[0] || {}),
-    };
-  }, []);
-
-  // Parse MDB/Access files (mock implementation - in production would use server-side parsing)
-  const parseMdbFile = useCallback(async (file: File) => {
-    // MDB files require server-side processing in production
-    // For now, we simulate with mock data structure
-    toast.info('MDB parsing requires server-side processing. Using sample data structure.');
-    
-    // Simulate processing delay
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    
-    // Return mock data structure that would come from server (larger dataset to demo batching)
-    const mockData = Array.from({ length: 7500 }, (_, i) => ({
-      StudentID: `STU${String(i + 1).padStart(5, '0')}`,
-      Name: `Student ${i + 1}`,
-      RollNo: `${1000 + i}`,
-      Department: ['Computer Science', 'Mechanical', 'Electrical', 'Civil'][i % 4],
-      Semester: String((i % 8) + 1),
-      Subject1: Math.floor(Math.random() * 40) + 60,
-      Subject2: Math.floor(Math.random() * 40) + 60,
-      Subject3: Math.floor(Math.random() * 40) + 60,
-      Subject4: Math.floor(Math.random() * 40) + 60,
-      Subject5: Math.floor(Math.random() * 40) + 60,
-    }));
-    
-    return {
-      data: mockData,
-      headers: Object.keys(mockData[0]),
-    };
-  }, []);
-
-  const handleUpload = useCallback(async (file: File, format: FileFormat) => {
-    setIsParsing(true);
-    try {
-      // Access DB files can be larger, allow up to 100MB; Excel/CSV limited to 10MB
-      const maxSize = format === 'mdb' ? 100 * 1024 * 1024 : 10 * 1024 * 1024;
-      const maxSizeLabel = format === 'mdb' ? '100MB' : '10MB';
-      
-      if (file.size > maxSize) {
-        throw new Error(`File size exceeds ${maxSizeLabel} limit`);
-      }
-
-      let result: { data: Record<string, unknown>[]; headers: string[] };
-
-      if (format === 'mdb') {
-        result = await parseMdbFile(file);
-      } else {
-        result = await parseExcelFile(file);
-      }
-
-      setExcelFile(file);
-      setRawData(result.data);
-      setHeaders(result.headers);
+  const handleUpload = useCallback(
+    async (file: File, format: FileFormat) => {
+      setFile(file);
       setParseError(null);
-      
-      const numBatches = Math.ceil(result.data.length / MAX_RECORDS_PER_BATCH);
-      toast.success(
-        `Loaded ${result.data.length.toLocaleString()} records from ${result.headers.length} columns. ` +
-        `Will be split into ${numBatches} batch${numBatches > 1 ? 'es' : ''}.`
-      );
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'Failed to parse the file';
-      setParseError(message);
-      toast.error(message);
-    } finally {
-      setIsParsing(false);
-    }
-  }, [parseExcelFile, parseMdbFile]);
+      setPreviewData([]);
+      setBatches([]); // Reset batches
+      setUploadId(null);
+
+      uploadMutation.mutate({ file, format });
+    },
+    [uploadMutation]
+  );
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -184,11 +205,12 @@ export default function IssuanceFlow() {
       const file = e.dataTransfer.files[0];
       if (file) {
         const validExtensions = VALID_EXTENSIONS[format];
-        const isValid = validExtensions.some(ext => file.name.toLowerCase().endsWith(ext));
+        const isValid = validExtensions.some((ext) => file.name.toLowerCase().endsWith(ext));
         if (isValid) {
           await handleUpload(file, format);
         } else {
-          const formatLabel = format === 'mdb' ? 'Access (.mdb, .accdb)' : 'Excel (.xlsx, .xls) or CSV';
+          const formatLabel =
+            format === 'mdb' ? 'Access (.mdb, .accdb)' : 'Excel (.xlsx, .xls) or CSV';
           toast.error(`Please upload a ${formatLabel} file`);
         }
       }
@@ -213,33 +235,68 @@ export default function IssuanceFlow() {
 
   // Show batch confirmation dialog before generating
   const handleSubmit = useCallback(() => {
-    if (!excelFile || rawData.length === 0) return;
+    if ((!file && batches.length === 0) || (previewData.length === 0 && batches.length === 0))
+      return;
     setShowBatchDialog(true);
-  }, [excelFile, rawData.length]);
+  }, [file, batches.length, previewData.length]);
+
+  const handleViewBatch = useCallback((batchId: string) => {
+    setPreviewBatchId(batchId);
+    setShowPreviewDialog(true);
+  }, []);
 
   // Start batch generation
+  // Mutation for committing upload
+  // Mutation for committing upload
+  const commitMutation = useMutation({
+    mutationFn: async (uploadId: string) => {
+      return await uploadService.commitUpload(uploadId);
+    },
+    onSuccess: (response, variables) => {
+      toast.success(response.message);
+      setCommittedBatchIds((prev) => [...prev, variables]);
+      setCommittingBatchIds((prev) => prev.filter((id) => id !== variables));
+    },
+    onError: (error: Error, variables) => {
+      toast.error(`Commit failed: ${error.message}`);
+      setCommittingBatchIds((prev) => prev.filter((id) => id !== variables));
+    },
+  });
+
+  const handleCommitBatch = useCallback(
+    (uploadId: string) => {
+      if (committingBatchIds.includes(uploadId) || committedBatchIds.includes(uploadId)) return;
+
+      setCommittingBatchIds((prev) => [...prev, uploadId]);
+      commitMutation.mutate(uploadId);
+    },
+    [committingBatchIds, committedBatchIds, commitMutation]
+  );
+
   const handleConfirmGeneration = useCallback(() => {
-    if (!excelFile || rawData.length === 0) return;
-    
-    // Store generation info BEFORE clearing data so dialog can reference it
-    setGenerationInfo({
-      fileName: excelFile.name,
-      totalRecords: rawData.length,
-    });
-    
-    startBatchGeneration({
-      fileName: excelFile.name,
-      totalRecords: rawData.length,
-      maxRecordsPerBatch: MAX_RECORDS_PER_BATCH,
-    });
-    
-    // Clear the file/data but keep dialog open to show progress
-    setExcelFile(null);
-    setRawData([]);
-    setHeaders([]);
-    
-    toast.success(`Started generating ${batchInfo?.totalBatches} batch${(batchInfo?.totalBatches || 0) > 1 ? 'es' : ''}`);
-  }, [excelFile, rawData.length, startBatchGeneration, batchInfo]);
+    // If we have batches, try to commit all uncommitted ones
+    const uncommittedBatches = batches.filter(
+      (b) => !committedBatchIds.includes(b.uploadId) && !committingBatchIds.includes(b.uploadId)
+    );
+
+    if (uncommittedBatches.length > 0) {
+      uncommittedBatches.forEach((b) => handleCommitBatch(b.uploadId));
+    } else if (batches.length > 0 && batches.every((b) => committedBatchIds.includes(b.uploadId))) {
+      toast.info('All batches are already committed.');
+    } else {
+      // Legacy fallback or single uploadId
+      const currentUploadId = uploadId || (batches.length > 0 ? batches[0].uploadId : null);
+      if (
+        currentUploadId &&
+        !committedBatchIds.includes(currentUploadId) &&
+        !committingBatchIds.includes(currentUploadId)
+      ) {
+        handleCommitBatch(currentUploadId);
+      } else if (!uploadId && batches.length === 0) {
+        toast.error('No active upload to commit');
+      }
+    }
+  }, [batches, committedBatchIds, committingBatchIds, handleCommitBatch, uploadId]);
 
   const handleNavigateToMarksCards = useCallback(() => {
     setShowBatchDialog(false);
@@ -247,11 +304,13 @@ export default function IssuanceFlow() {
   }, [navigate]);
 
   const handleReset = useCallback(() => {
-    setExcelFile(null);
-    setRawData([]);
+    setFile(null);
+    setPreviewData([]);
+    setBatches([]);
     setHeaders([]);
     setParseError(null);
     setGenerationInfo(null);
+    setUploadId(null);
   }, []);
 
   return (
@@ -270,8 +329,8 @@ export default function IssuanceFlow() {
         {/* Right: Upload & Preview Section */}
         <div className="xl:col-span-3 space-y-6">
           <FileUpload
-            file={excelFile}
-            isParsing={isParsing}
+            file={file}
+            isParsing={uploadMutation.isPending || isLoadingPreview}
             parseError={parseError}
             isDragOver={isDragOver}
             onDragOver={handleDragOver}
@@ -279,44 +338,56 @@ export default function IssuanceFlow() {
             onDrop={handleDrop}
             onFileSelect={handleFileSelect}
             onReset={handleReset}
-            hasData={rawData.length > 0}
+            hasData={previewData.length > 0}
             selectedFormat={selectedFormat}
             onFormatChange={handleFormatChange}
           />
 
-          {rawData.length > 0 && dataStats && (
-            <DataPreview
-              headers={headers}
-              paginatedData={pagination.paginatedData}
-              totalRecords={dataStats.totalRecords}
-              estimatedTime={dataStats.estimatedTime}
-              currentPage={pagination.currentPage}
-              totalPages={pagination.totalPages}
-              pageSize={pagination.pageSize}
-              startIndex={pagination.startIndex}
-              endIndex={pagination.endIndex}
-              onNextPage={pagination.nextPage}
-              onPrevPage={pagination.prevPage}
-              canGoNext={pagination.canGoNext}
-              canGoPrev={pagination.canGoPrev}
-              onSubmit={handleSubmit}
-              isSubmitting={false}
-              batchCount={dataStats.totalBatches}
+          {batches.length > 0 && (
+            <BatchList
+              batches={batches}
+              onViewBatch={handleViewBatch}
+              onIssueAll={handleSubmit}
+              isIssuing={false}
             />
           )}
+
+          {/* Legacy single preview fallback if needed, or remove completely if strict batch mode */}
+          {/* {previewData.length > 0 && batchInfo && batches.length === 0 && (
+            <DataPreview
+               ...
+            />
+          )} */}
         </div>
       </div>
+
+      <BatchPreviewDialog
+        uploadId={previewBatchId}
+        open={showPreviewDialog}
+        onOpenChange={setShowPreviewDialog}
+      />
 
       {/* Batch Confirmation & Progress Dialog */}
       <BatchConfirmationDialog
         open={showBatchDialog}
         onOpenChange={setShowBatchDialog}
-        fileName={excelFile?.name || generationInfo?.fileName || currentFileJobs[0]?.parentFileName || 'Unknown'}
-        totalRecords={rawData.length || generationInfo?.totalRecords || currentFileJobs.reduce((sum, j) => sum + j.totalCards, 0)}
+        fileName={
+          file?.name || generationInfo?.fileName || currentFileJobs[0]?.parentFileName || 'Unknown'
+        }
+        totalRecords={
+          batchInfo?.totalRecords ||
+          generationInfo?.totalRecords ||
+          currentFileJobs.reduce((sum, j) => sum + j.totalCards, 0)
+        }
         onConfirm={handleConfirmGeneration}
         onNavigateToMarksCards={handleNavigateToMarksCards}
         isGenerating={isGenerating && activeJobs.length > 0}
+        isCommitting={committingBatchIds.length > 0}
         activeJobs={activeJobs.length > 0 ? activeJobs : currentFileJobs}
+        batches={batches}
+        onCommitBatch={handleCommitBatch}
+        committingBatchIds={committingBatchIds}
+        committedBatchIds={committedBatchIds}
       />
     </DashboardLayout>
   );

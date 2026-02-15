@@ -57,6 +57,23 @@ export interface CreateUserResponse {
   };
 }
 
+export interface UpdateUserPayload {
+  userId: string;
+  name: string;
+  roles: Roles[];
+}
+
+export interface UpdateUserResponse {
+  success: boolean;
+  message: string;
+  data: {
+    _id: string;
+    name: string;
+    email: string;
+    roles: Roles[];
+  };
+}
+
 export const userService = {
   getAllUsers: async (params: GetAllUsersParams = {}): Promise<GetAllUsersResult> => {
     // Only include parameters that have values
@@ -115,6 +132,26 @@ export const userService = {
       roles: userData.roles,
       createdAt: new Date(), // API doesn't return createdAt, so we use current time
       status: userData.isActive ? 'active' : 'inactive',
+    };
+  },
+
+  updateUser: async (payload: UpdateUserPayload): Promise<ManagedUser> => {
+    const response = await apiClient.put<UpdateUserResponse>(userApi.updateUser, payload);
+
+    if (!response.data.success) {
+      throw new Error(response.data.message || 'Failed to update user');
+    }
+
+    const userData = response.data.data;
+    // The update API returns a slightly different structure (no userId, no isActive)
+    // We need to map it back to ManagedUser, potentially reusing existing data if missing from response
+    return {
+      userId: userData._id, // API returns _id for update
+      name: userData.name,
+      email: userData.email,
+      roles: userData.roles,
+      createdAt: new Date(), // Persist existing or use current
+      status: 'active', // Default or need to fetch? API doesn't return isActive on update
     };
   },
 };

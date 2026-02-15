@@ -4,7 +4,14 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 import { Eye, Users, Columns, Sparkles, Loader2, Send, Package } from 'lucide-react';
 
 interface DataPreviewProps {
@@ -24,6 +31,7 @@ interface DataPreviewProps {
   onSubmit: () => void;
   isSubmitting: boolean;
   batchCount?: number;
+  hideSubmit?: boolean;
 }
 
 export const DataPreview = React.memo(function DataPreview({
@@ -43,6 +51,7 @@ export const DataPreview = React.memo(function DataPreview({
   onSubmit,
   isSubmitting,
   batchCount,
+  hideSubmit = false,
 }: DataPreviewProps) {
   return (
     <Card className="animate-in slide-in-from-bottom-4 duration-300">
@@ -132,20 +141,10 @@ export const DataPreview = React.memo(function DataPreview({
               Showing {startIndex}-{endIndex} of {totalRecords}
             </p>
             <div className="flex gap-1">
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={onPrevPage}
-                disabled={!canGoPrev}
-              >
+              <Button variant="outline" size="sm" onClick={onPrevPage} disabled={!canGoPrev}>
                 Previous
               </Button>
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={onNextPage}
-                disabled={!canGoNext}
-              >
+              <Button variant="outline" size="sm" onClick={onNextPage} disabled={!canGoNext}>
                 Next
               </Button>
             </div>
@@ -155,30 +154,35 @@ export const DataPreview = React.memo(function DataPreview({
         <Separator />
 
         {/* Actions */}
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 pt-2">
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <Sparkles className="h-4 w-4 text-primary" />
-            <span>Estimated generation time: ~{estimatedTime} seconds</span>
+        {!hideSubmit && (
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 pt-2">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Sparkles className="h-4 w-4 text-primary" />
+              <span>Estimated generation time: ~{estimatedTime} seconds</span>
+            </div>
+            <Button
+              size="lg"
+              onClick={onSubmit}
+              disabled={isSubmitting}
+              className="gap-2 min-w-[180px]"
+            >
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Processing...
+                </>
+              ) : (
+                <>
+                  <Send className="h-4 w-4" />
+                  Generate{' '}
+                  {batchCount && batchCount > 1
+                    ? `${batchCount} Batches`
+                    : `${totalRecords.toLocaleString()} Cards`}
+                </>
+              )}
+            </Button>
           </div>
-          <Button 
-            size="lg"
-            onClick={onSubmit}
-            disabled={isSubmitting}
-            className="gap-2 min-w-[180px]"
-          >
-            {isSubmitting ? (
-              <>
-                <Loader2 className="h-4 w-4 animate-spin" />
-                Processing...
-              </>
-            ) : (
-              <>
-                <Send className="h-4 w-4" />
-                Generate {batchCount && batchCount > 1 ? `${batchCount} Batches` : `${totalRecords.toLocaleString()} Cards`}
-              </>
-            )}
-          </Button>
-        </div>
+        )}
       </CardContent>
     </Card>
   );

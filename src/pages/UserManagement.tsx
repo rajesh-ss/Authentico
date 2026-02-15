@@ -141,16 +141,38 @@ export default function UserManagement() {
     }
   };
 
-  const handleEditUser = () => {
+  const handleEditUser = async () => {
     if (!editDialog.data) return;
-    setUsers(
-      users.map((u) =>
-        u.userId === editDialog.data.userId ? { ...u, ...form.values, roles: form.values.roles } : u
-      )
-    );
-    editDialog.close();
-    form.reset();
-    toast.success('User updated successfully');
+
+    try {
+      // Basic validation before API call
+      const errors = form.validate(form.values);
+      if (Object.keys(errors).length > 0) return;
+
+      setIsLoading(true);
+      const updatedUser = await userService.updateUser({
+        userId: editDialog.data.userId,
+        name: form.values.name,
+        roles: form.values.roles,
+      });
+
+      setUsers(
+        users.map((u) =>
+          u.userId === editDialog.data.userId
+            ? { ...u, ...updatedUser, status: u.status } // Preserve existing status if API defaults it
+            : u
+        )
+      );
+
+      editDialog.close();
+      form.reset();
+      toast.success('User updated successfully');
+    } catch (error: any) {
+      console.error('Failed to update user:', error);
+      toast.error(error.message || 'Failed to update user');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleDeleteUser = () => {

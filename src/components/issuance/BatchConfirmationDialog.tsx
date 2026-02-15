@@ -11,18 +11,13 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@/components/ui/tooltip';
-import { 
-  Layers, 
-  Package, 
-  ArrowRight, 
-  Loader2, 
-  CheckCircle2, 
+  Layers,
+  Package,
+  ArrowRight,
+  Loader2,
+  CheckCircle2,
   XCircle,
   FileSpreadsheet,
   Hash,
@@ -30,12 +25,14 @@ import {
   RefreshCw,
   PartyPopper,
   Info,
-  Clock
+  Clock,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { GenerationJob, useGeneration } from '@/contexts/GenerationContext';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
+
+import { UploadBatch } from '@/services/upload.service';
 
 const MAX_RECORDS_PER_BATCH = 3000;
 
@@ -52,7 +49,12 @@ interface BatchConfirmationDialogProps {
   onConfirm: () => void;
   onNavigateToMarksCards: () => void;
   isGenerating: boolean;
+  isCommitting?: boolean;
   activeJobs: GenerationJob[];
+  batches?: UploadBatch[];
+  onCommitBatch?: (uploadId: string) => void;
+  committingBatchIds?: string[];
+  committedBatchIds?: string[];
 }
 
 export const BatchConfirmationDialog = memo(function BatchConfirmationDialog({
@@ -63,7 +65,12 @@ export const BatchConfirmationDialog = memo(function BatchConfirmationDialog({
   onConfirm,
   onNavigateToMarksCards,
   isGenerating,
+  isCommitting = false,
   activeJobs,
+  batches: propBatches,
+  onCommitBatch,
+  committingBatchIds = [],
+  committedBatchIds = [],
 }: BatchConfirmationDialogProps) {
   const { retryJob } = useGeneration();
   // Use totalRecords from props OR calculate from jobs if data was cleared
@@ -82,16 +89,18 @@ export const BatchConfirmationDialog = memo(function BatchConfirmationDialog({
   const batches = useMemo((): BatchInfo[] => {
     // If we have active jobs, use their batch info
     if (activeJobs.length > 0) {
-      return activeJobs.map(job => ({
-        batchNumber: job.batchNumber || 1,
-        recordCount: job.totalCards,
-      })).sort((a, b) => a.batchNumber - b.batchNumber);
+      return activeJobs
+        .map((job) => ({
+          batchNumber: job.batchNumber || 1,
+          recordCount: job.totalCards,
+        }))
+        .sort((a, b) => a.batchNumber - b.batchNumber);
     }
-    
+
     // Otherwise calculate from totalRecords
     const totalBatches = Math.ceil(effectiveTotalRecords / MAX_RECORDS_PER_BATCH);
     const result: BatchInfo[] = [];
-    
+
     for (let i = 0; i < totalBatches; i++) {
       const startIdx = i * MAX_RECORDS_PER_BATCH;
       const batchSize = Math.min(MAX_RECORDS_PER_BATCH, effectiveTotalRecords - startIdx);
@@ -100,13 +109,13 @@ export const BatchConfirmationDialog = memo(function BatchConfirmationDialog({
         recordCount: batchSize,
       });
     }
-    
+
     return result;
   }, [effectiveTotalRecords, activeJobs]);
 
   // Get corresponding job for each batch
   const getJobForBatch = (batchNumber: number): GenerationJob | undefined => {
-    return activeJobs.find(job => job.batchNumber === batchNumber);
+    return activeJobs.find((job) => job.batchNumber === batchNumber);
   };
 
   // Calculate overall progress
@@ -117,10 +126,10 @@ export const BatchConfirmationDialog = memo(function BatchConfirmationDialog({
     return totalCards > 0 ? Math.round((totalGenerated / totalCards) * 100) : 0;
   }, [activeJobs]);
 
-  const completedJobs = activeJobs.filter(job => job.status === 'completed');
-  const failedJobs = activeJobs.filter(job => job.status === 'failed');
-  const inProgressJobs = activeJobs.filter(job => job.status === 'in_progress');
-  
+  const completedJobs = activeJobs.filter((job) => job.status === 'completed');
+  const failedJobs = activeJobs.filter((job) => job.status === 'failed');
+  const inProgressJobs = activeJobs.filter((job) => job.status === 'in_progress');
+
   const allCompleted = activeJobs.length > 0 && inProgressJobs.length === 0;
   const hasFailures = failedJobs.length > 0;
   const allSuccess = allCompleted && !hasFailures;
@@ -130,9 +139,9 @@ export const BatchConfirmationDialog = memo(function BatchConfirmationDialog({
   // Show toast when generation completes
   useEffect(() => {
     if (!open || !allCompleted || activeJobs.length === 0) return;
-    
+
     const totalGeneratedCards = completedJobs.reduce((sum, j) => sum + j.totalCards, 0);
-    
+
     if (allSuccess) {
       toast.success('All batches generated successfully!', {
         description: `${totalGeneratedCards.toLocaleString()} marks cards are now verified on blockchain.`,
@@ -149,28 +158,79 @@ export const BatchConfirmationDialog = memo(function BatchConfirmationDialog({
         icon: <AlertTriangle className="h-5 w-5" />,
       });
     }
-  }, [open, allCompleted, allSuccess, allFailed, partialSuccess, completedJobs, failedJobs, activeJobs.length]);
+  }, [
+    open,
+    allCompleted,
+    allSuccess,
+    allFailed,
+    partialSuccess,
+    completedJobs,
+    failedJobs,
+    activeJobs.length,
+  ]);
+
+  const allCommitted = useMemo(() => {
+    return (
+      propBatches &&
+      propBatches.length > 0 &&
+      propBatches.every((b) => committedBatchIds.includes(b.uploadId))
+    );
+  }, [propBatches, committedBatchIds]);
 
   // Render success/failure summary screen
   const renderCompletionSummary = () => {
+    // If in commit mode
+    if (batches && batches.length > 0) {
+      return (
+        <div className="space-y-4">
+          <div className="flex flex-col items-center justify-center py-6 rounded-lg bg-success/10">
+            <div className="relative">
+              <CheckCircle2 className="h-16 w-16 text-success" />
+            </div>
+            <h3 className="mt-4 text-lg font-semibold text-success">All Batches Committed!</h3>
+            <p className="text-sm text-muted-foreground mt-1">
+              {batches.length} batches have been submitted for processing.
+            </p>
+          </div>
+
+          <div className="flex items-center gap-2 p-3 rounded-lg bg-muted/50">
+            <FileSpreadsheet className="h-5 w-5 text-primary shrink-0" />
+            <div className="min-w-0 flex-1">
+              <p className="font-medium truncate">{effectiveFileName}</p>
+              <p className="text-sm text-muted-foreground">
+                {effectiveTotalRecords.toLocaleString()} total records
+              </p>
+            </div>
+            <Badge variant="secondary" className="shrink-0">
+              {batches.length} Batches
+            </Badge>
+          </div>
+        </div>
+      );
+    }
+
     const totalGeneratedCards = completedJobs.reduce((sum, j) => sum + j.totalCards, 0);
-    
+
     return (
       <div className="space-y-4">
         {/* Success/Failure Icon and Message */}
-        <div className={cn(
-          "flex flex-col items-center justify-center py-6 rounded-lg",
-          allSuccess && "bg-success/10",
-          allFailed && "bg-destructive/10",
-          partialSuccess && "bg-warning/10"
-        )}>
+        <div
+          className={cn(
+            'flex flex-col items-center justify-center py-6 rounded-lg',
+            allSuccess && 'bg-success/10',
+            allFailed && 'bg-destructive/10',
+            partialSuccess && 'bg-warning/10'
+          )}
+        >
           {allSuccess && (
             <>
               <div className="relative">
                 <CheckCircle2 className="h-16 w-16 text-success" />
                 <PartyPopper className="h-6 w-6 text-success absolute -top-1 -right-1" />
               </div>
-              <h3 className="mt-4 text-lg font-semibold text-success">All Batches Generated Successfully!</h3>
+              <h3 className="mt-4 text-lg font-semibold text-success">
+                All Batches Generated Successfully!
+              </h3>
               <p className="text-sm text-muted-foreground mt-1">
                 {totalGeneratedCards.toLocaleString()} marks cards verified on blockchain
               </p>
@@ -199,7 +259,7 @@ export const BatchConfirmationDialog = memo(function BatchConfirmationDialog({
         {/* Summary Stats */}
         <div className="grid grid-cols-3 gap-3">
           <div className="p-3 rounded-lg bg-muted/50 text-center">
-            <p className="text-2xl font-bold">{batches.length}</p>
+            <p className="text-2xl font-bold">{propBatches?.length || batches.length}</p>
             <p className="text-xs text-muted-foreground">Total Batches</p>
           </div>
           <div className="p-3 rounded-lg bg-success/10 text-center">
@@ -233,7 +293,7 @@ export const BatchConfirmationDialog = memo(function BatchConfirmationDialog({
             <ScrollArea className="h-[100px]">
               <div className="space-y-2">
                 {failedJobs.map((job) => (
-                  <div 
+                  <div
                     key={job.id}
                     className="p-2 rounded-lg border border-destructive/50 bg-destructive/5 space-y-2"
                   >
@@ -264,7 +324,9 @@ export const BatchConfirmationDialog = memo(function BatchConfirmationDialog({
                           </TooltipTrigger>
                           <TooltipContent side="bottom" className="max-w-[300px]">
                             <p className="font-medium">Error Details</p>
-                            <p className="text-muted-foreground">{job.errorMessage || 'Unknown error occurred'}</p>
+                            <p className="text-muted-foreground">
+                              {job.errorMessage || 'Unknown error occurred'}
+                            </p>
                           </TooltipContent>
                         </Tooltip>
                       </TooltipProvider>
@@ -275,10 +337,9 @@ export const BatchConfirmationDialog = memo(function BatchConfirmationDialog({
                         <div className="flex items-center gap-1 text-muted-foreground mt-0.5">
                           <Clock className="h-3 w-3" />
                           <span>
-                            {job.completedAt 
+                            {job.completedAt
                               ? format(new Date(job.completedAt), 'MMM d, yyyy h:mm:ss a')
-                              : 'N/A'
-                            }
+                              : 'N/A'}
                           </span>
                         </div>
                       </div>
@@ -298,15 +359,17 @@ export const BatchConfirmationDialog = memo(function BatchConfirmationDialog({
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            {isGenerating ? (
+            {isGenerating || ((isCommitting || committingBatchIds.length > 0) && !allCommitted) ? (
               <>
                 <Loader2 className="h-5 w-5 text-primary animate-spin" />
-                Generating Marks Cards
+                {isCommitting || committingBatchIds.length > 0
+                  ? 'Committing Batches...'
+                  : 'Generating Marks Cards'}
               </>
-            ) : allSuccess ? (
+            ) : allSuccess || allCommitted ? (
               <>
                 <CheckCircle2 className="h-5 w-5 text-success" />
-                Generation Complete
+                {allCommitted ? 'Commit Complete' : 'Generation Complete'}
               </>
             ) : allFailed ? (
               <>
@@ -326,21 +389,24 @@ export const BatchConfirmationDialog = memo(function BatchConfirmationDialog({
             )}
           </DialogTitle>
           <DialogDescription>
-            {isGenerating 
-              ? 'Please wait while marks cards are being generated for each batch.'
-              : allSuccess
-              ? 'All batches have been successfully generated and verified.'
-              : allFailed
-              ? 'All batches failed to generate. You can retry them.'
-              : partialSuccess
-              ? 'Some batches completed while others failed.'
-              : `Your data will be split into ${batches.length} batch${batches.length > 1 ? 'es' : ''} (max ${MAX_RECORDS_PER_BATCH.toLocaleString()} records per batch).`
-            }
+            {allCommitted
+              ? 'All batches have been successfully committed for processing.'
+              : isGenerating
+                ? 'Please wait while marks cards are being generated for each batch.'
+                : isCommitting || committingBatchIds.length > 0
+                  ? 'Please wait while we commit your batches for processing.'
+                  : allSuccess
+                    ? 'All batches have been successfully generated and verified.'
+                    : allFailed
+                      ? 'All batches failed to generate. You can retry them.'
+                      : partialSuccess
+                        ? 'Some batches completed while others failed.'
+                        : `Your data will be split into ${propBatches?.length || batches.length} batch${(propBatches?.length || batches.length) > 1 ? 'es' : ''} (max ${MAX_RECORDS_PER_BATCH.toLocaleString()} records per batch).`}
           </DialogDescription>
         </DialogHeader>
 
         {/* Show completion summary when done */}
-        {allCompleted && activeJobs.length > 0 ? (
+        {(allCompleted && activeJobs.length > 0) || allCommitted ? (
           renderCompletionSummary()
         ) : (
           <div className="space-y-4">
@@ -370,24 +436,26 @@ export const BatchConfirmationDialog = memo(function BatchConfirmationDialog({
             )}
 
             {/* Batch List */}
-            <ScrollArea className="h-[200px] pr-4">
+            <ScrollArea className="h-[200px] pr-4 hidden">
               <div className="space-y-3">
                 {batches.map((batch) => {
                   const job = getJobForBatch(batch.batchNumber);
-                  const progress = job ? Math.round((job.generatedCards / job.totalCards) * 100) : 0;
+                  const progress = job
+                    ? Math.round((job.generatedCards / job.totalCards) * 100)
+                    : 0;
                   const isActive = job?.status === 'in_progress';
                   const isCompleted = job?.status === 'completed';
                   const isFailed = job?.status === 'failed';
 
                   return (
-                    <div 
+                    <div
                       key={batch.batchNumber}
                       className={cn(
-                        "p-3 rounded-lg border transition-colors",
-                        isActive && "border-primary/50 bg-primary/5",
-                        isCompleted && "border-success/50 bg-success/5",
-                        isFailed && "border-destructive/50 bg-destructive/5",
-                        !job && "border-border"
+                        'p-3 rounded-lg border transition-colors',
+                        isActive && 'border-primary/50 bg-primary/5',
+                        isCompleted && 'border-success/50 bg-success/5',
+                        isFailed && 'border-destructive/50 bg-destructive/5',
+                        !job && 'border-border'
                       )}
                     >
                       <div className="flex items-center justify-between mb-2">
@@ -416,17 +484,18 @@ export const BatchConfirmationDialog = memo(function BatchConfirmationDialog({
                       {/* Progress Bar (when generating) */}
                       {job && (
                         <div className="space-y-1">
-                          <Progress 
-                            value={progress} 
+                          <Progress
+                            value={progress}
                             className={cn(
-                              "h-1.5",
-                              isCompleted && "[&>div]:bg-success",
-                              isFailed && "[&>div]:bg-destructive"
+                              'h-1.5',
+                              isCompleted && '[&>div]:bg-success',
+                              isFailed && '[&>div]:bg-destructive'
                             )}
                           />
                           <div className="flex justify-between text-xs text-muted-foreground">
                             <span>
-                              {job.generatedCards.toLocaleString()} / {job.totalCards.toLocaleString()}
+                              {job.generatedCards.toLocaleString()} /{' '}
+                              {job.totalCards.toLocaleString()}
                             </span>
                             <span>{progress}%</span>
                           </div>
@@ -441,28 +510,32 @@ export const BatchConfirmationDialog = memo(function BatchConfirmationDialog({
         )}
 
         <DialogFooter className="gap-2 sm:gap-0">
-          {!isGenerating && !allCompleted && (
+          {!isGenerating && !allCompleted && !allCommitted && (
             <>
               <Button variant="outline" onClick={() => onOpenChange(false)}>
                 Cancel
               </Button>
               <Button onClick={onConfirm} className="gap-2">
-                Generate All Batches
+                Commit All Batches
                 <ArrowRight className="h-4 w-4" />
               </Button>
             </>
           )}
-          
-          {(isGenerating || allCompleted) && (
+
+          {(isGenerating || allCompleted || allCommitted) && (
             <>
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 onClick={() => onOpenChange(false)}
-                disabled={isGenerating}
+                disabled={isGenerating || committingBatchIds.length > 0}
               >
-                {isGenerating ? 'Continue in Background' : 'Close'}
+                {isGenerating || committingBatchIds.length > 0 ? 'Continue in Background' : 'Close'}
               </Button>
-              <Button onClick={onNavigateToMarksCards} className="gap-2">
+              <Button
+                onClick={onNavigateToMarksCards}
+                className="gap-2"
+                disabled={isGenerating || committingBatchIds.length > 0}
+              >
                 View All Batches
                 <ArrowRight className="h-4 w-4" />
               </Button>
