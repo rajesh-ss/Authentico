@@ -24,6 +24,7 @@ interface DataTableProps<T> {
   keyExtractor: (item: T) => string;
   emptyMessage?: string;
   className?: string;
+  isLoading?: boolean;
 }
 
 export function DataTable<T>({
@@ -33,6 +34,7 @@ export function DataTable<T>({
   keyExtractor,
   emptyMessage = 'No data found',
   className,
+  isLoading,
 }: DataTableProps<T>) {
   const content = (
     <div className="overflow-x-auto -mx-4 md:mx-0">
@@ -48,7 +50,18 @@ export function DataTable<T>({
             </TableRow>
           </TableHeader>
           <TableBody>
-            {data.length > 0 ? (
+            {isLoading && (
+              <TableRow>
+                <TableCell colSpan={columns.length} className="text-center py-8">
+                  <div className="flex flex-col items-center gap-2">
+                    <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                    <span className="text-sm text-muted-foreground">Loading data...</span>
+                  </div>
+                </TableCell>
+              </TableRow>
+            )}
+            {!isLoading &&
+              data.length > 0 &&
               data.map((item, index) => (
                 <TableRow key={keyExtractor(item)}>
                   {columns.map((col) => (
@@ -57,8 +70,8 @@ export function DataTable<T>({
                     </TableCell>
                   ))}
                 </TableRow>
-              ))
-            ) : (
+              ))}
+            {!isLoading && data.length === 0 && (
               <TableRow>
                 <TableCell colSpan={columns.length} className="text-center py-8">
                   <EmptyState message={emptyMessage} />
@@ -75,7 +88,9 @@ export function DataTable<T>({
     return (
       <Card className={className}>
         <CardHeader>
-          <CardTitle className="text-lg">{title} ({data.length})</CardTitle>
+          <CardTitle className="text-lg">
+            {title} ({data.length})
+          </CardTitle>
         </CardHeader>
         <CardContent>{content}</CardContent>
       </Card>

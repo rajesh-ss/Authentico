@@ -19,6 +19,7 @@ interface UseFormReturn<T extends FormField> {
   reset: () => void;
   setValues: (values: T) => void;
   setFieldValue: <K extends keyof T>(field: K, value: T[K]) => void;
+  validate: (values: T) => Partial<Record<keyof T, string>>;
 }
 
 export function useForm<T extends FormField>({
@@ -69,5 +70,6 @@ export function useForm<T extends FormField>({
     reset,
     setValues,
     setFieldValue,
+    validate: (values: T) => (validate ? validate(values) : {}),
   };
 }

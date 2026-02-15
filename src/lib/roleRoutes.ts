@@ -10,7 +10,7 @@ export const getRoleDefaultRoute = (roles: Roles[]): string => {
   // Define priority of roles and their routes
   switch (primaryRole) {
     case Roles.ADMIN:
-      return '/admin/dashboard';
+      return '/dashboard';
     case Roles.ISSUER:
     case Roles.APPROVER:
     case Roles.CHECKER:
