@@ -9,82 +9,82 @@ import {
   CheckCircle2,
   XCircle,
   Clock,
-  Eye,
   User,
   MessageSquare,
   FileText,
   Loader2,
-  AlertCircle,
   ArrowRight,
   ThumbsUp,
   ThumbsDown,
 } from 'lucide-react';
 import { format } from 'date-fns';
-import { detailsChangeService, DetailsChangeData } from '@/services/details-change.service';
+import { workflowService, ReevaluationItem, DetailsChangeItem } from '@/services/workflow.service';
 import { toast } from 'sonner';
 
-const pendingRequests = [
-  {
-    id: 'REV-2024-108',
-    studentName: 'Priya Sharma',
-    regNo: '2021CS1045',
-    subjects: ['Database Management', 'Computer Networks'],
-    reason: 'Discrepancy in answer evaluation for Q3 and Q5',
-    submittedAt: new Date(Date.now() - 3600000),
-    documents: 2,
-    oldMarks: { 'Database Management': 42, 'Computer Networks': 38 },
-  },
-  {
-    id: 'REV-2024-107',
-    studentName: 'Rahul Verma',
-    regNo: '2021CS1089',
-    subjects: ['Data Structures'],
-    reason: 'Answer sheet review requested for practical exam',
-    submittedAt: new Date(Date.now() - 7200000),
-    documents: 1,
-    oldMarks: { 'Data Structures': 35 },
-  },
-  {
-    id: 'REV-2024-106',
-    studentName: 'Ananya Patel',
-    regNo: '2021CS1023',
-    subjects: ['Machine Learning', 'Artificial Intelligence'],
-    reason: 'Re-totaling of marks required',
-    submittedAt: new Date(Date.now() - 14400000),
-    documents: 3,
-    oldMarks: { 'Machine Learning': 48, 'Artificial Intelligence': 45 },
-  },
-];
-
 export default function CheckerDashboard() {
-  const [detailsRequests, setDetailsRequests] = useState<DetailsChangeData[]>([]);
-  const [detailsLoading, setDetailsLoading] = useState(true);
+  const [detailsRequests, setDetailsRequests] = useState<DetailsChangeItem[]>([]);
+  const [reevaluationRequests, setReevaluationRequests] = useState<ReevaluationItem[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchDetailsRequests = async () => {
+    const fetchAllRequests = async () => {
       try {
-        const response = await detailsChangeService.getPendingRequests();
+        const response = await workflowService.getPendingRequests();
         if (response.success) {
-          setDetailsRequests(response.data);
+          // Filter by request type
+          const reevalRequests = response.data.filter(
+            (item): item is ReevaluationItem =>
+              item.type === 'REEVALUATION' && item.status === 'PENDING_CHECKER'
+          );
+          const detailsChanges = response.data.filter(
+            (item) => item.type === 'DETAILS_CHANGE' && item.status === 'PENDING_CHECKER'
+          ) as DetailsChangeItem[];
+
+          setReevaluationRequests(reevalRequests);
+          setDetailsRequests(detailsChanges);
         }
       } catch (err) {
-        console.error('Error fetching details requests:', err);
+        console.error('Error fetching requests:', err);
+        toast.error('Failed to load pending requests');
       } finally {
-        setDetailsLoading(false);
+        setLoading(false);
       }
     };
 
-    fetchDetailsRequests();
+    fetchAllRequests();
   }, []);
 
-  const handleDetailsAction = (id: string, action: string) => {
-    toast.info(`${action} functionality for request ${id.slice(-6)} coming soon`);
+  const handleAction = async (
+    id: string,
+    type: 'REEVALUATION' | 'DETAILS_CHANGE',
+    action: 'APPROVE' | 'REJECT'
+  ) => {
+    try {
+      await workflowService.processAction({ requestId: id, type, action });
+      toast.success(`Request ${action.toLowerCase()}d successfully`);
+      // Refresh data
+      const response = await workflowService.getPendingRequests();
+      if (response.success) {
+        const reevalRequests = response.data.filter(
+          (item): item is ReevaluationItem =>
+            item.type === 'REEVALUATION' && item.status === 'PENDING_CHECKER'
+        );
+        const detailsChanges = response.data.filter(
+          (item) => item.type === 'DETAILS_CHANGE' && item.status === 'PENDING_CHECKER'
+        ) as DetailsChangeItem[];
+        setReevaluationRequests(reevalRequests);
+        setDetailsRequests(detailsChanges);
+      }
+    } catch (err) {
+      console.error('Error processing action:', err);
+      toast.error(`Failed to ${action.toLowerCase()} request`);
+    }
   };
 
   const stats = [
     {
       icon: Clock,
-      value: pendingRequests.length + detailsRequests.length,
+      value: reevaluationRequests.length + detailsRequests.length,
       label: 'Total Pending',
       color: 'warning' as const,
     },
@@ -92,6 +92,16 @@ export default function CheckerDashboard() {
     { icon: XCircle, value: 1, label: 'Rejected Today', color: 'destructive' as const },
     { icon: ClipboardCheck, value: 45, label: 'This Month', color: 'primary' as const },
   ];
+
+  if (loading) {
+    return (
+      <DashboardLayout title="Re-Evaluation Checks" subtitle="Review and check requests">
+        <div className="flex items-center justify-center min-h-[400px]">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout title="Re-Evaluation Checks" subtitle="Review and check requests">
@@ -117,7 +127,7 @@ export default function CheckerDashboard() {
                         <div className="flex items-center gap-3 text-sm text-muted-foreground">
                           <span className="font-mono">ID: {req._id.slice(-8).toUpperCase()}</span>
                           <span>• {format(new Date(req.createdAt), 'MMM d, h:mm a')}</span>
-                          <span>• Recommended by: {req.requestedBy.slice(0, 8)}...</span>
+                          <span>• Requested by: {req.requestedBy.slice(0, 8)}...</span>
                         </div>
                         <p className="font-medium">Student Roll No: {req.rollNo}</p>
                         <div className="space-y-1">
@@ -138,18 +148,20 @@ export default function CheckerDashboard() {
                       <div className="flex gap-2 items-start">
                         <Button
                           size="sm"
-                          variant="outline"
-                          onClick={() => handleDetailsAction(req._id, 'Review')}
-                        >
-                          Review
-                        </Button>
-                        <Button
-                          size="sm"
-                          onClick={() => handleDetailsAction(req._id, 'Approve')}
+                          onClick={() => handleAction(req._id, 'DETAILS_CHANGE', 'APPROVE')}
                           className="bg-success hover:bg-success/90 text-white"
                         >
                           <ThumbsUp className="h-3 w-3 mr-1" />
-                          Check
+                          Approve
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleAction(req._id, 'DETAILS_CHANGE', 'REJECT')}
+                          className="text-destructive hover:bg-destructive/10"
+                        >
+                          <ThumbsDown className="h-3 w-3 mr-1" />
+                          Reject
                         </Button>
                       </div>
                     </div>
@@ -160,77 +172,84 @@ export default function CheckerDashboard() {
           </Card>
         )}
 
-        {/* Existing Re-Evaluation Requests */}
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-lg font-semibold">Marks Re-Evaluation</CardTitle>
-            <Badge variant="secondary">{pendingRequests.length} pending</Badge>
-          </CardHeader>
-          <CardContent className="pt-0">
-            <div className="space-y-4">
-              {pendingRequests.map((request) => (
-                <div
-                  key={request.id}
-                  className="border rounded-lg p-4 hover:border-accent/50 transition-colors"
-                >
-                  <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-2 flex-wrap">
-                        <Badge variant="outline" className="font-mono">
-                          {request.id}
-                        </Badge>
-                        <span className="text-xs text-muted-foreground">
-                          {format(request.submittedAt, 'MMM d, h:mm a')}
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-4 mb-3 flex-wrap">
-                        <div className="flex items-center gap-2">
-                          <User className="h-4 w-4 text-muted-foreground" />
-                          <span className="font-medium text-foreground">{request.studentName}</span>
-                        </div>
-                        <span className="text-sm text-muted-foreground font-mono">
-                          {request.regNo}
-                        </span>
-                      </div>
-                      <div className="flex flex-wrap gap-2 mb-3">
-                        {request.subjects.map((subject) => (
-                          <Badge key={subject} variant="secondary" className="text-xs">
-                            {subject}: {request.oldMarks[subject as keyof typeof request.oldMarks]}{' '}
-                            marks
+        {/* Re-Evaluation Requests Section */}
+        {reevaluationRequests.length > 0 && (
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-lg font-semibold">Marks Re-Evaluation</CardTitle>
+              <Badge variant="secondary">{reevaluationRequests.length} pending</Badge>
+            </CardHeader>
+            <CardContent className="pt-0">
+              <div className="space-y-4">
+                {reevaluationRequests.map((request) => (
+                  <div
+                    key={request._id}
+                    className="border rounded-lg p-4 hover:border-accent/50 transition-colors"
+                  >
+                    <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-3 mb-2 flex-wrap">
+                          <Badge variant="outline" className="font-mono">
+                            {request._id.slice(-8).toUpperCase()}
                           </Badge>
-                        ))}
+                          <span className="text-xs text-muted-foreground">
+                            {format(new Date(request.createdAt), 'MMM d, h:mm a')}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-4 mb-3 flex-wrap">
+                          <div className="flex items-center gap-2">
+                            <User className="h-4 w-4 text-muted-foreground" />
+                            <span className="font-medium text-foreground">
+                              Roll No: {request.rollNo}
+                            </span>
+                          </div>
+                        </div>
+                        <div className="flex flex-wrap gap-2 mb-3">
+                          <Badge variant="secondary" className="text-xs">
+                            Subject: {request.subjectCode}
+                          </Badge>
+                          <Badge variant="outline" className="text-xs">
+                            Pass Year: {request.passYear}
+                          </Badge>
+                        </div>
+                        {request.reason && (
+                          <div className="flex items-start gap-2 mb-3">
+                            <MessageSquare className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
+                            <p className="text-sm text-muted-foreground">{request.reason}</p>
+                          </div>
+                        )}
+                        <div className="flex items-center gap-2">
+                          <FileText className="h-4 w-4 text-muted-foreground" />
+                          <span className="text-xs text-muted-foreground">
+                            Requested for re-evaluation
+                          </span>
+                        </div>
                       </div>
-                      <div className="flex items-start gap-2 mb-3">
-                        <MessageSquare className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
-                        <p className="text-sm text-muted-foreground">{request.reason}</p>
+                      <div className="flex md:flex-col gap-2">
+                        <Button
+                          variant="approve"
+                          size="sm"
+                          onClick={() => handleAction(request._id, 'REEVALUATION', 'APPROVE')}
+                        >
+                          <CheckCircle2 className="h-4 w-4 mr-1" />
+                          Approve
+                        </Button>
+                        <Button
+                          variant="reject"
+                          size="sm"
+                          onClick={() => handleAction(request._id, 'REEVALUATION', 'REJECT')}
+                        >
+                          <XCircle className="h-4 w-4 mr-1" />
+                          Reject
+                        </Button>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <FileText className="h-4 w-4 text-muted-foreground" />
-                        <span className="text-xs text-muted-foreground">
-                          {request.documents} document{request.documents > 1 ? 's' : ''}
-                        </span>
-                      </div>
-                    </div>
-                    <div className="flex md:flex-col gap-2">
-                      <Button variant="ghost" size="sm">
-                        <Eye className="h-4 w-4 mr-1" />
-                        Review
-                      </Button>
-                      <Button variant="approve" size="sm">
-                        <CheckCircle2 className="h-4 w-4 mr-1" />
-                        Approve
-                      </Button>
-                      <Button variant="reject" size="sm">
-                        <XCircle className="h-4 w-4 mr-1" />
-                        Reject
-                      </Button>
                     </div>
                   </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
       </div>
     </DashboardLayout>
   );

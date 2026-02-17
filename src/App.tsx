@@ -37,6 +37,7 @@ const Analytics = lazy(() => import('./pages/admin/Analytics'));
 const Templates = lazy(() => import('./pages/issuer/Templates'));
 const NotFound = lazy(() => import('./pages/NotFound'));
 const Inbox = lazy(() => import('./pages/workflow/Inbox'));
+const PublicMarksheet = lazy(() => import('./pages/PublicMarksheet'));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -70,6 +71,7 @@ const App = () => (
                 <Route path="/" element={<Index />} />
                 <Route path="/auth/login" element={<Login />} />
                 <Route path="/verify" element={<VerifyCertificate />} />
+                <Route path="/certificate/:rollNo" element={<PublicMarksheet />} />
 
                 {/* Protected Dashboard - All authenticated users */}
                 <Route

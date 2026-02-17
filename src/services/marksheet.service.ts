@@ -1,4 +1,5 @@
 import apiClient from '@/api/client';
+import axios from 'axios';
 import { marksheetApi } from '@/api/endpoints/marksheet';
 
 export interface StudentInfo {
@@ -73,6 +74,14 @@ export interface StudentMarksheetResponse {
 export const marksheetService = {
   getMyMarksheets: async (): Promise<StudentMarksheetResponse> => {
     const response = await apiClient.get<StudentMarksheetResponse>(marksheetApi.me());
+    return response.data;
+  },
+
+  getPublicMarksheet: async (rollNo: string): Promise<StudentMarksheetResponse> => {
+    // Use a fresh axios instance to bypass auth interceptors
+    const response = await axios.get<StudentMarksheetResponse>(
+      `${import.meta.env.VITE_API_URL || 'http://localhost:3600'}/api/marksheet/public/${rollNo}`
+    );
     return response.data;
   },
 };
